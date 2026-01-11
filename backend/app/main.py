@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core.i18n import _
 from app.core.database import init_database, close_database
 from app.core.response import error, validation_error
+from app.core.logging import init_logging, get_logger
 from app.exceptions import AppException
 from app.middleware.i18n import I18nMiddleware
 
@@ -30,12 +31,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     - shutdown: 应用关闭时执行
     """
     # ========== Startup ==========
-    print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    print(f"📍 Environment: {settings.APP_ENV}")
-    print(f"🔧 Debug mode: {settings.DEBUG}")
+    # 初始化日志系统
+    init_logging()
+    logger = get_logger(__name__)
+    
+    logger.info(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    logger.info(f"📍 Environment: {settings.APP_ENV}")
+    logger.info(f"🔧 Debug mode: {settings.DEBUG}")
     
     # 初始化数据库（检查/创建数据库 + 运行迁移）
     await init_database()
+    logger.info("✅ Database initialized")
     
     # TODO: 初始化 Redis 连接
     # TODO: 初始化 Celery
@@ -43,10 +49,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
     
     # ========== Shutdown ==========
-    print(f"👋 Shutting down {settings.APP_NAME}")
+    logger = get_logger(__name__)
+    logger.info(f"👋 Shutting down {settings.APP_NAME}")
     
     # 关闭数据库连接
     await close_database()
+    logger.info("✅ Database connections closed")
     
     # TODO: 关闭 Redis 连接
 
@@ -145,10 +153,9 @@ def create_application() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """全局异常处理器 - 捕获未处理的异常"""
-        # 在 DEBUG 模式下打印异常信息
-        if settings.DEBUG:
-            import traceback
-            traceback.print_exc()
+        # 记录异常日志
+        logger = get_logger(__name__)
+        logger.exception(f"Unhandled exception: {exc}")
         
         response = error(message=_("common.server_error"), code=5000)
         return JSONResponse(

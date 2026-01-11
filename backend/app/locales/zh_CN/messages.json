@@ -76,5 +76,45 @@
     "quota_exceeded": "AI 配额已用完",
     "model_not_available": "模型暂不可用",
     "context_too_long": "上下文长度超出限制"
+  },
+  "enum": {
+    "status": {
+      "active": "启用",
+      "inactive": "禁用"
+    },
+    "bool": {
+      "yes": "是",
+      "no": "否"
+    },
+    "gender": {
+      "unknown": "未知",
+      "male": "男",
+      "female": "女"
+    },
+    "audit": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝"
+    },
+    "sort": {
+      "asc": "升序",
+      "desc": "降序"
+    },
+    "operation": {
+      "create": "创建",
+      "update": "更新",
+      "delete": "删除",
+      "query": "查询",
+      "login": "登录",
+      "logout": "登出",
+      "export": "导出",
+      "import": "导入"
+    },
+    "priority": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "urgent": "紧急"
+    }
   }
 }

@@ -76,5 +76,45 @@
     "quota_exceeded": "AI quota exhausted",
     "model_not_available": "Model is not available",
     "context_too_long": "Context length exceeds limit"
+  },
+  "enum": {
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "bool": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "gender": {
+      "unknown": "Unknown",
+      "male": "Male",
+      "female": "Female"
+    },
+    "audit": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "sort": {
+      "asc": "Ascending",
+      "desc": "Descending"
+    },
+    "operation": {
+      "create": "Create",
+      "update": "Update",
+      "delete": "Delete",
+      "query": "Query",
+      "login": "Login",
+      "logout": "Logout",
+      "export": "Export",
+      "import": "Import"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
   }
 }
