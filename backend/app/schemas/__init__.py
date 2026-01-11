@@ -11,6 +11,13 @@ from app.schemas.auth import (
     UserResponse,
     ChangePasswordRequest,
 )
+from app.schemas.admin import (
+    AdminLoginRequest,
+    AdminResponse,
+    AdminCreateRequest,
+    AdminUpdateRequest,
+    AdminChangePasswordRequest,
+)
 
 __all__ = [
     # Auth
@@ -19,4 +26,10 @@ __all__ = [
     "LoginRequest",
     "UserResponse",
     "ChangePasswordRequest",
+    # Admin
+    "AdminLoginRequest",
+    "AdminResponse",
+    "AdminCreateRequest",
+    "AdminUpdateRequest",
+    "AdminChangePasswordRequest",
 ]

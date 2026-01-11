@@ -1,7 +1,7 @@
 """
-认证 API 路由
+租户业务用户认证 API
 
-提供用户登录、登出、Token 刷新等认证相关接口
+提供租户业务用户（C端用户）的登录、登出、Token 刷新等接口
 """
 
 from datetime import datetime, timezone
@@ -11,7 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.deps import DbSession, ActiveUser
+from app.core.deps import DbSession, ActiveTenantUser
 from app.core.i18n import _
 from app.core.response import success, error
 from app.core.security import (
@@ -21,7 +21,7 @@ from app.core.security import (
     verify_token,
     TOKEN_TYPE_REFRESH,
 )
-from app.models.user import User
+from app.models import TenantUser
 from app.schemas.auth import (
     TokenResponse,
     RefreshTokenRequest,
@@ -31,7 +31,7 @@ from app.schemas.auth import (
 )
 
 
-router = APIRouter(prefix="/auth", tags=["认证"])
+router = APIRouter(prefix="/auth", tags=["租户用户认证"])
 
 
 @router.post("/login", summary="用户登录（OAuth2 表单）")
@@ -46,10 +46,14 @@ async def login_oauth2(
     - **username**: 用户名或邮箱
     - **password**: 密码
     """
-    # 查询用户（支持用户名或邮箱登录）
+    # 查询用户（支持用户名、邮箱或手机号登录）
     result = await db.execute(
-        select(User).where(
-            or_(User.username == form_data.username, User.email == form_data.username)
+        select(TenantUser).where(
+            or_(
+                TenantUser.username == form_data.username,
+                TenantUser.email == form_data.username,
+                TenantUser.phone == form_data.username,
+            )
         )
     )
     user = result.scalar_one_or_none()
@@ -95,10 +99,14 @@ async def login_json(
     - **username**: 用户名或邮箱
     - **password**: 密码
     """
-    # 查询用户
+    # 查询用户（支持用户名、邮箱或手机号登录）
     result = await db.execute(
-        select(User).where(
-            or_(User.username == login_data.username, User.email == login_data.username)
+        select(TenantUser).where(
+            or_(
+                TenantUser.username == login_data.username,
+                TenantUser.email == login_data.username,
+                TenantUser.phone == login_data.username,
+            )
         )
     )
     user = result.scalar_one_or_none()
@@ -149,7 +157,7 @@ async def refresh_token(
     
     # 查询用户
     result = await db.execute(
-        select(User).where(User.id == int(user_id))
+        select(TenantUser).where(TenantUser.id == int(user_id))
     )
     user = result.scalar_one_or_none()
     
@@ -177,7 +185,7 @@ async def refresh_token(
 
 @router.post("/logout", summary="用户登出")
 async def logout(
-    current_user: ActiveUser,
+    current_user: ActiveTenantUser,
 ):
     """
     用户登出
@@ -192,7 +200,7 @@ async def logout(
 
 @router.get("/me", summary="获取当前用户信息")
 async def get_current_user_info(
-    current_user: ActiveUser,
+    current_user: ActiveTenantUser,
 ):
     """
     获取当前登录用户的详细信息
@@ -206,7 +214,7 @@ async def get_current_user_info(
 @router.put("/password", summary="修改密码")
 async def change_password(
     db: DbSession,
-    current_user: ActiveUser,
+    current_user: ActiveTenantUser,
     password_data: ChangePasswordRequest,
 ):
     """
