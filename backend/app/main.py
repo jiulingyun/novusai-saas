@@ -8,12 +8,16 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
 from app.core.i18n import _
 from app.core.database import init_database, close_database
+from app.core.response import error, validation_error
+from app.exceptions import AppException
 from app.middleware.i18n import I18nMiddleware
 
 
@@ -82,16 +86,74 @@ def create_application() -> FastAPI:
     # 注册异常处理器
     # ========================================
     
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
+        """应用异常处理器"""
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.to_dict(),
+        )
+    
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """请求验证异常处理器"""
+        errors = [
+            {
+                "field": ".".join(str(loc) for loc in err.get("loc", [])),
+                "message": err.get("msg", ""),
+                "type": err.get("type", ""),
+            }
+            for err in exc.errors()
+        ]
+        response = validation_error(errors=errors)
+        return JSONResponse(
+            status_code=422,
+            content=response.model_dump(),
+        )
+    
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(
+        request: Request, exc: StarletteHTTPException
+    ) -> JSONResponse:
+        """HTTP 异常处理器"""
+        # 映射常见 HTTP 状态码到业务错误码
+        status_code_map = {
+            400: 4000,
+            401: 4010,
+            403: 4030,
+            404: 4040,
+            405: 4050,
+            409: 4090,
+            422: 4220,
+            429: 4290,
+            500: 5000,
+            502: 5020,
+            503: 5030,
+        }
+        code = status_code_map.get(exc.status_code, exc.status_code * 10)
+        response = error(
+            message=str(exc.detail) if exc.detail else None,
+            code=code,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=response.model_dump(),
+        )
+    
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-        """全局异常处理器"""
+        """全局异常处理器 - 捕获未处理的异常"""
+        # 在 DEBUG 模式下打印异常信息
+        if settings.DEBUG:
+            import traceback
+            traceback.print_exc()
+        
+        response = error(message=_("common.server_error"), code=5000)
         return JSONResponse(
             status_code=500,
-            content={
-                "code": 5000,
-                "message": _("common.server_error"),
-                "data": None,
-            },
+            content=response.model_dump(),
         )
     
     # ========================================

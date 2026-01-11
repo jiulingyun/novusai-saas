@@ -1,0 +1,31 @@
+"""
+异常模块
+
+提供应用的异常类层次结构
+"""
+
+from app.exceptions.base import (
+    AppException,
+    ValidationException,
+    AuthenticationException,
+    AuthorizationException,
+    NotFoundException,
+    ConflictException,
+    BusinessException,
+    RateLimitException,
+    ExternalServiceException,
+    ServiceUnavailableException,
+)
+
+__all__ = [
+    "AppException",
+    "ValidationException",
+    "AuthenticationException",
+    "AuthorizationException",
+    "NotFoundException",
+    "ConflictException",
+    "BusinessException",
+    "RateLimitException",
+    "ExternalServiceException",
+    "ServiceUnavailableException",
+]
