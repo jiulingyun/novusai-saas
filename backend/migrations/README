@@ -1,0 +1,42 @@
+Generic single-database configuration with an async dbapi.
+
+# Alembic 迁移指南
+
+## 创建新迁移
+
+```bash
+cd backend
+alembic revision --autogenerate -m "描述你的更改"
+```
+
+## 运行迁移
+
+```bash
+# 升级到最新版本
+alembic upgrade head
+
+# 升级到指定版本
+alembic upgrade <revision>
+
+# 回滚一个版本
+alembic downgrade -1
+
+# 回滚到指定版本
+alembic downgrade <revision>
+```
+
+## 查看迁移历史
+
+```bash
+# 查看当前版本
+alembic current
+
+# 查看迁移历史
+alembic history
+```
+
+## 注意事项
+
+1. 自动迁移功能已集成到应用启动流程中
+2. 每次启动时会自动运行 `alembic upgrade head`
+3. 新增模型后需要手动生成迁移文件

@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse, ORJSONResponse
 
 from app.core.config import settings
 from app.core.i18n import _
+from app.core.database import init_database, close_database
 from app.middleware.i18n import I18nMiddleware
 
 
@@ -29,7 +30,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print(f"📍 Environment: {settings.APP_ENV}")
     print(f"🔧 Debug mode: {settings.DEBUG}")
     
-    # TODO: 初始化数据库连接池
+    # 初始化数据库（检查/创建数据库 + 运行迁移）
+    await init_database()
+    
     # TODO: 初始化 Redis 连接
     # TODO: 初始化 Celery
     
@@ -38,7 +41,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # ========== Shutdown ==========
     print(f"👋 Shutting down {settings.APP_NAME}")
     
-    # TODO: 关闭数据库连接池
+    # 关闭数据库连接
+    await close_database()
+    
     # TODO: 关闭 Redis 连接
 
 

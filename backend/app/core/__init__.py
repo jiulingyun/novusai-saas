@@ -33,6 +33,9 @@ from app.core.base_service import BaseService, TenantService, GlobalService
 # 基类 - Controller
 from app.core.base_controller import BaseController, TenantController, GlobalController
 
+# 数据库
+from app.core.database import get_db, get_db_context, init_database, close_database
+
 __all__ = [
     # 配置
     "settings",
@@ -64,4 +67,9 @@ __all__ = [
     "BaseController",
     "TenantController",
     "GlobalController",
+    # Database
+    "get_db",
+    "get_db_context",
+    "init_database",
+    "close_database",
 ]
