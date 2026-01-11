@@ -160,6 +160,9 @@ lerna-debug.log*
 *.iml
 *.ipr
 *.iws
+.warp/
+.cursor/
+.trae/
 
 # VS Code
 .vscode/
