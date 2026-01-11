@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
 
 from app.core.config import settings
+from app.core.i18n import _
+from app.middleware.i18n import I18nMiddleware
 
 
 @asynccontextmanager
@@ -59,6 +61,9 @@ def create_application() -> FastAPI:
     # 注册中间件
     # ========================================
     
+    # i18n 国际化中间件（需要在 CORS 之前注册）
+    app.add_middleware(I18nMiddleware)
+    
     # CORS 中间件
     app.add_middleware(
         CORSMiddleware,
@@ -79,7 +84,7 @@ def create_application() -> FastAPI:
             status_code=500,
             content={
                 "code": 5000,
-                "message": "Internal Server Error",
+                "message": _("common.server_error"),
                 "data": None,
             },
         )
@@ -93,7 +98,7 @@ def create_application() -> FastAPI:
         """根路由 - 健康检查"""
         return {
             "code": 0,
-            "message": "success",
+            "message": _("common.success"),
             "data": {
                 "name": settings.APP_NAME,
                 "version": settings.APP_VERSION,
@@ -106,7 +111,7 @@ def create_application() -> FastAPI:
         """健康检查端点"""
         return {
             "code": 0,
-            "message": "success",
+            "message": _("common.success"),
             "data": {
                 "status": "healthy",
                 "env": settings.APP_ENV,

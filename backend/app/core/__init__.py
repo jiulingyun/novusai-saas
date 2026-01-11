@@ -5,5 +5,6 @@
 """
 
 from app.core.config import settings
+from app.core.i18n import _, translate, get_locale, set_locale
 
-__all__ = ["settings"]
+__all__ = ["settings", "_", "translate", "get_locale", "set_locale"]

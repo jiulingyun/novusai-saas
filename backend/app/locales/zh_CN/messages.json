@@ -1,0 +1,80 @@
+{
+  "common": {
+    "success": "操作成功",
+    "failed": "操作失败",
+    "created": "创建成功",
+    "updated": "更新成功",
+    "deleted": "删除成功",
+    "not_found": "资源不存在",
+    "invalid_request": "无效请求",
+    "server_error": "服务器内部错误",
+    "unauthorized": "未授权访问",
+    "forbidden": "禁止访问",
+    "validation_error": "数据验证失败",
+    "unknown_error": "未知错误"
+  },
+  "auth": {
+    "login_success": "登录成功",
+    "logout_success": "退出登录成功",
+    "token_expired": "令牌已过期",
+    "token_invalid": "无效令牌",
+    "credentials_invalid": "用户名或密码错误",
+    "account_disabled": "账户已禁用",
+    "account_locked": "账户已锁定",
+    "permission_denied": "权限不足",
+    "refresh_token_invalid": "刷新令牌无效",
+    "password_changed": "密码修改成功",
+    "password_mismatch": "密码不匹配"
+  },
+  "user": {
+    "not_found": "用户不存在",
+    "already_exists": "用户已存在",
+    "email_exists": "邮箱已被注册",
+    "username_exists": "用户名已被占用",
+    "created": "用户创建成功",
+    "updated": "用户信息更新成功",
+    "deleted": "用户删除成功",
+    "profile_updated": "个人资料更新成功"
+  },
+  "tenant": {
+    "not_found": "租户不存在",
+    "disabled": "租户已禁用",
+    "quota_exceeded": "配额已超限",
+    "created": "租户创建成功",
+    "updated": "租户更新成功"
+  },
+  "validation": {
+    "required": "{field}不能为空",
+    "invalid_email": "邮箱格式不正确",
+    "invalid_phone": "手机号格式不正确",
+    "min_length": "{field}长度不能少于{min}个字符",
+    "max_length": "{field}长度不能超过{max}个字符",
+    "invalid_format": "{field}格式不正确",
+    "out_of_range": "{field}超出有效范围"
+  },
+  "pagination": {
+    "invalid_page": "页码无效",
+    "invalid_page_size": "每页数量无效"
+  },
+  "file": {
+    "upload_success": "文件上传成功",
+    "upload_failed": "文件上传失败",
+    "file_too_large": "文件大小超出限制",
+    "invalid_file_type": "不支持的文件类型",
+    "not_found": "文件不存在"
+  },
+  "task": {
+    "created": "任务创建成功",
+    "started": "任务已启动",
+    "completed": "任务已完成",
+    "failed": "任务执行失败",
+    "cancelled": "任务已取消"
+  },
+  "ai": {
+    "request_failed": "AI 请求失败",
+    "rate_limited": "请求频率超限",
+    "quota_exceeded": "AI 配额已用完",
+    "model_not_available": "模型暂不可用",
+    "context_too_long": "上下文长度超出限制"
+  }
+}
