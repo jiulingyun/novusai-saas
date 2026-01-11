@@ -18,6 +18,13 @@ from app.schemas.admin import (
     AdminUpdateRequest,
     AdminChangePasswordRequest,
 )
+from app.schemas.tenant_admin import (
+    TenantAdminLoginRequest,
+    TenantAdminResponse,
+    TenantAdminCreateRequest,
+    TenantAdminUpdateRequest,
+    TenantAdminChangePasswordRequest,
+)
 
 __all__ = [
     # Auth
@@ -32,4 +39,10 @@ __all__ = [
     "AdminCreateRequest",
     "AdminUpdateRequest",
     "AdminChangePasswordRequest",
+    # TenantAdmin
+    "TenantAdminLoginRequest",
+    "TenantAdminResponse",
+    "TenantAdminCreateRequest",
+    "TenantAdminUpdateRequest",
+    "TenantAdminChangePasswordRequest",
 ]

@@ -196,9 +196,9 @@ def create_application() -> FastAPI:
     from app.api.admin import admin_router
     app.include_router(admin_router, prefix="/admin")
     
-    # TODO: 注册租户管理后台路由 (/tenant/*)
-    # from app.api.tenant import tenant_router
-    # app.include_router(tenant_router, prefix="/tenant")
+    # 注册租户管理后台路由 (/tenant/*)
+    from app.api.tenant import tenant_router
+    app.include_router(tenant_router, prefix="/tenant")
     
     # 注册租户业务用户 API v1 路由 (/api/v1/*)
     from app.api.v1 import api_router

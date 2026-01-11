@@ -9,8 +9,10 @@ API 路由模块
 
 from app.api.v1 import api_router as api_v1_router
 from app.api.admin import admin_router
+from app.api.tenant import tenant_router
 
 __all__ = [
     "api_v1_router",
     "admin_router",
+    "tenant_router",
 ]
