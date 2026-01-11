@@ -1,11 +1,17 @@
 """
 认证授权模块模型
 
-角色、权限等 RBAC 相关模型（后续 M2-T2 实现）
+RBAC 相关模型：权限、角色、角色-权限关联
 """
 
-# TODO: M2-T2 实现 RBAC 数据模型
-# from app.models.auth.role import Role, AdminRole, TenantAdminRole
-# from app.models.auth.permission import Permission
+from app.models.auth.permission import Permission
+from app.models.auth.admin_role import AdminRole, admin_role_permissions
+from app.models.auth.tenant_admin_role import TenantAdminRole, tenant_admin_role_permissions
 
-__all__ = []
+__all__ = [
+    "Permission",
+    "AdminRole",
+    "admin_role_permissions",
+    "TenantAdminRole",
+    "tenant_admin_role_permissions",
+]

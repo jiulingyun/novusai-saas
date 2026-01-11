@@ -69,8 +69,39 @@ class TenantAdmin(TenantModel):
         Integer, ForeignKey("tenant_admin_roles.id"), nullable=True, comment="角色 ID"
     )
     
+    # 角色关系
+    role: Mapped["TenantAdminRole | None"] = relationship(
+        "TenantAdminRole",
+        back_populates="admins",
+        lazy="selectin",
+    )
+    
     def __repr__(self) -> str:
         return f"<TenantAdmin(id={self.id}, tenant_id={self.tenant_id}, username={self.username})>"
+    
+    def has_permission(self, permission_code: str) -> bool:
+        """
+        检查租户管理员是否拥有指定权限
+        
+        Args:
+            permission_code: 权限代码
+        
+        Returns:
+            是否拥有该权限
+        """
+        # 租户所有者拥有所有权限
+        if self.is_owner:
+            return True
+        # 检查角色权限
+        if self.role:
+            return self.role.has_permission(permission_code)
+        return False
+
+
+# 类型注解导入
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.models.auth.tenant_admin_role import TenantAdminRole
 
 
 __all__ = ["TenantAdmin"]

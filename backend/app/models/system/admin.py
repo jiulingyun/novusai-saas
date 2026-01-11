@@ -68,8 +68,39 @@ class Admin(BaseModel):
         Integer, ForeignKey("admin_roles.id"), nullable=True, comment="角色 ID"
     )
     
+    # 角色关系
+    role: Mapped["AdminRole | None"] = relationship(
+        "AdminRole",
+        back_populates="admins",
+        lazy="selectin",
+    )
+    
     def __repr__(self) -> str:
         return f"<Admin(id={self.id}, username={self.username})>"
+    
+    def has_permission(self, permission_code: str) -> bool:
+        """
+        检查管理员是否拥有指定权限
+        
+        Args:
+            permission_code: 权限代码
+        
+        Returns:
+            是否拥有该权限
+        """
+        # 超级管理员拥有所有权限
+        if self.is_super:
+            return True
+        # 检查角色权限
+        if self.role:
+            return self.role.has_permission(permission_code)
+        return False
+
+
+# 类型注解导入
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from app.models.auth.admin_role import AdminRole
 
 
 __all__ = ["Admin"]

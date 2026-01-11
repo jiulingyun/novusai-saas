@@ -6,7 +6,7 @@
 目录结构:
 - system/: 平台级模型 (Admin)
 - tenant/: 租户级模型 (Tenant, TenantAdmin, TenantUser)
-- auth/: 认证授权模型 (Role, Permission)
+- auth/: RBAC 模型 (Permission, AdminRole, TenantAdminRole)
 """
 
 # 平台级模型
@@ -15,8 +15,14 @@ from app.models.system import Admin
 # 租户级模型
 from app.models.tenant import Tenant, TenantAdmin, TenantUser
 
-# 认证授权模型 (TODO: M2-T2)
-# from app.models.auth import Role, Permission
+# RBAC 模型
+from app.models.auth import (
+    Permission,
+    AdminRole,
+    admin_role_permissions,
+    TenantAdminRole,
+    tenant_admin_role_permissions,
+)
 
 __all__ = [
     # 平台级
@@ -25,4 +31,10 @@ __all__ = [
     "Tenant",
     "TenantAdmin",
     "TenantUser",
+    # RBAC
+    "Permission",
+    "AdminRole",
+    "admin_role_permissions",
+    "TenantAdminRole",
+    "tenant_admin_role_permissions",
 ]
