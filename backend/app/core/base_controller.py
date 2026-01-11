@@ -4,30 +4,38 @@
 提供 API 控制器层的基类，包括：
 - BaseController: 通用控制器基类
 - TenantController: 租户级控制器基类
-- GlobalController: 全局控制器基类
+- GlobalController: 全局控制器基类（平台管理端）
+
+使用示例:
+    @permission_resource(
+        resource="user",
+        name="用户管理",
+        scope=PermissionScope.TENANT,
+        menu=MenuConfig(icon="user", path="/users", component="user/List")
+    )
+    class UserController(TenantController):
+        prefix = "/users"
+        tags = ["用户管理"]
+        
+        @action_read("查看用户列表")
+        async def list_users(self, db: DbSession, current_user: ActiveTenantAdmin):
+            ...
 """
 
-from typing import Any, Type
+from typing import Any, Callable, Type, TypeVar
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+
+
+T = TypeVar("T", bound="BaseController")
 
 
 class BaseController:
     """
     控制器基类
     
-    提供统一的路由注册和依赖注入
-    
-    使用示例:
-        class UserController(BaseController):
-            prefix = "/users"
-            tags = ["用户管理"]
-            service_class = UserService
-            
-            def _register_routes(self):
-                @self.router.get("")
-                async def list_users():
-                    ...
+    通过类方法定义路由，结合 @permission_resource 和 @permission_action 装饰器
+    自动注册权限到数据库。
     """
     
     # 路由配置
@@ -38,20 +46,44 @@ class BaseController:
     # 关联的服务类
     service_class: Type | None = None
     
-    def __init__(self):
-        """初始化控制器，创建路由器"""
-        self.router = APIRouter(
-            prefix=self.prefix,
-            tags=self.tags,
-            dependencies=self.dependencies,
-        )
-        self._register_routes()
+    # 实例缓存（单例）
+    _instance: "BaseController | None" = None
+    _router: APIRouter | None = None
+    
+    def __new__(cls: Type[T]) -> T:
+        """单例模式，确保每个控制器类只有一个实例"""
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance  # type: ignore
+    
+    @classmethod
+    def get_router(cls) -> APIRouter:
+        """
+        获取控制器的路由器
+        
+        懒加载创建路由器并注册路由
+        """
+        if cls._router is None:
+            cls._router = APIRouter(
+                prefix=cls.prefix,
+                tags=cls.tags,
+                dependencies=cls.dependencies,
+            )
+            # 创建实例并注册路由
+            instance = cls()
+            instance._register_routes()
+        return cls._router
+    
+    @property
+    def router(self) -> APIRouter:
+        """获取路由器实例"""
+        return self.__class__.get_router()
     
     def _register_routes(self) -> None:
         """
         注册路由
         
-        子类必须重写此方法来注册具体的路由处理函数
+        子类重写此方法来注册具体的路由处理函数
         """
         pass
     
@@ -103,8 +135,11 @@ class TenantController(BaseController):
     """
     租户级控制器基类
     
-    自动注入租户上下文
+    用于租户管理后台 API，自动注入租户上下文
     """
+    
+    _instance: "TenantController | None" = None
+    _router: APIRouter | None = None
     
     def get_service(self, db: Any, tenant_id: int) -> Any:
         """
@@ -126,9 +161,11 @@ class GlobalController(BaseController):
     """
     全局控制器基类
     
-    用于超管或系统级操作，无租户隔离
+    用于平台管理后台 API，超管或系统级操作，无租户隔离
     """
-    pass
+    
+    _instance: "GlobalController | None" = None
+    _router: APIRouter | None = None
 
 
 # 导出

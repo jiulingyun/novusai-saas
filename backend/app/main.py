@@ -43,6 +43,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await init_database()
     logger.info("✅ Database initialized")
     
+    # 同步权限到数据库（将装饰器定义的权限同步到 DB）
+    from app.core.database import async_session_factory
+    from app.rbac.sync import sync_permissions_on_startup
+    
+    async with async_session_factory() as db:
+        sync_result = await sync_permissions_on_startup(db)
+        logger.info(
+            f"✅ Permissions synced: "
+            f"created={sync_result['created']}, "
+            f"updated={sync_result['updated']}, "
+            f"disabled={sync_result['disabled']}"
+        )
+    
     # TODO: 初始化 Redis 连接
     # TODO: 初始化 Celery
     
