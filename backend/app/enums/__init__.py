@@ -14,6 +14,10 @@ from app.enums.common import (
     OperationTypeEnum,
     PriorityEnum,
 )
+from app.enums.rbac import (
+    PermissionType,
+    PermissionScope,
+)
 
 __all__ = [
     # 基类
@@ -28,4 +32,7 @@ __all__ = [
     "SortOrderEnum",
     "OperationTypeEnum",
     "PriorityEnum",
+    # RBAC
+    "PermissionType",
+    "PermissionScope",
 ]
