@@ -1,0 +1,322 @@
+"""
+服务基类模块
+
+提供业务逻辑层的基类，包括：
+- BaseService: 通用服务基类
+- TenantService: 租户级服务基类
+- GlobalService: 全局服务基类
+"""
+
+from typing import Any, Generic, TypeVar, Type
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.base_model import BaseModel
+from app.core.base_repository import BaseRepository, TenantRepository
+from app.core.base_schema import PageParams, PageResponse
+
+# 泛型类型变量
+ModelType = TypeVar("ModelType", bound=BaseModel)
+RepoType = TypeVar("RepoType", bound=BaseRepository)
+
+
+class BaseService(Generic[ModelType, RepoType]):
+    """
+    服务基类
+    
+    提供通用的业务方法和扩展点（钩子方法）
+    
+    使用示例:
+        class UserService(BaseService[User, UserRepository]):
+            model = User
+            repository_class = UserRepository
+    """
+    
+    model: Type[ModelType]
+    repository_class: Type[RepoType]
+    
+    def __init__(self, db: AsyncSession):
+        """
+        初始化服务
+        
+        Args:
+            db: 异步数据库会话
+        """
+        self.db = db
+        self.repo: RepoType = self.repository_class(db)
+    
+    # ========================================
+    # 通用 CRUD 方法
+    # ========================================
+    
+    async def get_by_id(self, id: int) -> ModelType | None:
+        """
+        根据 ID 获取记录
+        
+        Args:
+            id: 记录 ID
+        
+        Returns:
+            模型实例或 None
+        """
+        return await self.repo.get_by_id(id)
+    
+    async def get_by_ids(self, ids: list[int]) -> list[ModelType]:
+        """
+        根据 ID 列表获取记录
+        
+        Args:
+            ids: ID 列表
+        
+        Returns:
+            模型实例列表
+        """
+        return await self.repo.get_by_ids(ids)
+    
+    async def get_list(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        **filters: Any,
+    ) -> list[ModelType]:
+        """
+        获取记录列表
+        
+        Args:
+            skip: 跳过的记录数
+            limit: 返回的最大记录数
+            **filters: 过滤条件
+        
+        Returns:
+            模型实例列表
+        """
+        return await self.repo.get_list(skip=skip, limit=limit, **filters)
+    
+    async def get_paginated(
+        self,
+        page_params: PageParams,
+        **filters: Any,
+    ) -> PageResponse[ModelType]:
+        """
+        获取分页记录
+        
+        Args:
+            page_params: 分页参数
+            **filters: 过滤条件
+        
+        Returns:
+            分页响应
+        """
+        items = await self.repo.get_list(
+            skip=page_params.skip,
+            limit=page_params.limit,
+            **filters,
+        )
+        total = await self.repo.count(**filters)
+        
+        return PageResponse.create(
+            items=items,
+            total=total,
+            page=page_params.page,
+            page_size=page_params.page_size,
+        )
+    
+    async def count(self, **filters: Any) -> int:
+        """
+        统计记录数量
+        
+        Args:
+            **filters: 过滤条件
+        
+        Returns:
+            记录数量
+        """
+        return await self.repo.count(**filters)
+    
+    async def create(self, data: dict[str, Any]) -> ModelType:
+        """
+        创建记录
+        
+        Args:
+            data: 创建数据字典
+        
+        Returns:
+            创建的模型实例
+        """
+        # 创建前钩子
+        await self._before_create(data)
+        
+        # 执行创建
+        instance = await self.repo.create(data)
+        
+        # 创建后钩子
+        await self._after_create(instance)
+        
+        return instance
+    
+    async def update(self, id: int, data: dict[str, Any]) -> ModelType | None:
+        """
+        更新记录
+        
+        Args:
+            id: 记录 ID
+            data: 更新数据字典
+        
+        Returns:
+            更新后的模型实例或 None
+        """
+        # 更新前钩子
+        await self._before_update(id, data)
+        
+        # 执行更新
+        instance = await self.repo.update(id, data)
+        
+        # 更新后钩子
+        if instance:
+            await self._after_update(instance)
+        
+        return instance
+    
+    async def delete(self, id: int, soft: bool = True) -> bool:
+        """
+        删除记录
+        
+        Args:
+            id: 记录 ID
+            soft: 是否软删除（默认 True）
+        
+        Returns:
+            是否删除成功
+        """
+        # 删除前钩子
+        await self._before_delete(id)
+        
+        # 执行删除
+        result = await self.repo.delete(id, soft=soft)
+        
+        # 删除后钩子
+        if result:
+            await self._after_delete(id)
+        
+        return result
+    
+    async def exists(self, id: int) -> bool:
+        """
+        检查记录是否存在
+        
+        Args:
+            id: 记录 ID
+        
+        Returns:
+            是否存在
+        """
+        return await self.repo.exists(id)
+    
+    # ========================================
+    # 钩子方法（子类可重写）
+    # ========================================
+    
+    async def _before_create(self, data: dict[str, Any]) -> None:
+        """
+        创建前钩子
+        
+        可用于：数据校验、默认值注入、权限检查等
+        
+        Args:
+            data: 创建数据字典（可修改）
+        """
+        pass
+    
+    async def _after_create(self, instance: ModelType) -> None:
+        """
+        创建后钩子
+        
+        可用于：发送事件、记录日志、触发通知等
+        
+        Args:
+            instance: 创建的模型实例
+        """
+        pass
+    
+    async def _before_update(self, id: int, data: dict[str, Any]) -> None:
+        """
+        更新前钩子
+        
+        可用于：数据校验、权限检查、记录变更等
+        
+        Args:
+            id: 记录 ID
+            data: 更新数据字典（可修改）
+        """
+        pass
+    
+    async def _after_update(self, instance: ModelType) -> None:
+        """
+        更新后钩子
+        
+        可用于：发送事件、记录日志、同步缓存等
+        
+        Args:
+            instance: 更新后的模型实例
+        """
+        pass
+    
+    async def _before_delete(self, id: int) -> None:
+        """
+        删除前钩子
+        
+        可用于：关联检查、权限验证等
+        
+        Args:
+            id: 记录 ID
+        """
+        pass
+    
+    async def _after_delete(self, id: int) -> None:
+        """
+        删除后钩子
+        
+        可用于：清理关联数据、记录日志等
+        
+        Args:
+            id: 已删除的记录 ID
+        """
+        pass
+
+
+class TenantService(BaseService[ModelType, RepoType]):
+    """
+    租户级服务基类
+    
+    自动注入租户隔离逻辑
+    """
+    
+    def __init__(self, db: AsyncSession, tenant_id: int):
+        """
+        初始化租户服务
+        
+        Args:
+            db: 异步数据库会话
+            tenant_id: 租户 ID
+        """
+        self.db = db
+        self.tenant_id = tenant_id
+        self.repo: RepoType = self.repository_class(db, tenant_id)
+    
+    async def _before_create(self, data: dict[str, Any]) -> None:
+        """创建前自动注入 tenant_id"""
+        await super()._before_create(data)
+        data["tenant_id"] = self.tenant_id
+
+
+class GlobalService(BaseService[ModelType, RepoType]):
+    """
+    全局服务基类
+    
+    用于超管或系统级操作，无租户隔离
+    """
+    pass
+
+
+# 导出
+__all__ = ["BaseService", "TenantService", "GlobalService"]
