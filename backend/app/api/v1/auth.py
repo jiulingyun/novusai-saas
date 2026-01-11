@@ -22,12 +22,11 @@ from app.core.security import (
     TOKEN_TYPE_REFRESH,
 )
 from app.models import TenantUser
-from app.schemas.auth import (
-    TokenResponse,
-    RefreshTokenRequest,
-    LoginRequest,
-    UserResponse,
-    ChangePasswordRequest,
+from app.schemas.common import TokenResponse, RefreshTokenRequest
+from app.schemas.tenant import (
+    TenantUserLoginRequest as LoginRequest,
+    TenantUserResponse as UserResponse,
+    TenantUserChangePasswordRequest as ChangePasswordRequest,
 )
 
 

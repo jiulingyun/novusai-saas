@@ -20,8 +20,8 @@ from app.core.security import (
     TOKEN_TYPE_REFRESH,
 )
 from app.models import TenantAdmin, Tenant
-from app.schemas.auth import TokenResponse, RefreshTokenRequest
-from app.schemas.tenant_admin import (
+from app.schemas.common import TokenResponse, RefreshTokenRequest
+from app.schemas.tenant import (
     TenantAdminLoginRequest,
     TenantAdminResponse,
     TenantAdminChangePasswordRequest,

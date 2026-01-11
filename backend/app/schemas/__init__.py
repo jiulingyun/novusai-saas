@@ -1,48 +1,63 @@
 """
 Schema 模块
 
-导出所有 Pydantic Schema
+按模块分层组织，统一导出所有 Pydantic Schema
+
+目录结构:
+- common/: 公共 Schema（三端共用）
+- system/: 平台管理后台 Schema
+- tenant/: 租户相关 Schema
 """
 
-from app.schemas.auth import (
+# Common
+from app.schemas.common import (
     TokenResponse,
     RefreshTokenRequest,
-    LoginRequest,
-    UserResponse,
-    ChangePasswordRequest,
 )
-from app.schemas.admin import (
+
+# System
+from app.schemas.system import (
     AdminLoginRequest,
     AdminResponse,
     AdminCreateRequest,
     AdminUpdateRequest,
     AdminChangePasswordRequest,
 )
-from app.schemas.tenant_admin import (
+
+# Tenant
+from app.schemas.tenant import (
     TenantAdminLoginRequest,
     TenantAdminResponse,
     TenantAdminCreateRequest,
     TenantAdminUpdateRequest,
     TenantAdminChangePasswordRequest,
+    TenantUserLoginRequest,
+    TenantUserResponse,
+    TenantUserCreateRequest,
+    TenantUserUpdateRequest,
+    TenantUserChangePasswordRequest,
 )
 
 __all__ = [
-    # Auth
+    # Common
     "TokenResponse",
     "RefreshTokenRequest",
-    "LoginRequest",
-    "UserResponse",
-    "ChangePasswordRequest",
-    # Admin
+    # System - Admin
     "AdminLoginRequest",
     "AdminResponse",
     "AdminCreateRequest",
     "AdminUpdateRequest",
     "AdminChangePasswordRequest",
-    # TenantAdmin
+    # Tenant - Admin
     "TenantAdminLoginRequest",
     "TenantAdminResponse",
     "TenantAdminCreateRequest",
     "TenantAdminUpdateRequest",
     "TenantAdminChangePasswordRequest",
+    # Tenant - User
+    "TenantUserLoginRequest",
+    "TenantUserResponse",
+    "TenantUserCreateRequest",
+    "TenantUserUpdateRequest",
+    "TenantUserChangePasswordRequest",
 ]

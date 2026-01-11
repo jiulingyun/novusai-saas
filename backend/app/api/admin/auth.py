@@ -20,8 +20,8 @@ from app.core.security import (
     TOKEN_TYPE_REFRESH,
 )
 from app.models import Admin
-from app.schemas.auth import TokenResponse, RefreshTokenRequest
-from app.schemas.admin import (
+from app.schemas.common import TokenResponse, RefreshTokenRequest
+from app.schemas.system import (
     AdminLoginRequest,
     AdminResponse,
     AdminChangePasswordRequest,
