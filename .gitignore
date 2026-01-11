@@ -163,6 +163,7 @@ lerna-debug.log*
 .warp/
 .cursor/
 .trae/
+.windsurf/
 
 # VS Code
 .vscode/
