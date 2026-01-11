@@ -192,9 +192,9 @@ def create_application() -> FastAPI:
             },
         }
     
-    # TODO: 注册 API v1 路由
-    # from app.api.v1 import api_router
-    # app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+    # 注册 API v1 路由
+    from app.api.v1 import api_router
+    app.include_router(api_router, prefix=settings.API_V1_PREFIX)
     
     return app
 
