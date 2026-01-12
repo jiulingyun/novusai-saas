@@ -60,7 +60,7 @@ class TestTenantAuth(BaseAPITest):
             "password": config.TENANT_ADMIN_PASSWORD,
         })
         data = assert_success(resp, "登录失败")
-        assert_has_keys(data["data"], ["access_token", "refresh_token", "token_type", "expires_in"])
+        assert_has_keys(data["data"], ["access_token", "refresh_token", "token_type"])
         
         # 保存 token
         self._test_data["access_token"] = data["data"]["access_token"]

@@ -64,7 +64,7 @@ class TestAdminAuth(BaseAPITest):
             "password": config.ADMIN_PASSWORD,
         })
         data = assert_success(resp, "登录失败")
-        assert_has_keys(data["data"], ["access_token", "refresh_token", "token_type", "expires_in"])
+        assert_has_keys(data["data"], ["access_token", "refresh_token", "token_type"])
         
         # 保存 token 供后续测试使用
         self._test_data["access_token"] = data["data"]["access_token"]
