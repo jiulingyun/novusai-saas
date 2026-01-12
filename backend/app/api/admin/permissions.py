@@ -24,6 +24,18 @@ from app.rbac.services import PermissionService
 from app.schemas.common import PermissionTreeResponse, MenuResponse
 
 
+def _translate_name(name: str) -> str:
+    """翻译权限/菜单名称"""
+    # 如果 name 是 i18n key 格式（包含点号），则翻译
+    if name and "." in name:
+        translated = _(name)
+        # 如果翻译失败（返回原 key），尝试返回最后一段作为默认名称
+        if translated == name:
+            return name.split(".")[-1]
+        return translated
+    return name or ""
+
+
 def build_permission_tree(
     permissions: list[Permission], 
     parent_id: int | None = None,
@@ -36,7 +48,7 @@ def build_permission_tree(
             tree.append(PermissionTreeResponse(
                 id=perm.id,
                 code=perm.code,
-                name=perm.name,
+                name=_translate_name(perm.name),
                 description=perm.description,
                 type=perm.type,
                 scope=perm.scope,
@@ -65,7 +77,7 @@ def build_menu_tree(
             tree.append(MenuResponse(
                 id=perm.id,
                 code=perm.code,
-                name=perm.name,
+                name=_translate_name(perm.name),
                 icon=perm.icon,
                 path=perm.path,
                 component=perm.component,
