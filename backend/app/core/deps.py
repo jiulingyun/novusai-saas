@@ -19,7 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import async_session_factory
 from app.core.config import settings
 from app.core.i18n import _
-from app.core.security import verify_token, TOKEN_TYPE_ACCESS
+from app.core.security import (
+    verify_token_with_scope,
+    TOKEN_TYPE_ACCESS,
+    TOKEN_SCOPE_ADMIN,
+    TOKEN_SCOPE_TENANT_ADMIN,
+    TOKEN_SCOPE_TENANT_USER,
+)
 from app.models import Admin, TenantAdmin, TenantUser
 
 
@@ -83,7 +89,10 @@ async def get_current_admin(
     if token is None:
         raise credentials_exception
     
-    user_id = verify_token(token, TOKEN_TYPE_ACCESS)
+    # 验证 Token 并检查 scope
+    user_id, scope = verify_token_with_scope(
+        token, TOKEN_SCOPE_ADMIN, TOKEN_TYPE_ACCESS
+    )
     if user_id is None:
         raise credentials_exception
     
@@ -146,7 +155,10 @@ async def get_current_tenant_admin(
     if token is None:
         raise credentials_exception
     
-    user_id = verify_token(token, TOKEN_TYPE_ACCESS)
+    # 验证 Token 并检查 scope
+    user_id, scope = verify_token_with_scope(
+        token, TOKEN_SCOPE_TENANT_ADMIN, TOKEN_TYPE_ACCESS
+    )
     if user_id is None:
         raise credentials_exception
     
@@ -209,7 +221,10 @@ async def get_current_tenant_user(
     if token is None:
         raise credentials_exception
     
-    user_id = verify_token(token, TOKEN_TYPE_ACCESS)
+    # 验证 Token 并检查 scope
+    user_id, scope = verify_token_with_scope(
+        token, TOKEN_SCOPE_TENANT_USER, TOKEN_TYPE_ACCESS
+    )
     if user_id is None:
         raise credentials_exception
     

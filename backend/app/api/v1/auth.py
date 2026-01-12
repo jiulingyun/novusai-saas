@@ -18,8 +18,9 @@ from app.core.security import (
     verify_password,
     get_password_hash,
     create_token_pair,
-    verify_token,
+    verify_token_with_scope,
     TOKEN_TYPE_REFRESH,
+    TOKEN_SCOPE_TENANT_USER,
 )
 from app.models import TenantUser
 from app.schemas.common import TokenResponse, RefreshTokenRequest
@@ -78,7 +79,11 @@ async def login_oauth2(
     await db.commit()
     
     # 生成 Token
-    tokens = create_token_pair(user.id)
+    tokens = create_token_pair(
+        user.id,
+        scope=TOKEN_SCOPE_TENANT_USER,
+        extra_claims={"tenant_id": user.tenant_id},
+    )
     
     return success(
         data=TokenResponse(**tokens),
@@ -130,7 +135,11 @@ async def login_json(
     await db.commit()
     
     # 生成 Token
-    tokens = create_token_pair(user.id)
+    tokens = create_token_pair(
+        user.id,
+        scope=TOKEN_SCOPE_TENANT_USER,
+        extra_claims={"tenant_id": user.tenant_id},
+    )
     
     return success(
         data=TokenResponse(**tokens),
@@ -146,8 +155,10 @@ async def refresh_token(
     """
     使用 Refresh Token 获取新的 Token 对
     """
-    # 验证 Refresh Token
-    user_id = verify_token(refresh_data.refresh_token, TOKEN_TYPE_REFRESH)
+    # 验证 Refresh Token 并检查 scope
+    user_id, scope = verify_token_with_scope(
+        refresh_data.refresh_token, TOKEN_SCOPE_TENANT_USER, TOKEN_TYPE_REFRESH
+    )
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -174,7 +185,11 @@ async def refresh_token(
         )
     
     # 生成新的 Token 对
-    tokens = create_token_pair(user.id)
+    tokens = create_token_pair(
+        user.id,
+        scope=TOKEN_SCOPE_TENANT_USER,
+        extra_claims={"tenant_id": user.tenant_id},
+    )
     
     return success(
         data=TokenResponse(**tokens),

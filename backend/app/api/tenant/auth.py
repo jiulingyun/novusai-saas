@@ -16,8 +16,9 @@ from app.core.security import (
     verify_password,
     get_password_hash,
     create_token_pair,
-    verify_token,
+    verify_token_with_scope,
     TOKEN_TYPE_REFRESH,
+    TOKEN_SCOPE_TENANT_ADMIN,
 )
 from app.models import TenantAdmin, Tenant
 from app.schemas.common import TokenResponse, RefreshTokenRequest
@@ -88,6 +89,7 @@ async def tenant_admin_login(
     # 生成 Token（包含 tenant_id 信息）
     tokens = create_token_pair(
         tenant_admin.id,
+        scope=TOKEN_SCOPE_TENANT_ADMIN,
         extra_claims={"tenant_id": tenant_admin.tenant_id},
     )
     
@@ -105,8 +107,10 @@ async def refresh_token(
     """
     使用 Refresh Token 获取新的 Token 对
     """
-    # 验证 Refresh Token
-    admin_id = verify_token(refresh_data.refresh_token, TOKEN_TYPE_REFRESH)
+    # 验证 Refresh Token 并检查 scope
+    admin_id, scope = verify_token_with_scope(
+        refresh_data.refresh_token, TOKEN_SCOPE_TENANT_ADMIN, TOKEN_TYPE_REFRESH
+    )
     if admin_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -135,6 +139,7 @@ async def refresh_token(
     # 生成新的 Token 对
     tokens = create_token_pair(
         tenant_admin.id,
+        scope=TOKEN_SCOPE_TENANT_ADMIN,
         extra_claims={"tenant_id": tenant_admin.tenant_id},
     )
     

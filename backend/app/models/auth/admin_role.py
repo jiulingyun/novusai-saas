@@ -32,7 +32,7 @@ class AdminRole(BaseModel):
     
     # 角色名称
     name: Mapped[str] = mapped_column(
-        String(50), unique=True, comment="角色名称"
+        String(50), comment="角色名称"
     )
     
     # 角色代码（唯一标识）

@@ -16,9 +16,15 @@ from app.core.config import settings
 TOKEN_TYPE_ACCESS = "access"
 TOKEN_TYPE_REFRESH = "refresh"
 
+# Token 作用域常量（用户类型）
+TOKEN_SCOPE_ADMIN = "admin"             # 平台管理员
+TOKEN_SCOPE_TENANT_ADMIN = "tenant_admin"  # 租户管理员
+TOKEN_SCOPE_TENANT_USER = "tenant_user"    # 租户业务用户
+
 
 def create_access_token(
     subject: str | int,
+    scope: str,
     expires_delta: timedelta | None = None,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
@@ -27,6 +33,7 @@ def create_access_token(
     
     Args:
         subject: Token 主体（通常是用户 ID）
+        scope: Token 作用域（用户类型），必须为 TOKEN_SCOPE_* 常量之一
         expires_delta: 过期时间增量
         extra_claims: 额外的 claims
         
@@ -42,6 +49,7 @@ def create_access_token(
     
     to_encode = {
         "sub": str(subject),
+        "scope": scope,
         "exp": expire,
         "iat": datetime.now(timezone.utc),
         "type": TOKEN_TYPE_ACCESS,
@@ -55,6 +63,7 @@ def create_access_token(
 
 def create_refresh_token(
     subject: str | int,
+    scope: str,
     expires_delta: timedelta | None = None,
 ) -> str:
     """
@@ -62,6 +71,7 @@ def create_refresh_token(
     
     Args:
         subject: Token 主体（通常是用户 ID）
+        scope: Token 作用域（用户类型），必须为 TOKEN_SCOPE_* 常量之一
         expires_delta: 过期时间增量
         
     Returns:
@@ -76,6 +86,7 @@ def create_refresh_token(
     
     to_encode = {
         "sub": str(subject),
+        "scope": scope,
         "exp": expire,
         "iat": datetime.now(timezone.utc),
         "type": TOKEN_TYPE_REFRESH,
@@ -125,6 +136,63 @@ def verify_token(token: str, token_type: str = TOKEN_TYPE_ACCESS) -> str | None:
     return payload.get("sub")
 
 
+def verify_token_with_scope(
+    token: str,
+    expected_scope: str,
+    token_type: str = TOKEN_TYPE_ACCESS,
+) -> tuple[str | None, str | None]:
+    """
+    验证 Token 并检查 scope
+    
+    Args:
+        token: JWT Token 字符串
+        expected_scope: 期望的 scope（用户类型）
+        token_type: 期望的 Token 类型
+        
+    Returns:
+        (subject, scope) 元组，验证失败返回 (None, None)
+    """
+    payload = decode_token(token)
+    if payload is None:
+        return None, None
+    
+    # 检查 Token 类型
+    if payload.get("type") != token_type:
+        return None, None
+    
+    # 检查 scope
+    scope = payload.get("scope")
+    if scope != expected_scope:
+        return None, None
+    
+    return payload.get("sub"), scope
+
+
+def get_token_payload(
+    token: str,
+    token_type: str = TOKEN_TYPE_ACCESS,
+) -> dict[str, Any] | None:
+    """
+    获取 Token 的完整 payload
+    
+    Args:
+        token: JWT Token 字符串
+        token_type: 期望的 Token 类型
+        
+    Returns:
+        Token 的 payload，验证失败返回 None
+    """
+    payload = decode_token(token)
+    if payload is None:
+        return None
+    
+    # 检查 Token 类型
+    if payload.get("type") != token_type:
+        return None
+    
+    return payload
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     验证密码
@@ -160,6 +228,7 @@ def get_password_hash(password: str) -> str:
 
 def create_token_pair(
     subject: str | int,
+    scope: str,
     extra_claims: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     """
@@ -167,14 +236,15 @@ def create_token_pair(
     
     Args:
         subject: Token 主体
+        scope: Token 作用域（用户类型）
         extra_claims: 额外的 claims（仅添加到 access_token）
         
     Returns:
         包含 access_token 和 refresh_token 的字典
     """
     return {
-        "access_token": create_access_token(subject, extra_claims=extra_claims),
-        "refresh_token": create_refresh_token(subject),
+        "access_token": create_access_token(subject, scope=scope, extra_claims=extra_claims),
+        "refresh_token": create_refresh_token(subject, scope=scope),
         "token_type": "bearer",
     }
 
@@ -184,9 +254,14 @@ __all__ = [
     "create_refresh_token",
     "decode_token",
     "verify_token",
+    "verify_token_with_scope",
+    "get_token_payload",
     "verify_password",
     "get_password_hash",
     "create_token_pair",
     "TOKEN_TYPE_ACCESS",
     "TOKEN_TYPE_REFRESH",
+    "TOKEN_SCOPE_ADMIN",
+    "TOKEN_SCOPE_TENANT_ADMIN",
+    "TOKEN_SCOPE_TENANT_USER",
 ]

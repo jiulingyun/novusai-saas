@@ -50,7 +50,10 @@ class TestTenantAuth(BaseAPITest):
         # 6. 测试刷新 Token - 无效 Token
         self.run_test("刷新 Token - 无效 Token", self.test_refresh_token_invalid)
         
-        # 7. 测试登出
+        # 7. 测试 scope 隔离 - TenantAdmin Token 访问平台接口应 401
+        self.run_test("scope 隔离 - TenantAdmin Token 访问平台接口应 401", self.test_scope_isolation_tenant_admin_token_to_admin, skip_reason)
+        
+        # 8. 测试登出
         self.run_test("登出", self.test_logout, skip_reason)
     
     def test_login_success(self) -> None:
@@ -120,6 +123,13 @@ class TestTenantAuth(BaseAPITest):
             "refresh_token": "invalid_refresh_token",
         })
         assert_error(resp, 401, "应返回 401 错误")
+    
+    def test_scope_isolation_tenant_admin_token_to_admin(self) -> None:
+        """使用租户管理员 Token 访问平台管理员接口应返回 401"""
+        if not self.client.token:
+            self._do_login()
+        resp = self.client.get("/admin/auth/me")
+        assert_error(resp, 401, "TenantAdmin token 不应访问平台接口")
     
     def test_logout(self) -> None:
         """测试登出"""
