@@ -77,24 +77,6 @@
     "model_not_available": "Model is not available",
     "context_too_long": "Context length exceeds limit"
   },
-  "menu": {
-    "admin": {
-      "dashboard": "Dashboard",
-      "system": "System",
-      "admin_user": "Users",
-      "permission": "Permissions",
-      "role": "Roles",
-      "tenant_mgmt": "Tenants",
-      "tenant": "Tenant List"
-    },
-    "tenant": {
-      "dashboard": "Dashboard",
-      "system": "System",
-      "tenant_user": "Users",
-      "permission": "Permissions",
-      "role": "Roles"
-    }
-  },
   "permission": {
     "read": "View",
     "create": "Create",

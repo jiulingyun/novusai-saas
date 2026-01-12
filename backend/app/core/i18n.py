@@ -29,6 +29,12 @@ def _load_translations(locale: str) -> dict[str, Any]:
     """
     加载指定语言的翻译文件
     
+    加载目录下所有 *.json 文件，深度合并到统一的翻译字典。
+    支持按模块拆分翻译文件，如：
+    - messages.json: 通用消息
+    - menu.json: 菜单翻译
+    - role.json: 角色模块翻译
+    
     Args:
         locale: 语言代码，如 'zh_CN', 'en'
     
@@ -41,17 +47,23 @@ def _load_translations(locale: str) -> dict[str, Any]:
     if not locale_dir.exists():
         return translations
     
-    # 加载所有 JSON 翻译文件
-    for json_file in locale_dir.glob("*.json"):
+    def deep_merge(base: dict, override: dict) -> dict:
+        """深度合并字典"""
+        result = base.copy()
+        for key, value in override.items():
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = deep_merge(result[key], value)
+            else:
+                result[key] = value
+        return result
+    
+    # 加载所有 JSON 翻译文件，深度合并到根级别
+    for json_file in sorted(locale_dir.glob("*.json")):
         try:
             with open(json_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # 使用文件名（不含扩展名）作为命名空间
-                # messages.json 的内容直接合并到根级别
-                if json_file.stem == "messages":
-                    translations.update(data)
-                else:
-                    translations[json_file.stem] = data
+                # 所有文件都深度合并到根级别
+                translations = deep_merge(translations, data)
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load translation file {json_file}: {e}")
     

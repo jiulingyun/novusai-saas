@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "dashboard": "Dashboard",
+    "system": "System",
+    "admin_user": "Users",
+    "permission": "Permissions",
+    "role": "Roles",
+    "tenant_mgmt": "Tenants",
+    "tenant": "Tenant List"
+  },
+  "tenant": {
+    "dashboard": "Dashboard",
+    "system": "System",
+    "tenant_user": "Users",
+    "permission": "Permissions",
+    "role": "Roles"
+  }
+}

@@ -77,24 +77,6 @@
     "model_not_available": "模型暂不可用",
     "context_too_long": "上下文长度超出限制"
   },
-  "menu": {
-    "admin": {
-      "dashboard": "仪表板",
-      "system": "权限管理",
-      "admin_user": "用户管理",
-      "permission": "权限查看",
-      "role": "角色管理",
-      "tenant_mgmt": "租户管理",
-      "tenant": "租户列表"
-    },
-    "tenant": {
-      "dashboard": "仪表板",
-      "system": "权限管理",
-      "tenant_user": "用户管理",
-      "permission": "权限查看",
-      "role": "角色管理"
-    }
-  },
   "permission": {
     "read": "查看",
     "create": "创建",
