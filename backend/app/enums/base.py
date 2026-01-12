@@ -9,17 +9,17 @@ from typing import Any, TypeVar
 
 from app.core.i18n import _
 
-T = TypeVar("T", bound="BaseEnum")
+T = TypeVar("T", bound="LabeledEnum")
 
 
-class BaseEnum(Enum):
+class LabeledEnum(Enum):
     """
-    枚举基类
+    带标签的枚举基类
     
     支持 (value, label_key) 元组形式定义，label_key 用于国际化
     
     Example:
-        class StatusEnum(BaseEnum):
+        class StatusEnum(LabeledIntEnum):
             ACTIVE = (1, "status.active")
             INACTIVE = (0, "status.inactive")
         
@@ -28,7 +28,7 @@ class BaseEnum(Enum):
         StatusEnum.choices()  # [(1, "启用"), (0, "禁用")]
     """
     
-    def __new__(cls, value: Any, label_key: str = "") -> "BaseEnum":
+    def __new__(cls, value: Any, label_key: str = "") -> "LabeledEnum":
         """
         创建枚举实例
         
@@ -104,25 +104,41 @@ class BaseEnum(Enum):
         return [member.to_dict() for member in cls]
 
 
-class IntEnum(BaseEnum):
-    """整数枚举基类"""
+class LabeledIntEnum(LabeledEnum):
+    """带标签的整数枚举基类"""
     
-    def __new__(cls, value: int, label_key: str = "") -> "IntEnum":
+    def __new__(cls, value: int, label_key: str = "") -> "LabeledIntEnum":
         if not isinstance(value, int):
-            raise TypeError(f"IntEnum value must be int, got {type(value)}")
-        return super().__new__(cls, value, label_key)
+            raise TypeError(f"LabeledIntEnum value must be int, got {type(value)}")
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj._label_key = label_key  # type: ignore
+        return obj
 
 
-class StrEnum(BaseEnum):
-    """字符串枚举基类"""
+class LabeledStrEnum(LabeledEnum):
+    """带标签的字符串枚举基类"""
     
-    def __new__(cls, value: str, label_key: str = "") -> "StrEnum":
+    def __new__(cls, value: str, label_key: str = "") -> "LabeledStrEnum":
         if not isinstance(value, str):
-            raise TypeError(f"StrEnum value must be str, got {type(value)}")
-        return super().__new__(cls, value, label_key)
+            raise TypeError(f"LabeledStrEnum value must be str, got {type(value)}")
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj._label_key = label_key  # type: ignore
+        return obj
+
+
+# 别名（兼容旧代码）
+BaseEnum = LabeledEnum
+IntEnum = LabeledIntEnum
+StrEnum = LabeledStrEnum
 
 
 __all__ = [
+    "LabeledEnum",
+    "LabeledIntEnum",
+    "LabeledStrEnum",
+    # 别名
     "BaseEnum",
     "IntEnum",
     "StrEnum",
