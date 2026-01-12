@@ -205,6 +205,10 @@ def create_application() -> FastAPI:
             },
         }
     
+    # 注册目录型菜单（必须在控制器导入之前，确保父菜单先注册）
+    from app.rbac.menus import register_directory_menus
+    register_directory_menus()
+    
     # 注册平台管理后台路由 (/admin/*)
     from app.api.admin import admin_router
     app.include_router(admin_router, prefix="/admin")

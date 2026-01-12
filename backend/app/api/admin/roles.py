@@ -42,6 +42,7 @@ from app.schemas.system import (
         icon="users",
         path="/system/roles",
         component="system/role/List",
+        parent="system",  # 父菜单: 权限管理
         sort_order=20,
     ),
     description="平台角色管理",

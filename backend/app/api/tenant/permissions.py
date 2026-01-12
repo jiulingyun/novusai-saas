@@ -78,15 +78,17 @@ def build_menu_tree(
 
 @permission_resource(
     resource="permission",
-    name="权限管理",
+    name="权限查看",
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
         icon="key",
         path="/system/permissions",
         component="system/permission/List",
+        parent="system",  # 父菜单: 权限管理
         sort_order=10,
+        hidden=True,  # 一般隐藏，仅租户所有者可见
     ),
-    description="租户权限管理",
+    description="租户权限查看",
 )
 class TenantPermissionController(TenantController):
     """
