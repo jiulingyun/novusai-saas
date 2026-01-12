@@ -4,4 +4,11 @@
 提供平台管理相关的服务
 """
 
-__all__ = []
+from app.services.system.admin_service import AdminService
+from app.services.system.tenant_service import TenantService
+
+
+__all__ = [
+    "AdminService",
+    "TenantService",
+]

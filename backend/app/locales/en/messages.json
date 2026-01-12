@@ -36,12 +36,32 @@
     "deleted": "User deleted successfully",
     "profile_updated": "Profile updated successfully"
   },
+  "admin": {
+    "not_found": "Admin not found",
+    "username_exists": "Username already taken",
+    "email_exists": "Email already in use",
+    "phone_exists": "Phone number already in use",
+    "password_incorrect": "Incorrect password",
+    "created": "Admin created successfully",
+    "updated": "Admin updated successfully",
+    "deleted": "Admin deleted successfully",
+    "password_reset": "Password reset successfully",
+    "status_updated": "Admin status updated successfully",
+    "cannot_delete_self": "Cannot delete yourself",
+    "cannot_delete_super": "Cannot delete super admin",
+    "cannot_disable_self": "Cannot disable yourself",
+    "cannot_modify_super": "Cannot modify super admin",
+    "super_admin_required": "Super admin privileges required"
+  },
   "tenant": {
     "not_found": "Tenant not found",
+    "code_exists": "Tenant code already exists",
     "disabled": "Tenant is disabled",
     "quota_exceeded": "Quota exceeded",
     "created": "Tenant created successfully",
-    "updated": "Tenant updated successfully"
+    "updated": "Tenant updated successfully",
+    "deleted": "Tenant deleted successfully",
+    "status_updated": "Tenant status updated successfully"
   },
   "validation": {
     "required": "{field} is required",

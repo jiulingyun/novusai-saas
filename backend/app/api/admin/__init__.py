@@ -12,6 +12,8 @@ from fastapi import APIRouter
 from app.api.admin.auth import router as auth_router
 from app.api.admin.permissions import router as permissions_router, AdminPermissionController
 from app.api.admin.roles import router as roles_router, AdminRoleController
+from app.api.admin.admins import router as admins_router, AdminAdminController
+from app.api.admin.tenants import router as tenants_router, AdminTenantController
 
 # 创建平台管理后台路由器
 admin_router = APIRouter()
@@ -20,6 +22,8 @@ admin_router = APIRouter()
 admin_router.include_router(auth_router)
 admin_router.include_router(permissions_router)
 admin_router.include_router(roles_router)
+admin_router.include_router(admins_router)
+admin_router.include_router(tenants_router)
 
 
 __all__ = [
@@ -27,4 +31,6 @@ __all__ = [
     # 导出控制器类，确保权限装饰器被执行
     "AdminPermissionController",
     "AdminRoleController",
+    "AdminAdminController",
+    "AdminTenantController",
 ]

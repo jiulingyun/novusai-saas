@@ -36,12 +36,32 @@
     "deleted": "用户删除成功",
     "profile_updated": "个人资料更新成功"
   },
+  "admin": {
+    "not_found": "管理员不存在",
+    "username_exists": "用户名已被占用",
+    "email_exists": "邮箱已被使用",
+    "phone_exists": "手机号已被使用",
+    "password_incorrect": "密码错误",
+    "created": "管理员创建成功",
+    "updated": "管理员更新成功",
+    "deleted": "管理员删除成功",
+    "password_reset": "密码重置成功",
+    "status_updated": "管理员状态更新成功",
+    "cannot_delete_self": "不能删除自己",
+    "cannot_delete_super": "不能删除超级管理员",
+    "cannot_disable_self": "不能禁用自己",
+    "cannot_modify_super": "不能修改超级管理员",
+    "super_admin_required": "需要超级管理员权限"
+  },
   "tenant": {
     "not_found": "租户不存在",
+    "code_exists": "租户编码已存在",
     "disabled": "租户已禁用",
     "quota_exceeded": "配额已超限",
     "created": "租户创建成功",
-    "updated": "租户更新成功"
+    "updated": "租户更新成功",
+    "deleted": "租户删除成功",
+    "status_updated": "租户状态更新成功"
   },
   "validation": {
     "required": "{field}不能为空",
