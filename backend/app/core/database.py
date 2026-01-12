@@ -124,9 +124,9 @@ async def check_database_connection() -> bool:
         return False
 
 
-async def create_database_if_not_exists() -> bool:
+def create_database_if_not_exists() -> bool:
     """
-    检查数据库是否存在，如果不存在则创建
+    检查数据库是否存在，如果不存在则创建（同步函数）
     
     Returns:
         是否成功
