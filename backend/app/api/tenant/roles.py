@@ -36,7 +36,7 @@ from app.schemas.tenant import (
 
 @permission_resource(
     resource="role",
-    name="角色管理",
+    name="menu.tenant.role",  # i18n key
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
         icon="users",
@@ -45,7 +45,6 @@ from app.schemas.tenant import (
         parent="system",  # 父菜单: 权限管理
         sort_order=20,
     ),
-    description="租户角色管理",
 )
 class TenantRoleController(TenantController):
     """

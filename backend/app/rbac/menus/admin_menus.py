@@ -10,6 +10,9 @@
   └── 角色管理 (role) - 由控制器声明
 - 租户管理 (tenant_mgmt)
   └── 租户列表 (tenant) - 由控制器声明
+
+name 字段使用 i18n key，前端渲染时翻译。
+格式: menu.{scope}.{resource}
 """
 
 from app.enums.rbac import PermissionType, PermissionScope
@@ -23,7 +26,7 @@ ADMIN_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     PermissionMeta(
         code="menu:admin.dashboard",
-        name="仪表板",
+        name="menu.admin.dashboard",  # i18n key
         type=PermissionType.MENU,
         scope=PermissionScope.ADMIN,
         resource="menu",
@@ -39,7 +42,7 @@ ADMIN_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     PermissionMeta(
         code="menu:admin.system",
-        name="权限管理",
+        name="menu.admin.system",  # i18n key
         type=PermissionType.MENU,
         scope=PermissionScope.ADMIN,
         resource="menu",
@@ -58,7 +61,7 @@ ADMIN_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     PermissionMeta(
         code="menu:admin.tenant_mgmt",
-        name="租户管理",
+        name="menu.admin.tenant_mgmt",  # i18n key
         type=PermissionType.MENU,
         scope=PermissionScope.ADMIN,
         resource="menu",

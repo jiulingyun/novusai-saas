@@ -77,6 +77,42 @@
     "model_not_available": "Model is not available",
     "context_too_long": "Context length exceeds limit"
   },
+  "menu": {
+    "admin": {
+      "dashboard": "Dashboard",
+      "system": "System",
+      "admin_user": "Users",
+      "permission": "Permissions",
+      "role": "Roles",
+      "tenant_mgmt": "Tenants",
+      "tenant": "Tenant List"
+    },
+    "tenant": {
+      "dashboard": "Dashboard",
+      "system": "System",
+      "tenant_user": "Users",
+      "permission": "Permissions",
+      "role": "Roles"
+    }
+  },
+  "permission": {
+    "read": "View",
+    "create": "Create",
+    "update": "Edit",
+    "delete": "Delete",
+    "export": "Export",
+    "import": "Import"
+  },
+  "role": {
+    "not_found": "Role not found",
+    "code_exists": "Role code already exists",
+    "created": "Role created successfully",
+    "updated": "Role updated successfully",
+    "deleted": "Role deleted successfully",
+    "system_role_cannot_modify": "System role cannot be modified",
+    "system_role_cannot_delete": "System role cannot be deleted",
+    "permissions_updated": "Role permissions updated successfully"
+  },
   "enum": {
     "status": {
       "active": "Active",

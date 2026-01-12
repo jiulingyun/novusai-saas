@@ -77,6 +77,42 @@
     "model_not_available": "模型暂不可用",
     "context_too_long": "上下文长度超出限制"
   },
+  "menu": {
+    "admin": {
+      "dashboard": "仪表板",
+      "system": "权限管理",
+      "admin_user": "用户管理",
+      "permission": "权限查看",
+      "role": "角色管理",
+      "tenant_mgmt": "租户管理",
+      "tenant": "租户列表"
+    },
+    "tenant": {
+      "dashboard": "仪表板",
+      "system": "权限管理",
+      "tenant_user": "用户管理",
+      "permission": "权限查看",
+      "role": "角色管理"
+    }
+  },
+  "permission": {
+    "read": "查看",
+    "create": "创建",
+    "update": "编辑",
+    "delete": "删除",
+    "export": "导出",
+    "import": "导入"
+  },
+  "role": {
+    "not_found": "角色不存在",
+    "code_exists": "角色代码已存在",
+    "created": "角色创建成功",
+    "updated": "角色更新成功",
+    "deleted": "角色删除成功",
+    "system_role_cannot_modify": "系统内置角色不可修改",
+    "system_role_cannot_delete": "系统内置角色不可删除",
+    "permissions_updated": "角色权限更新成功"
+  },
   "enum": {
     "status": {
       "active": "启用",

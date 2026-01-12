@@ -9,6 +9,9 @@
   ├── 用户管理 (tenant_user) - 由控制器声明
   └── 角色管理 (role) - 由控制器声明
 - 业务管理 (business) - 预留，具体子菜单由业务控制器声明
+
+name 字段使用 i18n key，前端渲染时翻译。
+格式: menu.{scope}.{resource}
 """
 
 from app.enums.rbac import PermissionType, PermissionScope
@@ -22,7 +25,7 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     PermissionMeta(
         code="menu:tenant.dashboard",
-        name="仪表板",
+        name="menu.tenant.dashboard",  # i18n key
         type=PermissionType.MENU,
         scope=PermissionScope.TENANT,
         resource="menu",
@@ -38,7 +41,7 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     PermissionMeta(
         code="menu:tenant.system",
-        name="权限管理",
+        name="menu.tenant.system",  # i18n key
         type=PermissionType.MENU,
         scope=PermissionScope.TENANT,
         resource="menu",
@@ -57,7 +60,7 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     # ========================================
     # PermissionMeta(
     #     code="menu:tenant.business",
-    #     name="业务管理",
+    #     name="menu.tenant.business",  # i18n key
     #     type=PermissionType.MENU,
     #     scope=PermissionScope.TENANT,
     #     resource="menu",

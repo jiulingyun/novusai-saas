@@ -36,7 +36,7 @@ from app.schemas.system import (
 
 @permission_resource(
     resource="role",
-    name="角色管理",
+    name="menu.admin.role",  # i18n key
     scope=PermissionScope.ADMIN,
     menu=MenuConfig(
         icon="users",
@@ -45,7 +45,6 @@ from app.schemas.system import (
         parent="system",  # 父菜单: 权限管理
         sort_order=20,
     ),
-    description="平台角色管理",
 )
 class AdminRoleController(GlobalController):
     """

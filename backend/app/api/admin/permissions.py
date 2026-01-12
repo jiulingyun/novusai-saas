@@ -78,7 +78,7 @@ def build_menu_tree(
 
 @permission_resource(
     resource="permission",
-    name="权限查看",
+    name="menu.admin.permission",  # i18n key
     scope=PermissionScope.ADMIN,
     menu=MenuConfig(
         icon="key",
@@ -88,7 +88,6 @@ def build_menu_tree(
         sort_order=10,
         hidden=True,  # 一般隐藏，仅超管可见
     ),
-    description="平台权限查看",
 )
 class AdminPermissionController(GlobalController):
     """
