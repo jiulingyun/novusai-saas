@@ -57,6 +57,8 @@
   "google": "Google",
   "loginAgainTitle": "Please Log In Again",
   "loginAgainSubTitle": "Your login session has expired. Please log in again to continue.",
+  "platformAdmin": "Platform Admin",
+  "tenantAdmin": "Tenant Admin",
   "layout": {
     "center": "Align Center",
     "alignLeft": "Align Left",

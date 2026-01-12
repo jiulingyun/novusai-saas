@@ -1,0 +1,117 @@
+/**
+ * 租户后台认证 API
+ * 对接后端 /tenant/auth/* 接口
+ */
+import type {
+  ChangePasswordParams,
+  LoginParams,
+  LoginResult,
+  LoginResultRaw,
+  RefreshTokenResult,
+  RefreshTokenResultRaw,
+  TenantAdminInfo,
+} from '../shared/types';
+
+import { baseRequestClient, requestClient } from '../request';
+import { useAccessStore } from '@vben/stores';
+
+// Logout 使用 baseRequestClient 避免 401 时循环调用
+
+const API_PREFIX = '/tenant/auth';
+
+/**
+ * 租户管理员登录
+ * 后端返回 snake_case，转换为 camelCase
+ */
+export async function tenantLoginApi(data: LoginParams): Promise<LoginResult> {
+  const response = await requestClient.post<LoginResultRaw>(
+    `${API_PREFIX}/login`,
+    data,
+  );
+  return {
+    accessToken: response.access_token,
+    refreshToken: response.refresh_token,
+  };
+}
+
+/**
+ * 刷新 Token
+ * 后端返回 snake_case，转换为 camelCase
+ */
+export async function tenantRefreshTokenApi(
+  refreshToken: string,
+): Promise<RefreshTokenResult> {
+  const response = await baseRequestClient.post<{
+    data: RefreshTokenResultRaw;
+  }>(`${API_PREFIX}/refresh`, {
+    refresh_token: refreshToken,
+  });
+  const raw = (response as any).data;
+  return {
+    accessToken: raw.access_token,
+    refreshToken: raw.refresh_token,
+  };
+}
+
+/**
+ * 租户管理员登出
+ * 使用 baseRequestClient 避免 401 时触发循环调用
+ */
+export async function tenantLogoutApi() {
+  try {
+    const accessStore = useAccessStore();
+    const token = accessStore?.accessToken;
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, { headers });
+  } catch {
+    // 登出失败不影响主流程
+  }
+}
+
+/**
+ * 后端返回的租户管理员信息原始格式
+ */
+interface TenantAdminInfoRaw {
+  id: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  nickname?: string;
+  avatar?: string;
+  is_active?: boolean;
+  tenant_id?: number;
+  tenant_name?: string;
+  role_id?: number;
+  last_login_at?: string;
+  created_at?: string;
+}
+
+/**
+ * 获取当前租户管理员信息
+ * 将后端 snake_case 转换为前端 camelCase
+ */
+export async function getTenantAdminInfoApi(): Promise<TenantAdminInfo> {
+  const raw = await requestClient.get<TenantAdminInfoRaw>(`${API_PREFIX}/me`);
+  return {
+    id: raw.id,
+    username: raw.username,
+    realName: raw.nickname || raw.username,
+    email: raw.email,
+    avatar: raw.avatar,
+    tenantId: raw.tenant_id || 0,
+    tenantName: raw.tenant_name,
+    roles: [],
+  };
+}
+
+/**
+ * 修改密码
+ */
+export async function tenantChangePasswordApi(data: ChangePasswordParams) {
+  return requestClient.put(`${API_PREFIX}/password`, {
+    old_password: data.oldPassword,
+    new_password: data.newPassword,
+    confirm_password: data.confirmPassword,
+  });
+}

@@ -7,9 +7,12 @@ import { initStores } from '@vben/stores';
 import '@vben/styles';
 import '@vben/styles/antd';
 
+import { TokenStorage } from './store/modules/token-storage';
+
 import { useTitle } from '@vueuse/core';
 
 import { $t, setupI18n } from '#/locales';
+import { setupConsoleFilter } from './utils/console-filter';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
@@ -17,6 +20,12 @@ import App from './app.vue';
 import { router } from './router';
 
 async function bootstrap(namespace: string) {
+  // 初始化 TokenStorage（多端 Token 分离存储）
+  TokenStorage.init(namespace);
+
+  // 设置控制台过滤器，过滤框架的组件错误输出
+  setupConsoleFilter();
+
   // 初始化组件适配器
   await initComponentAdapter();
 

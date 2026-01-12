@@ -8,7 +8,7 @@ import { $t } from '@vben/locales';
 
 import { useMultiAuthStore } from '#/store';
 
-defineOptions({ name: 'UserLogin' });
+defineOptions({ name: 'TenantLogin' });
 
 const multiAuthStore = useMultiAuthStore();
 
@@ -36,7 +36,7 @@ const formSchema = computed((): VbenFormSchema[] => {
 });
 
 async function handleLogin(values: Record<string, any>) {
-  await multiAuthStore.authLogin(values, 'user');
+  await multiAuthStore.authLogin(values, 'tenant');
 }
 </script>
 
@@ -44,6 +44,13 @@ async function handleLogin(values: Record<string, any>) {
   <AuthenticationLogin
     :form-schema="formSchema"
     :loading="multiAuthStore.loginLoading"
+    :show-code-login="false"
+    :show-forget-password="false"
+    :show-qrcode-login="false"
+    :show-register="false"
+    :show-remember-me="false"
+    :show-third-party-login="false"
+    :sub-title="$t('authentication.tenantAdmin')"
     @submit="handleLogin"
   />
 </template>

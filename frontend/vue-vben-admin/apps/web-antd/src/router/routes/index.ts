@@ -2,7 +2,9 @@ import type { RouteRecordRaw } from 'vue-router';
 
 import { mergeRouteModules, traverseTreeValues } from '@vben/utils';
 
+import { adminCoreRouteNames, adminRoutes } from './admin';
 import { coreRoutes, fallbackNotFoundRoute } from './core';
+import { tenantCoreRouteNames, tenantRoutes } from './tenant';
 
 const dynamicRouteFiles = import.meta.glob('./modules/**/*.ts', {
   eager: true,
@@ -25,12 +27,18 @@ const externalRoutes: RouteRecordRaw[] = [];
  *  无需走权限验证（会一直显示在菜单中） */
 const routes: RouteRecordRaw[] = [
   ...coreRoutes,
+  ...adminRoutes,
+  ...tenantRoutes,
   ...externalRoutes,
   fallbackNotFoundRoute,
 ];
 
 /** 基本路由列表，这些路由不需要进入权限拦截 */
-const coreRouteNames = traverseTreeValues(coreRoutes, (route) => route.name);
+const coreRouteNames = [
+  ...traverseTreeValues(coreRoutes, (route) => route.name),
+  ...adminCoreRouteNames,
+  ...tenantCoreRouteNames,
+];
 
 /** 有权限校验的路由列表，包含动态路由和静态路由 */
 const accessRoutes = [...dynamicRoutes, ...staticRoutes];

@@ -1,14 +1,36 @@
 import type { Router } from 'vue-router';
 
-import { LOGIN_PATH } from '@vben/constants';
 import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { startProgress, stopProgress } from '@vben/utils';
 
+import { type ApiEndpoint, getApiEndpoint } from '#/api';
 import { accessRoutes, coreRouteNames } from '#/router/routes';
-import { useAuthStore } from '#/store';
+import {
+  HOME_PATHS,
+  LOGIN_PATHS,
+  TokenStorage,
+  useMultiAuthStore,
+} from '#/store';
 
 import { generateAccess } from './access';
+
+/** 根据路由路径获取对应端的登录路径 */
+function getLoginPathByRoute(path: string): string {
+  const endpoint = getApiEndpoint(path);
+  return LOGIN_PATHS[endpoint];
+}
+
+/** 根据路由路径获取对应端的首页路径 */
+function getHomePathByRoute(path: string): string {
+  const endpoint = getApiEndpoint(path);
+  return HOME_PATHS[endpoint];
+}
+
+/** 判断是否是登录页面 */
+function isLoginPath(path: string): boolean {
+  return Object.values(LOGIN_PATHS).includes(path);
+}
 
 /**
  * 通用守卫配置
@@ -48,41 +70,57 @@ function setupAccessGuard(router: Router) {
   router.beforeEach(async (to, from) => {
     const accessStore = useAccessStore();
     const userStore = useUserStore();
-    const authStore = useAuthStore();
+    const multiAuthStore = useMultiAuthStore();
+
+    // 获取当前路由对应的端类型、登录路径和首页路径
+    const currentEndpoint: ApiEndpoint = getApiEndpoint(to.path);
+    const currentLoginPath = getLoginPathByRoute(to.path);
+    const currentHomePath = getHomePathByRoute(to.path);
+
+    // 从 TokenStorage 获取当前端的 Token（多端分离存储）
+    const currentToken = TokenStorage.getToken(currentEndpoint);
 
     // 基本路由，这些路由不需要进入权限拦截
     if (coreRouteNames.includes(to.name as string)) {
-      if (to.path === LOGIN_PATH && accessStore.accessToken) {
+      // 如果当前端已登录且访问登录页，重定向到对应端的首页
+      if (isLoginPath(to.path) && currentToken) {
         return decodeURIComponent(
           (to.query?.redirect as string) ||
             userStore.userInfo?.homePath ||
-            preferences.app.defaultHomePath,
+            currentHomePath,
         );
       }
       return true;
     }
 
-    // accessToken 检查
-    if (!accessStore.accessToken) {
+    // Token 检查（使用当前端的 Token）
+    if (!currentToken) {
       // 明确声明忽略权限访问权限，则可以访问
       if (to.meta.ignoreAccess) {
         return true;
       }
 
-      // 没有访问权限，跳转登录页面
-      if (to.fullPath !== LOGIN_PATH) {
+      // 没有访问权限，跳转到对应端的登录页面
+      if (!isLoginPath(to.path)) {
         return {
-          path: LOGIN_PATH,
-          // 如不需要，直接删除 query
+          path: currentLoginPath,
           query:
-            to.fullPath === preferences.app.defaultHomePath
+            to.fullPath === currentHomePath
               ? {}
               : { redirect: encodeURIComponent(to.fullPath) },
-          // 携带当前跳转的页面，登录后重新跳转该页面
           replace: true,
         };
       }
       return to;
+    }
+
+    // 同步 Token 到 accessStore（兼容 vben 框架组件）
+    if (accessStore.accessToken !== currentToken) {
+      accessStore.setAccessToken(currentToken);
+      const refreshToken = TokenStorage.getRefreshToken(currentEndpoint);
+      if (refreshToken) {
+        accessStore.setRefreshToken(refreshToken);
+      }
     }
 
     // 是否已经生成过动态路由
@@ -92,24 +130,29 @@ function setupAccessGuard(router: Router) {
 
     // 生成路由表
     // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
+    // 注意：必须传入 endpoint 参数，因为 route.path 可能还是旧路由
+    const userInfo =
+      userStore.userInfo || (await multiAuthStore.fetchUserInfo(currentEndpoint));
     const userRoles = userInfo.roles ?? [];
 
-    // 生成菜单和路由
-    const { accessibleMenus, accessibleRoutes } = await generateAccess({
-      roles: userRoles,
-      router,
-      // 则会在菜单中显示，但是访问会被重定向到403
-      routes: accessRoutes,
-    });
+    // 生成菜单和路由（根据端类型获取对应的菜单）
+    const { accessibleMenus, accessibleRoutes } = await generateAccess(
+      {
+        roles: userRoles,
+        router,
+        routes: accessRoutes,
+      },
+      currentEndpoint,
+    );
 
     // 保存菜单信息和路由信息
     accessStore.setAccessMenus(accessibleMenus);
     accessStore.setAccessRoutes(accessibleRoutes);
     accessStore.setIsAccessChecked(true);
+
     const redirectPath = (from.query.redirect ??
-      (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+      (to.path === currentHomePath
+        ? userInfo.homePath || currentHomePath
         : to.fullPath)) as string;
 
     return {

@@ -19,7 +19,7 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
 import { $t } from '#/locales';
-import { useAuthStore } from '#/store';
+import { useMultiAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
 const notifications = ref<NotificationItem[]>([
@@ -77,7 +77,7 @@ const notifications = ref<NotificationItem[]>([
 
 const router = useRouter();
 const userStore = useUserStore();
-const authStore = useAuthStore();
+const multiAuthStore = useMultiAuthStore();
 const accessStore = useAccessStore();
 const { destroyWatermark, updateWatermark } = useWatermark();
 const showDot = computed(() =>
@@ -126,7 +126,7 @@ const avatar = computed(() => {
 });
 
 async function handleLogout() {
-  await authStore.logout(false);
+  await multiAuthStore.logout(false);
 }
 
 function handleNoticeClear() {
@@ -176,8 +176,8 @@ watch(
         :avatar
         :menus
         :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
-        tag-text="Pro"
+        :description="userStore.userInfo?.email || userStore.userInfo?.username"
+        :tag-text="userStore.userInfo?.roles?.[0] || ''"
         @logout="handleLogout"
       />
     </template>
