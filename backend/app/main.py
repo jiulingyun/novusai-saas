@@ -91,9 +91,6 @@ def create_application() -> FastAPI:
     # 注册中间件
     # ========================================
     
-    # i18n 国际化中间件（需要在 CORS 之前注册）
-    app.add_middleware(I18nMiddleware)
-    
     # CORS 中间件
     app.add_middleware(
         CORSMiddleware,
@@ -102,6 +99,9 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    
+    # i18n 国际化中间件（纯 ASGI 实现，使用 add_middleware 注册）
+    app.add_middleware(I18nMiddleware)
     
     # ========================================
     # 注册异常处理器
@@ -128,11 +128,8 @@ def create_application() -> FastAPI:
             }
             for err in exc.errors()
         ]
-        response = validation_error(errors=errors)
-        return JSONResponse(
-            status_code=422,
-            content=response.model_dump(),
-        )
+        # validation_error() 返回 JSONResponse
+        return validation_error(errors=errors)
     
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(
@@ -154,13 +151,11 @@ def create_application() -> FastAPI:
             503: 5030,
         }
         code = status_code_map.get(exc.status_code, exc.status_code * 10)
-        response = error(
+        # error() 返回 JSONResponse，但需要指定正确的 status_code
+        return error(
             message=str(exc.detail) if exc.detail else None,
             code=code,
-        )
-        return JSONResponse(
             status_code=exc.status_code,
-            content=response.model_dump(),
         )
     
     @app.exception_handler(Exception)
@@ -170,11 +165,8 @@ def create_application() -> FastAPI:
         logger = get_logger(__name__)
         logger.exception(f"Unhandled exception: {exc}")
         
-        response = error(message=_("common.server_error"), code=5000)
-        return JSONResponse(
-            status_code=500,
-            content=response.model_dump(),
-        )
+        # error() 返回 JSONResponse
+        return error(message=_("common.server_error"), code=5000, status_code=500)
     
     # ========================================
     # 注册路由
