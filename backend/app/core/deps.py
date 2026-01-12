@@ -16,8 +16,9 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.database import async_session_factory
+from app.core.config import settings
+from app.core.i18n import _
 from app.core.security import verify_token, TOKEN_TYPE_ACCESS
 from app.models import Admin, TenantAdmin, TenantUser
 
@@ -75,7 +76,7 @@ async def get_current_admin(
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=_("auth.token_invalid"),
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -106,7 +107,7 @@ async def get_current_active_admin(
     if not current_admin.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive admin",
+            detail=_("auth.account_disabled"),
         )
     return current_admin
 
@@ -120,7 +121,7 @@ async def get_current_super_admin(
     if not current_admin.is_super:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Super admin privileges required",
+            detail=_("admin.super_admin_required"),
         )
     return current_admin
 
@@ -138,7 +139,7 @@ async def get_current_tenant_admin(
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=_("auth.token_invalid"),
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -169,7 +170,7 @@ async def get_current_active_tenant_admin(
     if not current_tenant_admin.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive tenant admin",
+            detail=_("auth.account_disabled"),
         )
     return current_tenant_admin
 
@@ -183,7 +184,7 @@ async def get_current_tenant_owner(
     if not current_tenant_admin.is_owner:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tenant owner privileges required",
+            detail=_("tenant_admin.owner_required"),
         )
     return current_tenant_admin
 
@@ -201,7 +202,7 @@ async def get_current_tenant_user(
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail=_("auth.token_invalid"),
         headers={"WWW-Authenticate": "Bearer"},
     )
     
@@ -232,7 +233,7 @@ async def get_current_active_tenant_user(
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
+            detail=_("auth.account_disabled"),
         )
     return current_user
 
