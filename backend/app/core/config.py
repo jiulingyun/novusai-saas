@@ -6,6 +6,7 @@
 
 from functools import lru_cache
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from pydantic import PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,6 +29,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "0.1.0"
     APP_ENV: str = "development"  # development, staging, production
     DEBUG: bool = True
+    
+    # 时区配置（用于后端和数据库）
+    TIMEZONE: str = "Asia/Shanghai"
     
     # API 配置
     API_V1_PREFIX: str = "/api/v1"
@@ -114,6 +118,11 @@ class Settings(BaseSettings):
     # ========================================
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
+    
+    @property
+    def tz(self) -> ZoneInfo:
+        """获取时区对象"""
+        return ZoneInfo(self.TIMEZONE)
 
 
 @lru_cache

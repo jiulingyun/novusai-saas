@@ -18,8 +18,17 @@ from app.core.config import settings
 from app.core.base_model import Base
 
 # 导入所有模型以确保它们被注册到 Base.metadata
-# 在这里导入你的模型文件
-# from app.models import user, tenant, ...
+from app.models import (
+    Admin,
+    Tenant,
+    TenantAdmin,
+    TenantUser,
+    Permission,
+    AdminRole,
+    admin_role_permissions,
+    TenantAdminRole,
+    tenant_admin_role_permissions,
+)
 
 # Alembic 配置对象
 config = context.config
