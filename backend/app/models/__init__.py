@@ -13,7 +13,7 @@
 from app.models.system import Admin
 
 # 租户级模型
-from app.models.tenant import Tenant, TenantAdmin, TenantUser
+from app.models.tenant import Tenant, TenantAdmin, TenantUser, TenantDomain
 
 # RBAC 模型
 from app.models.auth import (
@@ -31,6 +31,7 @@ __all__ = [
     "Tenant",
     "TenantAdmin",
     "TenantUser",
+    "TenantDomain",
     # RBAC
     "Permission",
     "AdminRole",

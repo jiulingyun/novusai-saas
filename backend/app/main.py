@@ -20,6 +20,7 @@ from app.core.response import error, validation_error
 from app.core.logging import init_logging, get_logger
 from app.exceptions import AppException
 from app.middleware.i18n import I18nMiddleware
+from app.middleware.tenant import TenantMiddleware
 
 
 @asynccontextmanager
@@ -102,6 +103,9 @@ def create_application() -> FastAPI:
     
     # i18n 国际化中间件（纯 ASGI 实现，使用 add_middleware 注册）
     app.add_middleware(I18nMiddleware)
+    
+    # 租户识别中间件（基于 Host 头解析租户）
+    app.add_middleware(TenantMiddleware)
     
     # ========================================
     # 注册异常处理器
@@ -212,6 +216,10 @@ def create_application() -> FastAPI:
     # 注册租户业务用户 API v1 路由 (/api/v1/*)
     from app.api.v1 import api_router
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+    
+    # 注册公共 API 路由 (/api/public/*) - 无需认证，用于租户登录页获取配置
+    from app.api.public import public_router
+    app.include_router(public_router, prefix="/api/public")
     
     return app
 

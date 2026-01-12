@@ -61,7 +61,24 @@
     "created": "租户创建成功",
     "updated": "租户更新成功",
     "deleted": "租户删除成功",
-    "status_updated": "租户状态更新成功"
+    "status_updated": "租户状态更新成功",
+    "settings_updated": "租户设置更新成功",
+    "identification_failed": "无法识别租户"
+  },
+  "domain": {
+    "not_found": "域名不存在",
+    "already_exists": "域名已被使用",
+    "invalid_format": "域名格式不正确",
+    "quota_exceeded": "自定义域名数量已达上限",
+    "custom_domain_disabled": "当前套餐不支持自定义域名",
+    "created": "域名添加成功",
+    "updated": "域名更新成功",
+    "deleted": "域名删除成功",
+    "verified": "域名验证成功",
+    "verification_failed": "域名验证失败",
+    "set_primary_success": "已设置为主域名",
+    "cannot_delete_primary": "不能删除主域名",
+    "not_owned_by_tenant": "域名不属于当前租户"
   },
   "validation": {
     "required": "{field}不能为空",

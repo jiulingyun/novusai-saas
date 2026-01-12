@@ -61,7 +61,24 @@
     "created": "Tenant created successfully",
     "updated": "Tenant updated successfully",
     "deleted": "Tenant deleted successfully",
-    "status_updated": "Tenant status updated successfully"
+    "status_updated": "Tenant status updated successfully",
+    "settings_updated": "Tenant settings updated successfully",
+    "identification_failed": "Unable to identify tenant"
+  },
+  "domain": {
+    "not_found": "Domain not found",
+    "already_exists": "Domain is already in use",
+    "invalid_format": "Invalid domain format",
+    "quota_exceeded": "Custom domain limit reached",
+    "custom_domain_disabled": "Custom domains not supported by current plan",
+    "created": "Domain added successfully",
+    "updated": "Domain updated successfully",
+    "deleted": "Domain deleted successfully",
+    "verified": "Domain verified successfully",
+    "verification_failed": "Domain verification failed",
+    "set_primary_success": "Set as primary domain",
+    "cannot_delete_primary": "Cannot delete primary domain",
+    "not_owned_by_tenant": "Domain does not belong to current tenant"
   },
   "validation": {
     "required": "{field} is required",

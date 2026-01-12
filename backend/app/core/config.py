@@ -119,6 +119,19 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
     
+    # ========================================
+    # 租户域名配置
+    # ========================================
+    # 租户子域名后缀，如 .app.novusai.com
+    # 租户访问地址为: {tenant_code}.app.novusai.com
+    TENANT_DOMAIN_SUFFIX: str = ".app.novusai.com"
+    
+    # 是否允许租户绑定自定义域名
+    ALLOW_CUSTOM_DOMAIN: bool = True
+    
+    # 租户域名验证前缀（用于 DNS TXT 记录验证）
+    DOMAIN_VERIFICATION_PREFIX: str = "_novusai-verification"
+    
     @property
     def tz(self) -> ZoneInfo:
         """获取时区对象"""

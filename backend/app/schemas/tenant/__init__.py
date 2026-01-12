@@ -25,6 +25,14 @@ from app.schemas.tenant.role import (
     TenantAdminRoleUpdateRequest,
     TenantAdminRolePermissionsRequest,
 )
+from app.schemas.tenant.domain import (
+    TenantDomainResponse,
+    TenantDomainCreateRequest,
+    TenantDomainUpdateRequest,
+    TenantDomainVerifyRequest,
+    TenantSettingsResponse,
+    TenantSettingsUpdateRequest,
+)
 
 __all__ = [
     # TenantAdmin
@@ -45,4 +53,11 @@ __all__ = [
     "TenantAdminRoleCreateRequest",
     "TenantAdminRoleUpdateRequest",
     "TenantAdminRolePermissionsRequest",
+    # Domain
+    "TenantDomainResponse",
+    "TenantDomainCreateRequest",
+    "TenantDomainUpdateRequest",
+    "TenantDomainVerifyRequest",
+    "TenantSettingsResponse",
+    "TenantSettingsUpdateRequest",
 ]
