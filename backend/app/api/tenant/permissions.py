@@ -21,7 +21,7 @@ from app.rbac.decorators import (
     action_read,
 )
 from app.rbac.services import PermissionService
-from app.schemas.common import PermissionTreeResponse, MenuResponse
+from app.schemas.common import PermissionResponse, PermissionTreeResponse, MenuResponse
 
 
 def _translate_name(name: str) -> str:
@@ -219,8 +219,29 @@ class TenantPermissionController(TenantController):
             result = await db.execute(query)
             permissions = result.scalars().all()
             
+            # 使用 PermissionResponse（不含 children）并翻译名称
+            data = [
+                PermissionResponse(
+                    id=p.id,
+                    code=p.code,
+                    name=_translate_name(p.name),
+                    description=p.description,
+                    type=p.type,
+                    scope=p.scope,
+                    resource=p.resource,
+                    action=p.action,
+                    parent_id=p.parent_id,
+                    sort_order=p.sort_order,
+                    icon=p.icon,
+                    path=p.path,
+                    component=p.component,
+                    hidden=p.hidden,
+                )
+                for p in permissions
+            ]
+            
             return success(
-                data=[PermissionTreeResponse.model_validate(p, from_attributes=True) for p in permissions],
+                data=data,
                 message=_("common.success"),
             )
 
