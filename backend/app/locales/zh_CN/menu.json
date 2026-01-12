@@ -14,7 +14,8 @@
       "system": "权限管理",
       "tenant_user": "用户管理",
       "permission": "权限查看",
-      "role": "角色管理"
+      "role": "角色管理",
+      "tenant_settings": "租户设置"
     }
   }
 }

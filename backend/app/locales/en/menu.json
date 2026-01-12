@@ -14,7 +14,8 @@
       "system": "System",
       "tenant_user": "Users",
       "permission": "Permissions",
-      "role": "Roles"
+      "role": "Roles",
+      "tenant_settings": "Settings"
     }
   }
 }
