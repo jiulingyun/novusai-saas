@@ -4,4 +4,9 @@
 提供租户相关的服务
 """
 
-__all__ = []
+from app.services.tenant.tenant_admin_service import TenantAdminService
+
+
+__all__ = [
+    "TenantAdminService",
+]

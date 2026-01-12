@@ -115,6 +115,23 @@
     "system_role_cannot_delete": "System role cannot be deleted",
     "permissions_updated": "Role permissions updated successfully"
   },
+  "tenant_admin": {
+    "not_found": "Admin not found",
+    "username_exists": "Username already taken",
+    "email_exists": "Email already in use",
+    "phone_exists": "Phone number already in use",
+    "password_incorrect": "Incorrect password",
+    "created": "Admin created successfully",
+    "updated": "Admin updated successfully",
+    "deleted": "Admin deleted successfully",
+    "password_reset": "Password reset successfully",
+    "status_updated": "Admin status updated successfully",
+    "cannot_delete_self": "Cannot delete yourself",
+    "cannot_delete_owner": "Cannot delete tenant owner",
+    "cannot_disable_self": "Cannot disable yourself",
+    "cannot_modify_owner": "Cannot modify tenant owner",
+    "owner_required": "Tenant owner privileges required"
+  },
   "enum": {
     "status": {
       "active": "Active",

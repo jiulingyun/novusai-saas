@@ -10,6 +10,7 @@
 from fastapi import APIRouter
 
 from app.api.tenant.auth import router as auth_router
+from app.api.tenant.admins import router as admins_router, TenantAdminController
 from app.api.tenant.permissions import router as permissions_router, TenantPermissionController
 from app.api.tenant.roles import router as roles_router, TenantRoleController
 
@@ -18,6 +19,7 @@ tenant_router = APIRouter()
 
 # 注册子路由
 tenant_router.include_router(auth_router)
+tenant_router.include_router(admins_router)
 tenant_router.include_router(permissions_router)
 tenant_router.include_router(roles_router)
 
@@ -25,6 +27,7 @@ tenant_router.include_router(roles_router)
 __all__ = [
     "tenant_router",
     # 导出控制器类，确保权限装饰器被执行
+    "TenantAdminController",
     "TenantPermissionController",
     "TenantRoleController",
 ]
