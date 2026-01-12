@@ -2,6 +2,15 @@
 权限同步服务
 
 应用启动时调用，将装饰器定义的权限同步到数据库
+
+同步策略:
+- 新权限（代码有，DB 无）: 创建
+- 已存在（代码有，DB 有）: 更新所有字段（name, icon, path, parent_id 等）
+- 代码删除（代码无，DB 有）: 禁用（is_enabled=False），不物理删除
+
+父子关系处理:
+- 使用拓扑排序确保父级先于子级处理
+- 支持菜单层级变更（移动到不同父级）
 """
 
 from sqlalchemy import select
@@ -19,16 +28,42 @@ class PermissionSyncService:
     """
     权限同步服务
     
-    应用启动时调用，将装饰器定义的权限同步到数据库
-    
-    策略：
-    - 新权限：创建
-    - 已存在：更新名称、描述等（code 不变）
-    - 数据库中多余的：标记为禁用（不删除，保留历史）
+    应用启动时调用，将装饰器/菜单定义文件中的权限同步到数据库
     """
     
     def __init__(self, db: AsyncSession):
         self.db = db
+    
+    def _topological_sort(self, permissions: list[PermissionMeta]) -> list[PermissionMeta]:
+        """
+        拓扑排序，确保父级权限先于子级处理
+        
+        Args:
+            permissions: 权限列表
+        
+        Returns:
+            排序后的权限列表
+        """
+        code_to_perm = {p.code: p for p in permissions}
+        
+        # 计算每个权限的深度（到根的距离）
+        def get_depth(perm: PermissionMeta, visited: set[str] | None = None) -> int:
+            if visited is None:
+                visited = set()
+            if perm.code in visited:
+                # 循环引用，返回 0 避免无限递归
+                return 0
+            visited.add(perm.code)
+            
+            if not perm.parent_code:
+                return 0
+            parent = code_to_perm.get(perm.parent_code)
+            if not parent:
+                return 0
+            return 1 + get_depth(parent, visited)
+        
+        # 按深度排序，深度小的（父级）先处理
+        return sorted(permissions, key=lambda p: get_depth(p))
     
     async def sync_permissions(self) -> dict[str, int]:
         """
@@ -50,18 +85,24 @@ class PermissionSyncService:
         updated_count = 0
         disabled_count = 0
         
-        # 处理父级权限映射（用于菜单层级）
-        parent_map: dict[str, int] = {}  # code -> id
+        # code -> db_id 映射（用于父子关联）
+        code_to_id: dict[str, int] = {p.code: p.id for p in existing_permissions}
         
-        # 第一轮：创建/更新权限（先处理无父级的）
-        sorted_permissions = sorted(
-            registered_permissions, 
-            key=lambda x: x.parent_code or ""
-        )
+        # 拓扑排序，确保父级先于子级处理
+        sorted_permissions = self._topological_sort(registered_permissions)
         
         for perm_meta in sorted_permissions:
+            # 解析父级 ID
+            parent_id = None
+            if perm_meta.parent_code:
+                parent_id = code_to_id.get(perm_meta.parent_code)
+                if parent_id is None:
+                    logger.warning(
+                        f"权限 {perm_meta.code} 的父级 {perm_meta.parent_code} 不存在"
+                    )
+            
             if perm_meta.code in existing_codes:
-                # 更新
+                # 更新已存在的权限
                 db_perm = existing_map[perm_meta.code]
                 db_perm.name = perm_meta.name
                 db_perm.description = perm_meta.description
@@ -75,19 +116,12 @@ class PermissionSyncService:
                 db_perm.sort_order = perm_meta.sort_order
                 db_perm.hidden = perm_meta.hidden
                 db_perm.is_enabled = True
+                # 始终更新 parent_id（支持菜单移动）
+                db_perm.parent_id = parent_id
                 
-                # 更新父级
-                if perm_meta.parent_code and perm_meta.parent_code in parent_map:
-                    db_perm.parent_id = parent_map[perm_meta.parent_code]
-                
-                parent_map[perm_meta.code] = db_perm.id
                 updated_count += 1
             else:
-                # 创建
-                parent_id = None
-                if perm_meta.parent_code and perm_meta.parent_code in parent_map:
-                    parent_id = parent_map[perm_meta.parent_code]
-                
+                # 创建新权限
                 db_perm = Permission(
                     code=perm_meta.code,
                     name=perm_meta.name,
@@ -106,16 +140,17 @@ class PermissionSyncService:
                 )
                 self.db.add(db_perm)
                 await self.db.flush()  # 获取 ID
-                parent_map[perm_meta.code] = db_perm.id
+                code_to_id[perm_meta.code] = db_perm.id
                 created_count += 1
         
-        # 禁用数据库中多余的权限（代码中已删除的）
+        # 禁用代码中已删除的权限
         orphan_codes = existing_codes - registered_codes
         for code in orphan_codes:
             db_perm = existing_map[code]
             if db_perm.is_enabled:
                 db_perm.is_enabled = False
                 disabled_count += 1
+                logger.debug(f"禁用权限: {code}")
         
         await self.db.commit()
         
