@@ -4,18 +4,27 @@
 提供租户 CRUD 接口（平台管理员专用）
 """
 
-from fastapi import Depends, Query
+from fastapi import Depends, HTTPException, Query, status
+from sqlalchemy import select
 
 from app.core.base_controller import GlobalController
 from app.core.base_schema import PageParams
 from app.core.deps import DbSession
 from app.core.i18n import _
+from app.core.logging import get_logger
 from app.core.response import success
+from app.core.security import (
+    create_impersonate_token,
+    IMPERSONATE_TOKEN_EXPIRE_SECONDS,
+    TOKEN_SCOPE_TENANT_ADMIN,
+)
 from app.enums.rbac import PermissionScope
-from app.models import Admin
+from app.models import Admin, TenantAdmin
+from app.models.auth.tenant_admin_role import TenantAdminRole
 from app.rbac import require_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
+    permission_action,
     MenuConfig,
     action_read,
     action_create,
@@ -27,8 +36,13 @@ from app.schemas.system import (
     TenantCreateRequest,
     TenantUpdateRequest,
     TenantStatusRequest,
+    TenantImpersonateRequest,
+    TenantImpersonateResponse,
 )
 from app.services.system import TenantService
+
+# 审计日志
+audit_logger = get_logger("impersonate", separate_file=True)
 
 
 @permission_resource(
@@ -236,6 +250,84 @@ class AdminTenantController(GlobalController):
             return success(
                 data=TenantResponse.model_validate(tenant, from_attributes=True),
                 message=_("tenant.status_updated"),
+            )
+        
+        @router.post("/{tenant_id}/impersonate", summary="一键登录租户后台")
+        @permission_action("impersonate", "一键登录租户后台")
+        async def impersonate_tenant(
+            db: DbSession,
+            tenant_id: int,
+            data: TenantImpersonateRequest | None = None,
+            current_admin: Admin = Depends(require_admin_permissions("tenant:impersonate")),
+        ):
+            """
+            生成一键登录租户后台的 Token
+            
+            - Token 60 秒过期，一次性使用
+            - 可选指定目标角色 role_id
+            
+            权限: tenant:impersonate
+            """
+            # 获取租户信息
+            service = TenantService(db)
+            tenant = await service.get_by_id(tenant_id)
+            
+            if tenant is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=_("tenant.not_found"),
+                )
+            
+            if not tenant.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=_("tenant.disabled"),
+                )
+            
+            # 验证目标角色（如果指定）
+            role_id = data.role_id if data else None
+            if role_id:
+                role_result = await db.execute(
+                    select(TenantAdminRole).where(
+                        TenantAdminRole.id == role_id,
+                        TenantAdminRole.tenant_id == tenant_id,
+                        TenantAdminRole.is_deleted == False,
+                    )
+                )
+                role = role_result.scalar_one_or_none()
+                if role is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=_("tenant_admin.role_not_found"),
+                    )
+            
+            # 生成 impersonate token
+            token = create_impersonate_token(
+                admin_id=current_admin.id,
+                target_scope=TOKEN_SCOPE_TENANT_ADMIN,
+                target_tenant_id=tenant_id,
+                target_role_id=role_id,
+            )
+            
+            # 记录审计日志
+            audit_logger.info(
+                "Admin impersonate initiated | admin_id=%s | admin_username=%s | "
+                "target_tenant_id=%s | target_tenant_code=%s | target_role_id=%s",
+                current_admin.id,
+                current_admin.username,
+                tenant_id,
+                tenant.code,
+                role_id,
+            )
+            
+            return success(
+                data=TenantImpersonateResponse(
+                    impersonate_token=token,
+                    tenant_code=tenant.code,
+                    tenant_name=tenant.name,
+                    expires_in=IMPERSONATE_TOKEN_EXPIRE_SECONDS,
+                ),
+                message=_("common.success"),
             )
 
 

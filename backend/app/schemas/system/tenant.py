@@ -69,9 +69,26 @@ class TenantStatusRequest(BaseSchema):
     is_active: bool = Field(..., description="是否启用")
 
 
+class TenantImpersonateRequest(BaseSchema):
+    """一键登录租户后台请求"""
+    
+    role_id: int | None = Field(None, description="目标角色 ID（可选）")
+
+
+class TenantImpersonateResponse(BaseSchema):
+    """一键登录租户后台响应"""
+    
+    impersonate_token: str = Field(..., description="一键登录 Token（60秒有效，一次性）")
+    tenant_code: str = Field(..., description="租户编码")
+    tenant_name: str = Field(..., description="租户名称")
+    expires_in: int = Field(60, description="Token 有效期（秒）")
+
+
 __all__ = [
     "TenantResponse",
     "TenantCreateRequest",
     "TenantUpdateRequest",
     "TenantStatusRequest",
+    "TenantImpersonateRequest",
+    "TenantImpersonateResponse",
 ]

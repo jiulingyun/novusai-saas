@@ -24,7 +24,9 @@
     "permission_denied": "权限不足",
     "refresh_token_invalid": "刷新令牌无效",
     "password_changed": "密码修改成功",
-    "password_mismatch": "密码不匹配"
+    "password_mismatch": "密码不匹配",
+    "impersonate_token_invalid": "一键登录令牌无效或已过期",
+    "impersonate_success": "一键登录成功"
   },
   "user": {
     "not_found": "用户不存在",
@@ -63,7 +65,8 @@
     "deleted": "租户删除成功",
     "status_updated": "租户状态更新成功",
     "settings_updated": "租户设置更新成功",
-    "identification_failed": "无法识别租户"
+    "identification_failed": "无法识别租户",
+    "owner_not_found": "租户所有者不存在"
   },
   "domain": {
     "not_found": "域名不存在",
@@ -147,7 +150,8 @@
     "cannot_delete_owner": "不能删除租户所有者",
     "cannot_disable_self": "不能禁用自己",
     "cannot_modify_owner": "不能修改租户所有者",
-    "owner_required": "需要租户所有者权限"
+    "owner_required": "需要租户所有者权限",
+    "role_not_found": "角色不存在"
   },
   "enum": {
     "status": {

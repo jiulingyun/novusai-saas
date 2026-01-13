@@ -23,7 +23,14 @@ class RefreshTokenRequest(BaseSchema):
     refresh_token: str = Field(..., description="刷新令牌")
 
 
+class ImpersonateTokenRequest(BaseSchema):
+    """一键登录 Token 验证请求"""
+    
+    impersonate_token: str = Field(..., description="一键登录 Token")
+
+
 __all__ = [
     "TokenResponse",
     "RefreshTokenRequest",
+    "ImpersonateTokenRequest",
 ]

@@ -11,22 +11,27 @@ from sqlalchemy import select, or_
 
 from app.core.deps import DbSession, ActiveTenantAdmin
 from app.core.i18n import _
+from app.core.logging import get_logger
 from app.core.response import success
 from app.core.security import (
     verify_password,
     get_password_hash,
     create_token_pair,
     verify_token_with_scope,
+    verify_impersonate_token,
     TOKEN_TYPE_REFRESH,
     TOKEN_SCOPE_TENANT_ADMIN,
 )
-from app.models import TenantAdmin, Tenant
-from app.schemas.common import TokenResponse, RefreshTokenRequest
+from app.models import TenantAdmin, Tenant, Admin
+from app.schemas.common import TokenResponse, RefreshTokenRequest, ImpersonateTokenRequest
 from app.schemas.tenant import (
     TenantAdminLoginRequest,
     TenantAdminResponse,
     TenantAdminChangePasswordRequest,
 )
+
+# 审计日志
+audit_logger = get_logger("impersonate", separate_file=True)
 
 
 router = APIRouter(prefix="/auth", tags=["租户管理员认证"])
@@ -196,6 +201,105 @@ async def change_password(
     
     return success(
         message=_("auth.password_changed"),
+    )
+
+
+@router.post("/impersonate", summary="平台管理员一键登录")
+async def impersonate_login(
+    db: DbSession,
+    request: Request,
+    data: ImpersonateTokenRequest,
+):
+    """
+    验证平台管理员的 impersonate token 并换取正式 Token
+    
+    - Token 60 秒过期，一次性使用
+    - 返回标准的 access_token 和 refresh_token
+    """
+    # 验证 impersonate token
+    payload = verify_impersonate_token(data.impersonate_token, TOKEN_SCOPE_TENANT_ADMIN)
+    
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=_("auth.impersonate_token_invalid"),
+        )
+    
+    admin_id = payload.get("admin_id")
+    target_tenant_id = payload.get("target_tenant_id")
+    target_role_id = payload.get("target_role_id")
+    
+    # 验证租户状态
+    tenant_result = await db.execute(
+        select(Tenant).where(
+            Tenant.id == target_tenant_id,
+            Tenant.is_deleted == False,
+        )
+    )
+    tenant = tenant_result.scalar_one_or_none()
+    
+    if tenant is None or not tenant.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=_("tenant.disabled"),
+        )
+    
+    # 获取租户的所有者信息（作为登录身份）
+    owner_result = await db.execute(
+        select(TenantAdmin).where(
+            TenantAdmin.tenant_id == target_tenant_id,
+            TenantAdmin.is_owner == True,
+            TenantAdmin.is_deleted == False,
+        )
+    )
+    tenant_owner = owner_result.scalar_one_or_none()
+    
+    if tenant_owner is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=_("tenant.owner_not_found"),
+        )
+    
+    # 获取执行 impersonate 的平台管理员信息（用于审计日志）
+    platform_admin_result = await db.execute(
+        select(Admin).where(Admin.id == admin_id)
+    )
+    platform_admin = platform_admin_result.scalar_one_or_none()
+    platform_admin_username = platform_admin.username if platform_admin else "unknown"
+    
+    # 生成正式 Token
+    extra_claims = {
+        "tenant_id": target_tenant_id,
+        "impersonated_by": admin_id,  # 标记是平台管理员代登录
+    }
+    
+    # 如果指定了角色，加入 claims
+    if target_role_id:
+        extra_claims["impersonate_role_id"] = target_role_id
+    
+    tokens = create_token_pair(
+        tenant_owner.id,
+        scope=TOKEN_SCOPE_TENANT_ADMIN,
+        extra_claims=extra_claims,
+    )
+    
+    # 记录审计日志
+    audit_logger.info(
+        "Admin impersonate completed | admin_id=%s | admin_username=%s | "
+        "target_tenant_id=%s | target_tenant_code=%s | tenant_owner_id=%s | "
+        "target_role_id=%s | client_ip=%s",
+        admin_id,
+        platform_admin_username,
+        target_tenant_id,
+        tenant.code,
+        tenant_owner.id,
+        target_role_id,
+        request.client.host if request.client else None,
+    )
+    
+    return success(
+        data=TokenResponse(**tokens),
+        message=_("auth.impersonate_success"),
     )
 
 

@@ -7,6 +7,7 @@
 from app.schemas.common.auth import (
     TokenResponse,
     RefreshTokenRequest,
+    ImpersonateTokenRequest,
 )
 from app.schemas.common.permission import (
     PermissionResponse,
@@ -17,6 +18,7 @@ from app.schemas.common.permission import (
 __all__ = [
     "TokenResponse",
     "RefreshTokenRequest",
+    "ImpersonateTokenRequest",
     "PermissionResponse",
     "PermissionTreeResponse",
     "MenuResponse",

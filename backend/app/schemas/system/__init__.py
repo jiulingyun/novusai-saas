@@ -23,6 +23,8 @@ from app.schemas.system.tenant import (
     TenantCreateRequest,
     TenantUpdateRequest,
     TenantStatusRequest,
+    TenantImpersonateRequest,
+    TenantImpersonateResponse,
 )
 
 __all__ = [
@@ -43,4 +45,6 @@ __all__ = [
     "TenantCreateRequest",
     "TenantUpdateRequest",
     "TenantStatusRequest",
+    "TenantImpersonateRequest",
+    "TenantImpersonateResponse",
 ]

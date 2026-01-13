@@ -15,11 +15,15 @@ from app.core.config import settings
 # Token 类型常量
 TOKEN_TYPE_ACCESS = "access"
 TOKEN_TYPE_REFRESH = "refresh"
+TOKEN_TYPE_IMPERSONATE = "impersonate"  # 一键登录临时 Token
 
 # Token 作用域常量（用户类型）
 TOKEN_SCOPE_ADMIN = "admin"             # 平台管理员
 TOKEN_SCOPE_TENANT_ADMIN = "tenant_admin"  # 租户管理员
 TOKEN_SCOPE_TENANT_USER = "tenant_user"    # 租户业务用户
+
+# Impersonate Token 过期时间（秒）
+IMPERSONATE_TOKEN_EXPIRE_SECONDS = 60
 
 
 def create_access_token(
@@ -249,6 +253,75 @@ def create_token_pair(
     }
 
 
+def create_impersonate_token(
+    admin_id: int,
+    target_scope: str,
+    target_tenant_id: int,
+    target_role_id: int | None = None,
+    expires_seconds: int = IMPERSONATE_TOKEN_EXPIRE_SECONDS,
+) -> str:
+    """
+    创建一键登录临时 Token
+    
+    用于平台管理员一键登录租户后台或租户管理员一键登录用户端
+    
+    Args:
+        admin_id: 发起者 ID（平台管理员或租户管理员）
+        target_scope: 目标 scope（tenant_admin 或 tenant_user）
+        target_tenant_id: 目标租户 ID
+        target_role_id: 目标角色 ID（可选）
+        expires_seconds: 过期时间（秒），默认 60 秒
+        
+    Returns:
+        编码后的 JWT Token
+    """
+    expire = datetime.now(timezone.utc) + timedelta(seconds=expires_seconds)
+    
+    to_encode = {
+        "sub": str(admin_id),  # 发起者 ID
+        "type": TOKEN_TYPE_IMPERSONATE,
+        "target_scope": target_scope,
+        "target_tenant_id": target_tenant_id,
+        "exp": expire,
+        "iat": datetime.now(timezone.utc),
+    }
+    
+    if target_role_id is not None:
+        to_encode["target_role_id"] = target_role_id
+    
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def verify_impersonate_token(
+    token: str,
+    expected_target_scope: str,
+) -> dict[str, Any] | None:
+    """
+    验证一键登录 Token
+    
+    Args:
+        token: JWT Token 字符串
+        expected_target_scope: 期望的目标 scope
+        
+    Returns:
+        Token 的 payload，验证失败返回 None
+        payload 包含: sub, target_scope, target_tenant_id, target_role_id(可选)
+    """
+    payload = decode_token(token)
+    if payload is None:
+        return None
+    
+    # 检查 Token 类型
+    if payload.get("type") != TOKEN_TYPE_IMPERSONATE:
+        return None
+    
+    # 检查目标 scope
+    if payload.get("target_scope") != expected_target_scope:
+        return None
+    
+    return payload
+
+
 __all__ = [
     "create_access_token",
     "create_refresh_token",
@@ -259,9 +332,13 @@ __all__ = [
     "verify_password",
     "get_password_hash",
     "create_token_pair",
+    "create_impersonate_token",
+    "verify_impersonate_token",
     "TOKEN_TYPE_ACCESS",
     "TOKEN_TYPE_REFRESH",
+    "TOKEN_TYPE_IMPERSONATE",
     "TOKEN_SCOPE_ADMIN",
     "TOKEN_SCOPE_TENANT_ADMIN",
     "TOKEN_SCOPE_TENANT_USER",
+    "IMPERSONATE_TOKEN_EXPIRE_SECONDS",
 ]
