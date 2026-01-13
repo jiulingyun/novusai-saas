@@ -85,6 +85,8 @@ interface TenantAdminInfoRaw {
   role_id?: number;
   last_login_at?: string;
   created_at?: string;
+  /** 权限码列表 */
+  permissions?: string[];
 }
 
 /**
@@ -102,6 +104,7 @@ export async function getTenantAdminInfoApi(): Promise<TenantAdminInfo> {
     tenantId: raw.tenant_id || 0,
     tenantName: raw.tenant_name,
     roles: [],
+    permissions: raw.permissions || [],
   };
 }
 

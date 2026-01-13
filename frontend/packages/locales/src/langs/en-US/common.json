@@ -17,8 +17,12 @@
   "edit": "Edit",
   "delete": "Delete",
   "create": "Create",
+  "detail": "Detail",
+  "copy": "Copy",
+  "export": "Export",
   "yes": "Yes",
   "no": "No",
   "showSearchPanel": "Show search panel",
-  "hideSearchPanel": "Hide search panel"
+  "hideSearchPanel": "Hide search panel",
+  "resetPassword": "Reset Password"
 }

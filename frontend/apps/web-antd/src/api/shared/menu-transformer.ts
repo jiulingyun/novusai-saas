@@ -17,27 +17,27 @@ export interface BackendMenuItemRaw {
   path: string;
   component?: string;
   redirect?: string;
-  parent_id?: number | string | null;
+  parent_id?: null | number | string;
   sort_order?: number;
   icon?: string;
   title?: string;
   hidden?: boolean;
   // meta 字段可能是嵌套对象或扁平字段
   meta?: {
-    title?: string;
-    icon?: string;
-    order?: number;
-    hide_in_menu?: boolean;
-    hide_in_tab?: boolean;
-    hide_in_breadcrumb?: boolean;
     affix_tab?: boolean;
-    keep_alive?: boolean;
+    authority?: string[];
     badge?: string;
     badge_type?: string;
     badge_variants?: string;
-    authority?: string[];
+    hide_in_breadcrumb?: boolean;
+    hide_in_menu?: boolean;
+    hide_in_tab?: boolean;
+    icon?: string;
     iframe_src?: string;
+    keep_alive?: boolean;
     link?: string;
+    order?: number;
+    title?: string;
   };
   children?: BackendMenuItemRaw[];
 }
@@ -65,14 +65,16 @@ function transformComponentPath(
 
   // 处理文件扩展名和大小写
   // 后端可能返回 Index.vue，但前端文件通常是 index.vue
+  const lastSlash = path.lastIndexOf('/');
   if (path.endsWith('.vue')) {
     // 将文件名转为小写（如 Index.vue -> index.vue）
-    const lastSlash = path.lastIndexOf('/');
     const fileName = path.slice(lastSlash + 1);
     path = path.slice(0, lastSlash + 1) + fileName.toLowerCase();
   } else {
-    // 没有扩展名的，添加 .vue 并确保小写
-    path = `${path.toLowerCase()}.vue`;
+    // 没有扩展名的，添加 .vue 并确保文件名小写（保持目录路径不变）
+    const dirPath = path.slice(0, lastSlash + 1);
+    const fileName = path.slice(lastSlash + 1);
+    path = `${dirPath}${fileName.toLowerCase()}.vue`;
   }
 
   // 根据端类型添加前缀
@@ -87,6 +89,30 @@ function transformComponentPath(
   // user 端暂不添加前缀，可根据实际目录结构调整
 
   return path;
+}
+
+/**
+ * 转换路由路径
+ * 根据端类型添加前缀
+ * @param path 后端返回的路径，如 /system/admins
+ * @param endpoint 端类型
+ * @returns 带前缀的路径，如 /admin/system/admins
+ */
+function transformRoutePath(path: string, endpoint: ApiEndpoint): string {
+  if (!path) return '';
+
+  // 确保路径以 / 开头
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // 根据端类型添加前缀
+  if (endpoint === 'admin' && !normalizedPath.startsWith('/admin')) {
+    return `/admin${normalizedPath}`;
+  }
+  if (endpoint === 'tenant' && !normalizedPath.startsWith('/tenant')) {
+    return `/tenant${normalizedPath}`;
+  }
+  // user 端不添加前缀
+  return normalizedPath;
 }
 
 /**
@@ -137,17 +163,20 @@ function transformMenuItem(
   // 路由名称应该是唯一标识符，不能使用中文
   const routeName = item.code || generateRouteName(item.path, endpoint);
 
+  // 转换路由路径（添加端前缀）
+  const routePath = transformRoutePath(item.path, endpoint);
+
   // 构建路由项
   const route: RouteRecordStringComponent = {
     name: routeName,
-    path: item.path,
+    path: routePath,
     component: transformComponentPath(item.component, endpoint),
     meta,
   };
 
-  // 添加可选字段
+  // 添加可选字段（redirect 也需要添加前缀）
   if (item.redirect) {
-    route.redirect = item.redirect;
+    route.redirect = transformRoutePath(item.redirect, endpoint);
   }
 
   // 递归处理子菜单
@@ -171,7 +200,7 @@ interface MissingComponentInfo {
 type ComponentMap = Record<string, unknown>;
 
 /** 缓存已存在的组件路径（从 pageMap 解析） */
-let cachedExistingPaths: Set<string> | null = null;
+let cachedExistingPaths: null | Set<string> = null;
 
 /**
  * 设置已存在的组件映射表
@@ -248,16 +277,14 @@ function transformMenuItemWithCheck(
     route.component &&
     route.component !== 'BasicLayout' &&
     route.component !== 'IFrameView' &&
-    route.component !== ''
+    route.component !== '' && // 只记录真正缺失的组件
+    !componentExists(route.component)
   ) {
-    // 只记录真正缺失的组件
-    if (!componentExists(route.component)) {
-      missingComponents.push({
-        menuName: item.name,
-        componentPath: route.component,
-        expectedFile: `src/views${route.component}`,
-      });
-    }
+    missingComponents.push({
+      menuName: item.name,
+      componentPath: route.component,
+      expectedFile: `src/views${route.component}`,
+    });
   }
 
   // 递归处理子菜单
@@ -295,7 +322,10 @@ function printMissingComponentsWarning(
     console.log(`  • 「${menuName}」 → %c${expectedFile}`, 'color: #52c41a;');
   });
 
-  console.log('%c提示: 这些菜单将显示为 404 页面，直到创建对应组件', 'color: #999;');
+  console.log(
+    '%c提示: 这些菜单将显示为 404 页面，直到创建对应组件',
+    'color: #999;',
+  );
   console.groupEnd();
 }
 
@@ -307,7 +337,7 @@ function printMissingComponentsWarning(
  */
 function generateRouteName(path: string, endpoint: ApiEndpoint): string {
   // 将路径转换为路由名称，如 /system/admins -> admin.system.admins
-  const cleanPath = path.replace(/^\//,  '').replace(/\//g, '.');
+  const cleanPath = path.replace(/^\//, '').replaceAll('/', '.');
   return `${endpoint}.${cleanPath || 'index'}`;
 }
 

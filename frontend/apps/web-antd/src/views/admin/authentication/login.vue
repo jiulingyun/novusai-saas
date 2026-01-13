@@ -41,16 +41,29 @@ async function handleLogin(values: Record<string, any>) {
 </script>
 
 <template>
-  <AuthenticationLogin
-    :form-schema="formSchema"
-    :loading="multiAuthStore.loginLoading"
-    :show-code-login="false"
-    :show-forget-password="false"
-    :show-qrcode-login="false"
-    :show-register="false"
-    :show-remember-me="false"
-    :show-third-party-login="false"
-    :sub-title="$t('authentication.platformAdmin')"
-    @submit="handleLogin"
-  />
+  <div>
+    <!-- 平台管理端标识 -->
+    <div class="mb-6 flex items-center justify-center">
+      <div class="flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-2">
+        <span class="i-lucide-shield-check text-xl text-blue-500"></span>
+        <span class="text-sm font-medium text-blue-600 dark:text-blue-400">
+          {{ $t('authentication.platformAdmin') }}
+        </span>
+      </div>
+    </div>
+
+    <AuthenticationLogin
+      :form-schema="formSchema"
+      :loading="multiAuthStore.loginLoading"
+      :show-code-login="false"
+      :show-forget-password="false"
+      :show-qrcode-login="false"
+      :show-register="false"
+      :show-remember-me="false"
+      :show-third-party-login="false"
+      title="平台管理系统"
+      :sub-title="$t('authentication.platformAdminDesc')"
+      @submit="handleLogin"
+    />
+  </div>
 </template>

@@ -41,16 +41,29 @@ async function handleLogin(values: Record<string, any>) {
 </script>
 
 <template>
-  <AuthenticationLogin
-    :form-schema="formSchema"
-    :loading="multiAuthStore.loginLoading"
-    :show-code-login="false"
-    :show-forget-password="false"
-    :show-qrcode-login="false"
-    :show-register="false"
-    :show-remember-me="false"
-    :show-third-party-login="false"
-    :sub-title="$t('authentication.tenantAdmin')"
-    @submit="handleLogin"
-  />
+  <div>
+    <!-- 租户管理端标识 -->
+    <div class="mb-6 flex items-center justify-center">
+      <div class="flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2">
+        <span class="i-lucide-building-2 text-xl text-green-500"></span>
+        <span class="text-sm font-medium text-green-600 dark:text-green-400">
+          {{ $t('authentication.tenantAdmin') }}
+        </span>
+      </div>
+    </div>
+
+    <AuthenticationLogin
+      :form-schema="formSchema"
+      :loading="multiAuthStore.loginLoading"
+      :show-code-login="false"
+      :show-forget-password="false"
+      :show-qrcode-login="false"
+      :show-register="false"
+      :show-remember-me="false"
+      :show-third-party-login="false"
+      title="租户管理后台"
+      :sub-title="$t('authentication.tenantAdminDesc')"
+      @submit="handleLogin"
+    />
+  </div>
 </template>

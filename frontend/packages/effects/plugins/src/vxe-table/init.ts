@@ -16,6 +16,7 @@ import {
   VxeIcon,
   VxeInput,
   VxeLoading,
+  VxeMenu,
   VxeModal,
   VxeNumberInput,
   VxePager,
@@ -82,6 +83,7 @@ export function initVxeTable() {
   VxeUI.component(VxeInput);
   // VxeUI.component(VxeList);
   VxeUI.component(VxeLoading);
+  VxeUI.component(VxeMenu);
   VxeUI.component(VxeModal);
   VxeUI.component(VxeNumberInput);
   // VxeUI.component(VxeOptgroup);

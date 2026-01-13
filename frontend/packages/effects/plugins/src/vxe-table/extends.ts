@@ -67,15 +67,20 @@ function extendProxyOption(
 }
 
 export function extendsDefaultFormatter(vxeUI: VxeUIExport) {
-  vxeUI.formats.add('formatDate', {
-    tableCellFormatMethod({ cellValue }) {
-      return formatDate(cellValue);
-    },
-  });
+  // 避免热更新时重复注册
+  if (!vxeUI.formats.get('formatDate')) {
+    vxeUI.formats.add('formatDate', {
+      tableCellFormatMethod({ cellValue }) {
+        return formatDate(cellValue);
+      },
+    });
+  }
 
-  vxeUI.formats.add('formatDateTime', {
-    tableCellFormatMethod({ cellValue }) {
-      return formatDateTime(cellValue);
-    },
-  });
+  if (!vxeUI.formats.get('formatDateTime')) {
+    vxeUI.formats.add('formatDateTime', {
+      tableCellFormatMethod({ cellValue }) {
+        return formatDateTime(cellValue);
+      },
+    });
+  }
 }

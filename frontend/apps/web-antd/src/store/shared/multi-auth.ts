@@ -240,6 +240,11 @@ export const useMultiAuthStore = defineStore('multi-auth', () => {
     };
 
     userStore.setUserInfo(vbenUserInfo);
+
+    // 设置权限码到 accessStore，用于按钮级权限控制
+    const permissions = userInfo?.permissions || [];
+    accessStore.setAccessCodes(permissions);
+
     return userInfo;
   }
 

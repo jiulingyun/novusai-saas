@@ -58,7 +58,9 @@
   "loginAgainTitle": "重新登录",
   "loginAgainSubTitle": "您的登录状态已过期，请重新登录以继续。",
   "platformAdmin": "平台管理后台",
+  "platformAdminDesc": "超级管理员登录入口，管理平台全局配置与租户",
   "tenantAdmin": "租户管理后台",
+  "tenantAdminDesc": "租户管理员登录入口，管理租户业务与用户",
   "layout": {
     "center": "居中",
     "alignLeft": "居左",

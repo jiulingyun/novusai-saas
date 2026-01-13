@@ -55,6 +55,8 @@ export interface BaseUserInfo {
   avatar?: string;
   email?: string;
   roles?: string[];
+  /** 权限码列表，用于按钮级别权限控制 */
+  permissions?: string[];
   homePath?: string;
 }
 

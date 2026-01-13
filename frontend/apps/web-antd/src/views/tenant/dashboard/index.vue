@@ -3,45 +3,47 @@ import { Card } from 'ant-design-vue';
 
 import { useUserStore } from '@vben/stores';
 
+import { $t } from '#/locales';
+
 const userStore = useUserStore();
 </script>
 
 <template>
   <div class="p-5">
-    <Card title="租户管理控制台" class="mb-4">
+    <Card :title="$t('tenant.dashboard.title')" class="mb-4">
       <template #extra>
-        <span class="text-gray-500">欢迎回来</span>
+        <span class="text-gray-500">{{ $t('tenant.dashboard.welcome') }}</span>
       </template>
       <div class="text-lg">
-        您好，{{ userStore.userInfo?.realName || '管理员' }}！
+        {{ $t('tenant.dashboard.greeting', { name: userStore.userInfo?.realName || $t('tenant.common.admin') }) }}
       </div>
       <p class="mt-2 text-gray-500">
-        这是租户管理控制台，您可以在这里管理您的租户资源。
+        {{ $t('tenant.dashboard.description') }}
       </p>
     </Card>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <template #title>
-          <span class="text-blue-500">用户总数</span>
+          <span class="text-blue-500">{{ $t('tenant.dashboard.stats.totalUsers') }}</span>
         </template>
         <div class="text-3xl font-bold">--</div>
       </Card>
       <Card>
         <template #title>
-          <span class="text-green-500">活跃用户</span>
+          <span class="text-green-500">{{ $t('tenant.dashboard.stats.activeUsers') }}</span>
         </template>
         <div class="text-3xl font-bold">--</div>
       </Card>
       <Card>
         <template #title>
-          <span class="text-orange-500">API 调用</span>
+          <span class="text-orange-500">{{ $t('tenant.dashboard.stats.apiCalls') }}</span>
         </template>
         <div class="text-3xl font-bold">--</div>
       </Card>
       <Card>
         <template #title>
-          <span class="text-purple-500">资源使用</span>
+          <span class="text-purple-500">{{ $t('tenant.dashboard.stats.resourceUsage') }}</span>
         </template>
         <div class="text-3xl font-bold">--</div>
       </Card>

@@ -25,6 +25,9 @@
   "imports": {
     "#/*": "./src/*"
   },
+  "devDependencies": {
+    "@types/sortablejs": "catalog:"
+  },
   "dependencies": {
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
@@ -44,7 +47,10 @@
     "ant-design-vue": "catalog:",
     "dayjs": "catalog:",
     "pinia": "catalog:",
+    "sortablejs": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:"
+    "vue-router": "catalog:",
+    "vxe-table": "catalog:",
+    "xlsx": "^0.18.5"
   }
 }

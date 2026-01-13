@@ -1,10 +1,12 @@
 import type { Router } from 'vue-router';
 
+import type { ApiEndpoint } from '#/api';
+
 import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { startProgress, stopProgress } from '@vben/utils';
 
-import { type ApiEndpoint, getApiEndpoint } from '#/api';
+import { getApiEndpoint } from '#/api';
 import { accessRoutes, coreRouteNames } from '#/router/routes';
 import {
   HOME_PATHS,
@@ -62,6 +64,9 @@ function setupCommonGuard(router: Router) {
   });
 }
 
+// 记录上一次的端类型，用于检测端切换
+let lastEndpoint: ApiEndpoint | null = null;
+
 /**
  * 权限访问守卫配置
  * @param router
@@ -77,6 +82,16 @@ function setupAccessGuard(router: Router) {
     const currentLoginPath = getLoginPathByRoute(to.path);
     const currentHomePath = getHomePathByRoute(to.path);
 
+    // 检测端切换：如果端类型变化，需要重新生成路由和权限
+    if (lastEndpoint && lastEndpoint !== currentEndpoint) {
+      accessStore.setIsAccessChecked(false);
+      accessStore.setAccessMenus([]);
+      accessStore.setAccessRoutes([]);
+      // 清除权限码，避免使用旧端的权限
+      accessStore.setAccessCodes([]);
+    }
+    lastEndpoint = currentEndpoint;
+
     // 从 TokenStorage 获取当前端的 Token（多端分离存储）
     const currentToken = TokenStorage.getToken(currentEndpoint);
 
@@ -84,10 +99,10 @@ function setupAccessGuard(router: Router) {
     if (coreRouteNames.includes(to.name as string)) {
       // 如果当前端已登录且访问登录页，重定向到对应端的首页
       if (isLoginPath(to.path) && currentToken) {
-        return decodeURIComponent(
+        return (
           (to.query?.redirect as string) ||
-            userStore.userInfo?.homePath ||
-            currentHomePath,
+          userStore.userInfo?.homePath ||
+          currentHomePath
         );
       }
       return true;
@@ -105,9 +120,7 @@ function setupAccessGuard(router: Router) {
         return {
           path: currentLoginPath,
           query:
-            to.fullPath === currentHomePath
-              ? {}
-              : { redirect: encodeURIComponent(to.fullPath) },
+            to.fullPath === currentHomePath ? {} : { redirect: to.fullPath },
           replace: true,
         };
       }
@@ -131,8 +144,24 @@ function setupAccessGuard(router: Router) {
     // 生成路由表
     // 当前登录用户拥有的角色标识列表
     // 注意：必须传入 endpoint 参数，因为 route.path 可能还是旧路由
-    const userInfo =
-      userStore.userInfo || (await multiAuthStore.fetchUserInfo(currentEndpoint));
+    let userInfo;
+    try {
+      userInfo =
+        userStore.userInfo ||
+        (await multiAuthStore.fetchUserInfo(currentEndpoint));
+    } catch (error) {
+      // 获取用户信息失败（可能是 Token 过期），清除 Token 并跳转到登录页
+      console.error('[Router Guard] 获取用户信息失败:', error);
+      TokenStorage.clearToken(currentEndpoint);
+      accessStore.setAccessToken(null);
+      accessStore.setIsAccessChecked(false);
+      return {
+        path: currentLoginPath,
+        query: { redirect: to.fullPath },
+        replace: true,
+      };
+    }
+
     const userRoles = userInfo.roles ?? [];
 
     // 生成菜单和路由（根据端类型获取对应的菜单）
@@ -156,7 +185,7 @@ function setupAccessGuard(router: Router) {
         : to.fullPath)) as string;
 
     return {
-      ...router.resolve(decodeURIComponent(redirectPath)),
+      ...router.resolve(redirectPath),
       replace: true,
     };
   });

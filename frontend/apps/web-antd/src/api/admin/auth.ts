@@ -84,6 +84,8 @@ interface AdminUserInfoRaw {
   role_id?: number;
   last_login_at?: string;
   created_at?: string;
+  /** 权限码列表 */
+  permissions?: string[];
 }
 
 /**
@@ -100,6 +102,8 @@ export async function getAdminInfoApi(): Promise<AdminUserInfo> {
     avatar: raw.avatar,
     isSuperAdmin: raw.is_super,
     roles: raw.is_super ? ['super_admin'] : [],
+    // 超级管理员拥有所有权限，普通管理员使用后端返回的权限码
+    permissions: raw.is_super ? ['*'] : (raw.permissions || []),
   };
 }
 

@@ -70,10 +70,40 @@ export async function userLogoutApi() {
 }
 
 /**
- * 获取当前用户信息
+ * 后端返回的用户信息原始格式
  */
-export async function getUserInfoApi() {
-  return requestClient.get<TenantUserInfo>(`${API_PREFIX}/me`);
+interface UserInfoRaw {
+  id: number;
+  username: string;
+  email?: string;
+  phone?: string;
+  nickname?: string;
+  avatar?: string;
+  is_active?: boolean;
+  tenant_id?: number;
+  role_id?: number;
+  last_login_at?: string;
+  created_at?: string;
+  /** 权限码列表 */
+  permissions?: string[];
+}
+
+/**
+ * 获取当前用户信息
+ * 将后端 snake_case 转换为前端 camelCase
+ */
+export async function getUserInfoApi(): Promise<TenantUserInfo> {
+  const raw = await requestClient.get<UserInfoRaw>(`${API_PREFIX}/me`);
+  return {
+    id: raw.id,
+    username: raw.username,
+    realName: raw.nickname || raw.username,
+    email: raw.email,
+    avatar: raw.avatar,
+    tenantId: raw.tenant_id || 0,
+    roles: [],
+    permissions: raw.permissions || [],
+  };
 }
 
 /**

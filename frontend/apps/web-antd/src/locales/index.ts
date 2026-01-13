@@ -19,10 +19,20 @@ import dayjs from 'dayjs';
 
 const antdLocale = ref<Locale>(antdDefaultLocale);
 
+/**
+ * 加载所有语言包文件
+ * 支持嵌套目录结构：./langs/{lang}/{endpoint}/{module}.json
+ */
 const modules = import.meta.glob('./langs/**/*.json');
 
+/**
+ * 正则表达式匹配语言包路径
+ * 匹配格式：./langs/zh-CN/admin/system.json 或 ./langs/zh-CN/admin.json
+ * 捕获组1: 语言代码 (zh-CN)
+ * 捕获组2: 剩余路径 (admin/system 或 admin)
+ */
 const localesMap = loadLocalesMapFromDir(
-  /\.\/langs\/([^/]+)\/(.*)\.json$/,
+  /\.\/langs\/([^/]+)\/(.+)\.json$/,
   modules,
 );
 /**

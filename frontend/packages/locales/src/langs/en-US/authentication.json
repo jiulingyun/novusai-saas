@@ -58,7 +58,9 @@
   "loginAgainTitle": "Please Log In Again",
   "loginAgainSubTitle": "Your login session has expired. Please log in again to continue.",
   "platformAdmin": "Platform Admin",
+  "platformAdminDesc": "Super admin portal for global configuration and tenant management",
   "tenantAdmin": "Tenant Admin",
+  "tenantAdminDesc": "Tenant admin portal for business and user management",
   "layout": {
     "center": "Align Center",
     "alignLeft": "Align Left",

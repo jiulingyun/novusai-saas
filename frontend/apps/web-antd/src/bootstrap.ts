@@ -1,13 +1,13 @@
 import { createApp, watchEffect } from 'vue';
 
-import { registerAccessDirective } from '@vben/access';
+import { registerCustomAccessDirective } from './directives/access';
 import { registerLoadingDirective } from '@vben/common-ui/es/loading';
 import { preferences } from '@vben/preferences';
 import { initStores } from '@vben/stores';
 import '@vben/styles';
 import '@vben/styles/antd';
 
-import { TokenStorage } from './store/modules/token-storage';
+import { TokenStorage } from './store/shared/token-storage';
 
 import { useTitle } from '@vueuse/core';
 
@@ -55,8 +55,8 @@ async function bootstrap(namespace: string) {
   // 配置 pinia-tore
   await initStores(app, { namespace });
 
-  // 安装权限指令
-  registerAccessDirective(app);
+  // 安装自定义权限指令（支持超级管理员 '*' 通配符）
+  registerCustomAccessDirective(app);
 
   // 初始化 tippy
   const { initTippy } = await import('@vben/common-ui/es/tippy');
