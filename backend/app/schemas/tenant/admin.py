@@ -31,8 +31,28 @@ class TenantAdminResponse(BaseSchema):
     is_active: bool = Field(..., description="是否激活")
     is_owner: bool = Field(..., description="是否租户所有者")
     role_id: int | None = Field(None, description="角色 ID")
+    role_name: str | None = Field(None, description="角色名称")
     last_login_at: datetime | None = Field(None, description="最后登录时间")
     created_at: datetime = Field(..., description="创建时间")
+    
+    @classmethod
+    def from_model(cls, admin) -> "TenantAdminResponse":
+        """从模型创建响应，包含角色名称"""
+        return cls(
+            id=admin.id,
+            tenant_id=admin.tenant_id,
+            username=admin.username,
+            email=admin.email,
+            phone=admin.phone,
+            nickname=admin.nickname,
+            avatar=admin.avatar,
+            is_active=admin.is_active,
+            is_owner=admin.is_owner,
+            role_id=admin.role_id,
+            role_name=admin.role.name if admin.role else None,
+            last_login_at=admin.last_login_at,
+            created_at=admin.created_at,
+        )
 
 
 class TenantAdminCreateRequest(BaseSchema):

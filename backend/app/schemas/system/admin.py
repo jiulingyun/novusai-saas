@@ -30,8 +30,27 @@ class AdminResponse(BaseSchema):
     is_active: bool = Field(..., description="是否激活")
     is_super: bool = Field(..., description="是否超级管理员")
     role_id: int | None = Field(None, description="角色 ID")
+    role_name: str | None = Field(None, description="角色名称")
     last_login_at: datetime | None = Field(None, description="最后登录时间")
     created_at: datetime = Field(..., description="创建时间")
+    
+    @classmethod
+    def from_model(cls, admin) -> "AdminResponse":
+        """从模型创建响应，包含角色名称"""
+        return cls(
+            id=admin.id,
+            username=admin.username,
+            email=admin.email,
+            phone=admin.phone,
+            nickname=admin.nickname,
+            avatar=admin.avatar,
+            is_active=admin.is_active,
+            is_super=admin.is_super,
+            role_id=admin.role_id,
+            role_name=admin.role.name if admin.role else None,
+            last_login_at=admin.last_login_at,
+            created_at=admin.created_at,
+        )
 
 
 class AdminCreateRequest(BaseSchema):

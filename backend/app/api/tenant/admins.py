@@ -94,7 +94,7 @@ class TenantAdminController(TenantController):
             
             return success(
                 data={
-                    "items": [TenantAdminResponse.model_validate(item, from_attributes=True) for item in page_result.items],
+                    "items": [TenantAdminResponse.from_model(item) for item in page_result.items],
                     "total": page_result.total,
                     "page": page_result.page,
                     "page_size": page_result.page_size,
@@ -125,7 +125,7 @@ class TenantAdminController(TenantController):
                 )
             
             return success(
-                data=TenantAdminResponse.model_validate(admin, from_attributes=True),
+                data=TenantAdminResponse.from_model(admin),
                 message=_("common.success"),
             )
         
@@ -155,7 +155,7 @@ class TenantAdminController(TenantController):
             await db.commit()
             
             return success(
-                data=TenantAdminResponse.model_validate(admin, from_attributes=True),
+                data=TenantAdminResponse.from_model(admin),
                 message=_("tenant_admin.created"),
             )
         
@@ -184,7 +184,7 @@ class TenantAdminController(TenantController):
             await db.commit()
             
             return success(
-                data=TenantAdminResponse.model_validate(admin, from_attributes=True),
+                data=TenantAdminResponse.from_model(admin),
                 message=_("tenant_admin.updated"),
             )
         
@@ -304,7 +304,7 @@ class TenantAdminController(TenantController):
             await db.commit()
             
             return success(
-                data=TenantAdminResponse.model_validate(admin, from_attributes=True),
+                data=TenantAdminResponse.from_model(admin),
                 message=_("tenant_admin.status_updated"),
             )
 

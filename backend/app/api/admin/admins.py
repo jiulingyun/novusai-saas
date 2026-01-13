@@ -93,7 +93,7 @@ class AdminAdminController(GlobalController):
             
             return success(
                 data={
-                    "items": [AdminResponse.model_validate(item, from_attributes=True) for item in page_result.items],
+                    "items": [AdminResponse.from_model(item) for item in page_result.items],
                     "total": page_result.total,
                     "page": page_result.page,
                     "page_size": page_result.page_size,
@@ -125,7 +125,7 @@ class AdminAdminController(GlobalController):
                 )
             
             return success(
-                data=AdminResponse.model_validate(admin, from_attributes=True),
+                data=AdminResponse.from_model(admin),
                 message=_("common.success"),
             )
         
@@ -155,7 +155,7 @@ class AdminAdminController(GlobalController):
             await db.commit()
             
             return success(
-                data=AdminResponse.model_validate(admin, from_attributes=True),
+                data=AdminResponse.from_model(admin),
                 message=_("admin.created"),
             )
         
@@ -184,7 +184,7 @@ class AdminAdminController(GlobalController):
             await db.commit()
             
             return success(
-                data=AdminResponse.model_validate(admin, from_attributes=True),
+                data=AdminResponse.from_model(admin),
                 message=_("admin.updated"),
             )
         
@@ -311,7 +311,7 @@ class AdminAdminController(GlobalController):
             await db.commit()
             
             return success(
-                data=AdminResponse.model_validate(admin, from_attributes=True),
+                data=AdminResponse.from_model(admin),
                 message=_("admin.status_updated"),
             )
 
