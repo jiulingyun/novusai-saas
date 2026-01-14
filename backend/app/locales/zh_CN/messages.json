@@ -149,7 +149,8 @@
       "update": "更新角色",
       "move": "移动角色",
       "delete": "删除角色",
-      "assign_permissions": "分配角色权限"
+      "assign_permissions": "分配角色权限",
+      "select": "角色远程下拉"
     },
     "admin": {
       "list": "查看管理员列表",
@@ -158,7 +159,8 @@
       "update": "更新管理员",
       "delete": "删除管理员",
       "reset_password": "重置管理员密码",
-      "toggle_status": "切换管理员状态"
+      "toggle_status": "切换管理员状态",
+      "select": "管理员远程下拉"
     },
     "permission": {
       "tree": "查看权限树",
@@ -171,7 +173,8 @@
       "update": "更新租户",
       "delete": "删除租户",
       "toggle_status": "切换租户状态",
-      "impersonate": "一键登录租户后台"
+      "impersonate": "一键登录租户后台",
+      "select": "租户远程下拉"
     },
     "tenant_settings": {
       "view": "查看租户设置",

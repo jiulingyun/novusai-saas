@@ -149,7 +149,8 @@
       "update": "Update Role",
       "move": "Move Role",
       "delete": "Delete Role",
-      "assign_permissions": "Assign Role Permissions"
+      "assign_permissions": "Assign Role Permissions",
+      "select": "Role Remote Select"
     },
     "admin": {
       "list": "View Admin List",
@@ -158,7 +159,8 @@
       "update": "Update Admin",
       "delete": "Delete Admin",
       "reset_password": "Reset Admin Password",
-      "toggle_status": "Toggle Admin Status"
+      "toggle_status": "Toggle Admin Status",
+      "select": "Admin Remote Select"
     },
     "permission": {
       "tree": "View Permission Tree",
@@ -171,7 +173,8 @@
       "update": "Update Tenant",
       "delete": "Delete Tenant",
       "toggle_status": "Toggle Tenant Status",
-      "impersonate": "Login as Tenant"
+      "impersonate": "Login as Tenant",
+      "select": "Tenant Remote Select"
     },
     "tenant_settings": {
       "view": "View Tenant Settings",
