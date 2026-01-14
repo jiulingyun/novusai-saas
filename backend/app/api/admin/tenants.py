@@ -50,7 +50,7 @@ audit_logger = get_logger("impersonate", separate_file=True)
     name="menu.admin.tenant",  # i18n key
     scope=PermissionScope.ADMIN,
     menu=MenuConfig(
-        icon="shop",
+        icon="lucide:store",
         path="/tenant/list",
         component="tenant/List",
         parent="tenant_mgmt",  # 父菜单: 租户管理

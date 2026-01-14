@@ -45,7 +45,7 @@ from app.services.common.role_hierarchy_validator import TenantAdminRoleHierarch
     name="menu.tenant.role",  # i18n key
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
-        icon="users",
+        icon="lucide:users",
         path="/system/roles",
         component="system/role/List",
         parent="system",  # 父菜单: 权限管理

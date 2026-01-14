@@ -41,7 +41,7 @@ class TenantAdminResetPasswordRequest(BaseSchema):
     name="menu.tenant.tenant_user",  # i18n key
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
-        icon="user",
+        icon="lucide:user",
         path="/system/admins",
         component="system/admin/List",
         parent="system",  # 父菜单: 权限管理

@@ -45,7 +45,7 @@ from app.services.common.role_hierarchy_validator import AdminRoleHierarchyValid
     name="menu.admin.role",  # i18n key
     scope=PermissionScope.ADMIN,
     menu=MenuConfig(
-        icon="users",
+        icon="lucide:users",
         path="/system/roles",
         component="system/role/List",
         parent="system",  # 父菜单: 权限管理

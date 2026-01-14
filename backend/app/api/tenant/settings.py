@@ -40,7 +40,7 @@ from app.schemas.tenant import (
     name="menu.tenant.tenant_settings",  # i18n key
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
-        icon="setting",
+        icon="lucide:settings",
         path="/system/settings",
         component="system/settings/Index",
         parent="system",  # 父菜单: 权限管理

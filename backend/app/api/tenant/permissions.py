@@ -94,7 +94,7 @@ def build_menu_tree(
     name="menu.tenant.permission",  # i18n key
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
-        icon="key",
+        icon="lucide:key-round",
         path="/system/permissions",
         component="system/permission/List",
         parent="system",  # 父菜单: 权限管理
