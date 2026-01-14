@@ -64,7 +64,7 @@ class TenantSettingsController(TenantController):
         # ==================== 租户设置 ====================
         
         @router.get("", summary="获取租户设置")
-        @action_read(_("action.tenant_settings.view"))
+        @action_read("action.tenant_settings.view")
         async def get_tenant_settings(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:read")),
@@ -117,7 +117,7 @@ class TenantSettingsController(TenantController):
             )
         
         @router.put("", summary="更新租户设置")
-        @action_update(_("action.tenant_settings.update"))
+        @action_update("action.tenant_settings.update")
         async def update_tenant_settings(
             db: DbSession,
             data: TenantSettingsUpdateRequest,
@@ -199,7 +199,7 @@ class TenantSettingsController(TenantController):
         # ==================== 域名管理 ====================
         
         @router.get("/domains", summary="获取域名列表")
-        @action_read(_("action.tenant_settings.domain_list"))
+        @action_read("action.tenant_settings.domain_list")
         async def list_tenant_domains(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:read")),
@@ -245,7 +245,7 @@ class TenantSettingsController(TenantController):
             )
         
         @router.post("/domains", summary="添加自定义域名")
-        @action_create(_("action.tenant_settings.domain_add"))
+        @action_create("action.tenant_settings.domain_add")
         async def add_tenant_domain(
             db: DbSession,
             data: TenantDomainCreateRequest,
@@ -357,7 +357,7 @@ class TenantSettingsController(TenantController):
             )
         
         @router.get("/domains/{domain_id}", summary="获取域名详情")
-        @action_read(_("action.tenant_settings.domain_detail"))
+        @action_read("action.tenant_settings.domain_detail")
         async def get_tenant_domain(
             db: DbSession,
             domain_id: int,
@@ -408,7 +408,7 @@ class TenantSettingsController(TenantController):
             )
         
         @router.put("/domains/{domain_id}", summary="更新域名设置")
-        @action_update(_("action.tenant_settings.domain_update"))
+        @action_update("action.tenant_settings.domain_update")
         async def update_tenant_domain(
             db: DbSession,
             domain_id: int,
@@ -485,7 +485,7 @@ class TenantSettingsController(TenantController):
             )
         
         @router.delete("/domains/{domain_id}", summary="删除域名")
-        @action_delete(_("action.tenant_settings.domain_delete"))
+        @action_delete("action.tenant_settings.domain_delete")
         async def delete_tenant_domain(
             db: DbSession,
             domain_id: int,
@@ -523,7 +523,7 @@ class TenantSettingsController(TenantController):
             return success(message=_("domain.deleted"))
         
         @router.post("/domains/{domain_id}/verify", summary="验证域名")
-        @action_update(_("action.tenant_settings.domain_verify"))
+        @action_update("action.tenant_settings.domain_verify")
         async def verify_tenant_domain(
             db: DbSession,
             domain_id: int,

@@ -73,7 +73,7 @@ class AdminTenantController(GlobalController):
         router = self.router
         
         @router.get("", summary="获取租户列表")
-        @action_read(_("action.tenant.list"))
+        @action_read("action.tenant.list")
         async def list_tenants(
             db: DbSession,
             current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
@@ -115,7 +115,7 @@ class AdminTenantController(GlobalController):
             )
         
         @router.get("/{tenant_id}", summary="获取租户详情")
-        @action_read(_("action.tenant.detail"))
+        @action_read("action.tenant.detail")
         async def get_tenant(
             db: DbSession,
             tenant_id: int,
@@ -142,7 +142,7 @@ class AdminTenantController(GlobalController):
             )
         
         @router.post("", summary="创建租户")
-        @action_create(_("action.tenant.create"))
+        @action_create("action.tenant.create")
         async def create_tenant(
             db: DbSession,
             data: TenantCreateRequest,
@@ -174,7 +174,7 @@ class AdminTenantController(GlobalController):
             )
         
         @router.put("/{tenant_id}", summary="更新租户")
-        @action_update(_("action.tenant.update"))
+        @action_update("action.tenant.update")
         async def update_tenant(
             db: DbSession,
             tenant_id: int,
@@ -200,7 +200,7 @@ class AdminTenantController(GlobalController):
             )
         
         @router.delete("/{tenant_id}", summary="删除租户")
-        @action_delete(_("action.tenant.delete"))
+        @action_delete("action.tenant.delete")
         async def delete_tenant(
             db: DbSession,
             tenant_id: int,
@@ -230,7 +230,7 @@ class AdminTenantController(GlobalController):
             return success(message=_("tenant.deleted"))
         
         @router.put("/{tenant_id}/status", summary="切换租户状态")
-        @action_update(_("action.tenant.toggle_status"))
+        @action_update("action.tenant.toggle_status")
         async def toggle_tenant_status(
             db: DbSession,
             tenant_id: int,
@@ -254,7 +254,7 @@ class AdminTenantController(GlobalController):
             )
         
         @router.post("/{tenant_id}/impersonate", summary="一键登录租户后台")
-        @permission_action("impersonate", _("action.tenant.impersonate"))
+        @permission_action("impersonate", "action.tenant.impersonate")
         async def impersonate_tenant(
             db: DbSession,
             tenant_id: int,

@@ -117,7 +117,7 @@ class AdminPermissionController(GlobalController):
         router = self.router
         
         @router.get("", summary="获取权限树")
-        @action_read(_("action.permission.tree"))
+        @action_read("action.permission.tree")
         async def get_permission_tree(
             db: DbSession,
             current_admin: Admin = Depends(require_admin_permissions("permission:read")),
@@ -244,7 +244,7 @@ class AdminPermissionController(GlobalController):
             )
         
         @router.get("/list", summary="获取权限列表（平铺）")
-        @action_read(_("action.permission.list"))
+        @action_read("action.permission.list")
         async def get_permission_list(
             db: DbSession,
             current_admin: Admin = Depends(require_admin_permissions("permission:read")),
