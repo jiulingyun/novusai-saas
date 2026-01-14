@@ -72,6 +72,10 @@ class BaseController:
             # 创建实例并注册路由
             instance = cls()
             instance._register_routes()
+            
+            # 自动扫描并注册操作权限
+            from app.rbac.decorators import register_action_permissions
+            register_action_permissions(cls, cls._router)
         return cls._router
     
     @property

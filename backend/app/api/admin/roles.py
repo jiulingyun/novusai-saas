@@ -50,7 +50,7 @@ from app.services.common.role_hierarchy_validator import AdminRoleHierarchyValid
         component="system/role/List",
         parent="system",  # 父菜单: 权限管理
         sort_order=20,
-    ),
+    )
 )
 class AdminRoleController(GlobalController):
     """

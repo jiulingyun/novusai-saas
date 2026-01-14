@@ -57,7 +57,7 @@ def permission_resource(
     
     自动注册：
     1. 菜单权限（如果提供了 menu 配置）
-    2. 资源的基础操作权限（通过 @permission_action 定义）
+    2. 操作权限（通过 @action_* 装饰器自动扫描）
     
     Args:
         resource: 资源标识，如 "user", "order"
@@ -74,7 +74,10 @@ def permission_resource(
             menu=MenuConfig(icon="user", path="/users", component="user/List")
         )
         class UserController:
-            ...
+            # 操作权限通过 @action_read 等装饰器自动注册
+            @action_read("查看用户")
+            async def list_users(self, ...):
+                ...
     """
     # 延迟导入避免循环引用
     from app.rbac.registry import permission_registry
@@ -110,22 +113,6 @@ def permission_resource(
             )
             permission_registry.register(menu_perm)
         
-        # 扫描类中的 @permission_action 装饰的方法
-        for attr_name in dir(cls):
-            attr = getattr(cls, attr_name, None)
-            if callable(attr) and hasattr(attr, "_permission_action"):
-                action_info = attr._permission_action
-                action_perm = PermissionMeta(
-                    code=f"{resource}:{action_info['action']}",
-                    name=action_info["name"],
-                    type=PermissionType.OPERATION,
-                    scope=scope,
-                    resource=resource,
-                    action=action_info["action"],
-                    description=action_info.get("description", ""),
-                )
-                permission_registry.register(action_perm)
-        
         return cls
     
     return decorator
@@ -140,6 +127,8 @@ def permission_action(
     """
     操作权限装饰器（用于控制器方法）
     
+    在路由注册时自动将操作权限注册到 permission_registry。
+    
     Args:
         action: 操作标识，如 "create", "read", "update", "delete"
         name: 操作名称，如 "创建用户"
@@ -147,9 +136,8 @@ def permission_action(
         auto_check: 是否自动检查权限（默认 True，由依赖注入处理）
     
     Example:
-        @permission_action("create", "创建用户")
-        @router.post("")
-        async def create_user(self, data: UserCreate):
+        @action_read("查看用户列表")
+        async def list_users(...):
             ...
     """
     def decorator(func: F) -> F:
@@ -201,6 +189,63 @@ def action_import(name: str = "导入", **kwargs: Any) -> Callable[[F], F]:
     return permission_action("import", name, **kwargs)
 
 
+# ==================== 操作权限自动注册 ====================
+
+def register_action_permissions(controller_cls: type, router: Any) -> None:
+    """
+    扫描路由器上的路由，自动注册操作权限
+    
+    在控制器的 _register_routes 执行后调用，扫描路由器上所有带有
+    _permission_action 属性的路由处理函数，并注册到 permission_registry。
+    
+    Args:
+        controller_cls: 控制器类（带有 _permission_resource 等属性）
+        router: FastAPI APIRouter 实例
+    """
+    from app.rbac.registry import permission_registry
+    
+    # 获取控制器的资源信息
+    resource = getattr(controller_cls, "_permission_resource", None)
+    scope = getattr(controller_cls, "_permission_scope", None)
+    
+    if not resource or not scope:
+        return
+    
+    # 已注册的操作（避免重复）
+    registered_actions: set[str] = set()
+    
+    # 扫描路由器上的所有路由
+    for route in router.routes:
+        # 获取路由的 endpoint 函数
+        endpoint = getattr(route, "endpoint", None)
+        if not endpoint:
+            continue
+        
+        # 检查是否有 _permission_action 属性
+        action_info = getattr(endpoint, "_permission_action", None)
+        if not action_info:
+            continue
+        
+        action = action_info["action"]
+        
+        # 避免重复注册
+        if action in registered_actions:
+            continue
+        registered_actions.add(action)
+        
+        # 注册操作权限
+        action_perm = PermissionMeta(
+            code=f"{resource}:{action}",
+            name=action_info["name"],
+            type=PermissionType.OPERATION,
+            scope=scope,
+            resource=resource,
+            action=action,
+            description=action_info.get("description", ""),
+        )
+        permission_registry.register(action_perm)
+
+
 __all__ = [
     "MenuConfig",
     "PermissionMeta",
@@ -212,4 +257,6 @@ __all__ = [
     "action_delete",
     "action_export",
     "action_import",
+    # 用于手动注册操作权限
+    "register_action_permissions",
 ]

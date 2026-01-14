@@ -19,13 +19,17 @@ class PermissionRegistry:
     """
     
     _instance: "PermissionRegistry | None" = None
-    _permissions: dict[str, "PermissionMeta"]
+    _permissions: dict[str, "PermissionMeta"]  # key = "code:scope"
     
     def __new__(cls) -> "PermissionRegistry":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._permissions = {}
         return cls._instance
+    
+    def _make_key(self, code: str, scope: "PermissionScope") -> str:
+        """生成权限唯一标识"""
+        return f"{code}:{scope.value}"
     
     def register(self, permission: "PermissionMeta") -> None:
         """
@@ -34,20 +38,28 @@ class PermissionRegistry:
         Args:
             permission: 权限元信息
         """
-        if permission.code not in self._permissions:
-            self._permissions[permission.code] = permission
+        key = self._make_key(permission.code, permission.scope)
+        if key not in self._permissions:
+            self._permissions[key] = permission
     
-    def get(self, code: str) -> "PermissionMeta | None":
+    def get(self, code: str, scope: "PermissionScope | None" = None) -> "PermissionMeta | None":
         """
         获取权限
         
         Args:
             code: 权限代码
+            scope: 权限作用域（可选，若不提供则逐一匹配）
         
         Returns:
             权限元信息或 None
         """
-        return self._permissions.get(code)
+        if scope:
+            return self._permissions.get(self._make_key(code, scope))
+        # 无 scope 时遍历查找
+        for perm in self._permissions.values():
+            if perm.code == code:
+                return perm
+        return None
     
     def get_all(self) -> list["PermissionMeta"]:
         """获取所有权限"""
@@ -95,7 +107,8 @@ class PermissionRegistry:
         return len(self._permissions)
     
     def __contains__(self, code: str) -> bool:
-        return code in self._permissions
+        """检查权限代码是否存在（不区分 scope）"""
+        return any(p.code == code for p in self._permissions.values())
 
 
 # 全局实例
