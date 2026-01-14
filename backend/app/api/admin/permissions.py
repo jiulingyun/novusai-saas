@@ -22,6 +22,7 @@ from app.rbac.decorators import (
 )
 from app.rbac.services import PermissionService
 from app.schemas.common import PermissionResponse, PermissionTreeResponse, MenuResponse
+from app.services.common.role_hierarchy_validator import AdminRoleHierarchyValidator
 
 
 def _translate_name(name: str) -> str:
@@ -122,20 +123,70 @@ class AdminPermissionController(GlobalController):
             current_admin: Admin = Depends(require_admin_permissions("permission:read")),
         ):
             """
-            获取平台端所有权限（树形结构）
+            获取平台端权限（树形结构）
             
-            用于角色权限配置页面
+            用于角色权限配置页面。
+            
+            层级权限控制：
+            - 超级管理员：返回所有权限
+            - 普通管理员：返回自己拥有的权限（含继承）
             
             权限: permission:read
             """
             perm_service = PermissionService(db)
-            permissions = await perm_service.get_enabled_permissions_by_scope("admin")
-            tree = build_permission_tree(permissions)
             
-            return success(
-                data=tree,
-                message=_("common.success"),
+            # 超级管理员返回所有权限
+            if current_admin.is_super:
+                permissions = await perm_service.get_enabled_permissions_by_scope("admin")
+                tree = build_permission_tree(permissions)
+                return success(data=tree, message=_("common.success"))
+            
+            # 获取当前用户的有效权限 ID
+            validator = AdminRoleHierarchyValidator(db, current_admin)
+            effective_ids = await validator.get_effective_permission_ids()
+            
+            if not effective_ids:
+                return success(data=[], message=_("common.success"))
+            
+            # 查询这些权限
+            result = await db.execute(
+                select(Permission)
+                .where(
+                    Permission.id.in_(effective_ids),
+                    Permission.is_enabled == True,
+                    Permission.is_deleted == False,
+                )
+                .order_by(Permission.sort_order)
             )
+            permissions = list(result.scalars().all())
+            
+            # 补充父级权限（确保树形结构完整）
+            perm_ids = {p.id for p in permissions}
+            parent_ids_to_fetch = set()
+            for p in permissions:
+                if p.parent_id and p.parent_id not in perm_ids:
+                    parent_ids_to_fetch.add(p.parent_id)
+            
+            while parent_ids_to_fetch:
+                result = await db.execute(
+                    select(Permission)
+                    .where(
+                        Permission.id.in_(parent_ids_to_fetch),
+                        Permission.is_enabled == True,
+                        Permission.is_deleted == False,
+                    )
+                )
+                parents = list(result.scalars().all())
+                permissions.extend(parents)
+                perm_ids.update(p.id for p in parents)
+                
+                parent_ids_to_fetch = set()
+                for p in parents:
+                    if p.parent_id and p.parent_id not in perm_ids:
+                        parent_ids_to_fetch.add(p.parent_id)
+            
+            tree = build_permission_tree(permissions)
+            return success(data=tree, message=_("common.success"))
         
         @router.get("/menus", summary="获取当前用户菜单")
         async def get_current_user_menus(
@@ -202,23 +253,44 @@ class AdminPermissionController(GlobalController):
             """
             获取权限列表（非树形）
             
+            层级权限控制：
+            - 超级管理员：返回所有权限
+            - 普通管理员：返回自己拥有的权限（含继承）
+            
             - type: 可选过滤，menu/operation
             
             权限: permission:read
             """
-            query = select(Permission).where(
-                Permission.is_enabled == True,
-                Permission.is_deleted == False,
-                Permission.scope.in_(["admin", "both"]),
-            )
-            
-            if type:
-                query = query.where(Permission.type == type)
-            
-            query = query.order_by(Permission.sort_order)
-            
-            result = await db.execute(query)
-            permissions = result.scalars().all()
+            # 超级管理员返回所有权限
+            if current_admin.is_super:
+                query = select(Permission).where(
+                    Permission.is_enabled == True,
+                    Permission.is_deleted == False,
+                    Permission.scope.in_(["admin", "both"]),
+                )
+                if type:
+                    query = query.where(Permission.type == type)
+                query = query.order_by(Permission.sort_order)
+                result = await db.execute(query)
+                permissions = result.scalars().all()
+            else:
+                # 普通管理员只返回自己拥有的权限
+                validator = AdminRoleHierarchyValidator(db, current_admin)
+                effective_ids = await validator.get_effective_permission_ids()
+                
+                if not effective_ids:
+                    return success(data=[], message=_("common.success"))
+                
+                query = select(Permission).where(
+                    Permission.id.in_(effective_ids),
+                    Permission.is_enabled == True,
+                    Permission.is_deleted == False,
+                )
+                if type:
+                    query = query.where(Permission.type == type)
+                query = query.order_by(Permission.sort_order)
+                result = await db.execute(query)
+                permissions = result.scalars().all()
             
             # 使用 PermissionResponse（不含 children）并翻译名称
             data = [
