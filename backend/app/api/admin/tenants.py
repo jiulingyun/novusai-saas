@@ -39,6 +39,7 @@ from app.schemas.system import (
     TenantImpersonateRequest,
     TenantImpersonateResponse,
 )
+from app.schemas.common.select import SelectResponse
 from app.services.system import TenantService
 
 # 审计日志
@@ -71,6 +72,32 @@ class AdminTenantController(GlobalController):
     def _register_routes(self) -> None:
         """注册路由"""
         router = self.router
+        
+        @router.get("/select", summary="获取租户下拉选项")
+        @action_read("action.tenant.select")
+        async def select_tenants(
+            db: DbSession,
+            current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
+            search: str = "",
+            is_active: bool = True,
+        ):
+            """
+            获取租户下拉选项
+            
+            用于筛选器或表单中的租户选择组件
+            
+            权限: tenant:read
+            """
+            service = TenantService(db)
+            options = await service.get_select_options(
+                search=search,
+                limit=50,
+                is_active=is_active,
+            )
+            return success(
+                data=SelectResponse(items=options),
+                message=_("common.success"),
+            )
         
         @router.get("", summary="获取租户列表")
         @action_read("action.tenant.list")

@@ -29,6 +29,7 @@ from app.schemas.system import (
     AdminCreateRequest,
     AdminUpdateRequest,
 )
+from app.schemas.common.select import SelectResponse
 from app.services.system import AdminService
 
 
@@ -63,6 +64,32 @@ class AdminAdminController(GlobalController):
     def _register_routes(self) -> None:
         """注册路由"""
         router = self.router
+        
+        @router.get("/select", summary="获取管理员下拉选项")
+        @action_read("action.admin.select")
+        async def select_admins(
+            db: DbSession,
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:read")),
+            search: str = "",
+            is_active: bool = True,
+        ):
+            """
+            获取管理员下拉选项
+            
+            用于表单中的管理员选择组件
+            
+            权限: admin_user:read
+            """
+            service = AdminService(db)
+            options = await service.get_select_options(
+                search=search,
+                limit=50,
+                is_active=is_active,
+            )
+            return success(
+                data=SelectResponse(items=options),
+                message=_("common.success"),
+            )
         
         @router.get("", summary="获取管理员列表")
         @action_read("action.admin.list")

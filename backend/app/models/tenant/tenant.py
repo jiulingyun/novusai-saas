@@ -29,6 +29,14 @@ class Tenant(BaseModel):
         "created_at", "updated_at",
     }
     
+    # 下拉选项配置
+    __selectable__ = {
+        "label": "name",
+        "value": "id",
+        "search": ["name", "code"],
+        "extra": ["code"],
+    }
+    
     # 基本信息
     name: Mapped[str] = mapped_column(
         String(100), index=True, comment="租户名称"

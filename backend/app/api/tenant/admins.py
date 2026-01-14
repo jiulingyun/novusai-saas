@@ -29,6 +29,7 @@ from app.schemas.tenant import (
     TenantAdminCreateRequest,
     TenantAdminUpdateRequest,
 )
+from app.schemas.common.select import SelectResponse
 from app.services.tenant import TenantAdminService
 
 
@@ -63,6 +64,32 @@ class TenantAdminController(TenantController):
     def _register_routes(self) -> None:
         """注册路由"""
         router = self.router
+        
+        @router.get("/select", summary="获取管理员下拉选项")
+        @action_read("action.admin.select")
+        async def select_admins(
+            db: DbSession,
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
+            search: str = "",
+            is_active: bool = True,
+        ):
+            """
+            获取管理员下拉选项
+            
+            用于表单中的管理员选择组件
+            
+            权限: tenant_user:read
+            """
+            service = TenantAdminService(db, tenant_id=current_admin.tenant_id)
+            options = await service.get_select_options(
+                search=search,
+                limit=50,
+                is_active=is_active,
+            )
+            return success(
+                data=SelectResponse(items=options),
+                message=_("common.success"),
+            )
         
         @router.get("", summary="获取管理员列表")
         @action_read("action.admin.list")

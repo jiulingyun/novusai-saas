@@ -38,6 +38,7 @@ from app.schemas.tenant import (
 from app.schemas.common import PermissionResponse
 from app.services.tenant.tenant_admin_role_service import TenantAdminRoleService
 from app.services.common.role_hierarchy_validator import TenantAdminRoleHierarchyValidator
+from app.schemas.common.select import SelectResponse
 
 
 @permission_resource(
@@ -65,6 +66,32 @@ class TenantRoleController(TenantController):
     def _register_routes(self) -> None:
         """注册路由"""
         router = self.router
+        
+        @router.get("/select", summary="获取角色下拉选项")
+        @action_read("action.role.select")
+        async def select_roles(
+            db: DbSession,
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:read")),
+            search: str = "",
+            is_active: bool = True,
+        ):
+            """
+            获取角色下拉选项
+            
+            用于表单中的角色选择组件
+            
+            权限: role:read
+            """
+            service = TenantAdminRoleService(db, current_admin.tenant_id)
+            options = await service.get_select_options(
+                search=search,
+                limit=50,
+                is_active=is_active,
+            )
+            return success(
+                data=SelectResponse(items=options),
+                message=_("common.success"),
+            )
         
         @router.get("", summary="获取角色列表")
         @action_read("action.role.list")

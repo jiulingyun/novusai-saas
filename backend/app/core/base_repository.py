@@ -13,6 +13,7 @@ from sqlalchemy.sql import Select
 
 from app.core.base_model import BaseModel
 from app.schemas.common.query import FilterOp, FilterRule, QuerySpec
+from app.schemas.common.select import SelectOption
 
 # 泛型类型变量
 ModelType = TypeVar("ModelType", bound=BaseModel)
@@ -564,6 +565,94 @@ class BaseRepository(Generic[ModelType]):
         return items, total
 
 
+    async def get_select_options(
+        self,
+        search: str = "",
+        limit: int = 50,
+        filters: dict[str, Any] | None = None,
+    ) -> list[SelectOption]:
+        """
+        获取下拉选项列表
+        
+        根据模型的 __selectable__ 配置自动构建查询
+        
+        Args:
+            search: 搜索关键词
+            limit: 最大返回数量
+            filters: 额外过滤条件（如 is_active=True）
+        
+        Returns:
+            SelectOption 列表
+        """
+        # 获取 __selectable__ 配置
+        selectable = getattr(self.model, "__selectable__", None)
+        if not selectable:
+            raise ValueError(
+                f"Model {self.model.__name__} does not have __selectable__ configuration"
+            )
+        
+        label_field = selectable.get("label", "name")
+        value_field = selectable.get("value", "id")
+        search_fields = selectable.get("search", [label_field])
+        extra_fields = selectable.get("extra", [])
+        
+        # 构建查询
+        query = select(self.model).where(self.model.is_deleted == False)
+        
+        # 应用额外过滤条件
+        if filters:
+            for key, value in filters.items():
+                if hasattr(self.model, key) and value is not None:
+                    query = query.where(getattr(self.model, key) == value)
+        
+        # 应用搜索条件（OR 多字段）
+        if search:
+            search_predicates = []
+            for field_name in search_fields:
+                if hasattr(self.model, field_name):
+                    col = getattr(self.model, field_name)
+                    search_predicates.append(col.ilike(f"%{search}%"))
+            if search_predicates:
+                query = query.where(or_(*search_predicates))
+        
+        # 排序和限制
+        if hasattr(self.model, label_field):
+            query = query.order_by(asc(getattr(self.model, label_field)))
+        query = query.limit(limit)
+        
+        # 执行查询
+        result = await self.db.execute(query)
+        items = list(result.scalars().all())
+        
+        # 构建 SelectOption 列表
+        options = []
+        for item in items:
+            label = getattr(item, label_field, "")
+            value = getattr(item, value_field, 0)
+            
+            # 构建 extra 数据
+            extra = None
+            if extra_fields:
+                extra = {}
+                for ef in extra_fields:
+                    if hasattr(item, ef):
+                        extra[ef] = getattr(item, ef)
+            
+            # 检查是否禁用（如果有 is_active 字段）
+            disabled = False
+            if hasattr(item, "is_active"):
+                disabled = not item.is_active
+            
+            options.append(SelectOption(
+                label=str(label),
+                value=value,
+                extra=extra,
+                disabled=disabled,
+            ))
+        
+        return options
+
+
 class TenantRepository(BaseRepository[ModelType]):
     """
     租户级仓储基类
@@ -648,6 +737,27 @@ class TenantRepository(BaseRepository[ModelType]):
             scope=scope,
             forced_filters=all_forced,
             include_deleted=include_deleted,
+        )
+    
+    async def get_select_options(
+        self,
+        search: str = "",
+        limit: int = 50,
+        filters: dict[str, Any] | None = None,
+    ) -> list[SelectOption]:
+        """
+        租户级下拉选项列表
+        
+        自动注入 tenant_id 过滤
+        """
+        # 自动添加租户过滤
+        all_filters = filters.copy() if filters else {}
+        all_filters["tenant_id"] = self.tenant_id
+        
+        return await super().get_select_options(
+            search=search,
+            limit=limit,
+            filters=all_filters,
         )
 
 

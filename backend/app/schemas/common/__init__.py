@@ -19,6 +19,10 @@ from app.schemas.common.query import (
     FilterRule,
     QuerySpec,
 )
+from app.schemas.common.select import (
+    SelectOption,
+    SelectResponse,
+)
 
 __all__ = [
     "TokenResponse",
@@ -30,4 +34,6 @@ __all__ = [
     "FilterOp",
     "FilterRule",
     "QuerySpec",
+    "SelectOption",
+    "SelectResponse",
 ]

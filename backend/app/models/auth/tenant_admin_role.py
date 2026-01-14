@@ -49,6 +49,14 @@ class TenantAdminRole(TenantModel):
         "updated_at": "updated_at",
     }
     
+    # 下拉选项配置
+    __selectable__ = {
+        "label": "name",
+        "value": "id",
+        "search": ["name", "code"],
+        "extra": ["code"],
+    }
+    
     # 角色名称
     name: Mapped[str] = mapped_column(
         String(50), comment="角色名称"

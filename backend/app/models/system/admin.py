@@ -37,6 +37,14 @@ class Admin(BaseModel):
         "updated_at": "updated_at",
     }
     
+    # 下拉选项配置
+    __selectable__ = {
+        "label": "username",
+        "value": "id",
+        "search": ["username", "nickname", "email"],
+        "extra": ["nickname", "avatar"],
+    }
+    
     # 基本信息
     username: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, comment="用户名"

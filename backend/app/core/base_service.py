@@ -15,6 +15,7 @@ from app.core.base_model import BaseModel
 from app.core.base_repository import BaseRepository, TenantRepository
 from app.core.base_schema import PageParams, PageResponse
 from app.schemas.common.query import QuerySpec, FilterRule
+from app.schemas.common.select import SelectOption
 
 # 泛型类型变量
 ModelType = TypeVar("ModelType", bound=BaseModel)
@@ -236,6 +237,29 @@ class BaseService(Generic[ModelType, RepoType]):
             spec=spec,
             scope=scope,
             forced_filters=forced_filters,
+        )
+    
+    async def get_select_options(
+        self,
+        search: str = "",
+        limit: int = 50,
+        **filters: Any,
+    ) -> list[SelectOption]:
+        """
+        获取下拉选项列表
+        
+        Args:
+            search: 搜索关键词
+            limit: 最大返回数量
+            **filters: 额外过滤条件
+        
+        Returns:
+            SelectOption 列表
+        """
+        return await self.repo.get_select_options(
+            search=search,
+            limit=limit,
+            filters=filters if filters else None,
         )
     
     # ========================================
