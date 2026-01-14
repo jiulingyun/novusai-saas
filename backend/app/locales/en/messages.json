@@ -130,6 +130,16 @@
     "model_not_available": "Model is not available",
     "context_too_long": "Context length exceeds limit"
   },
+  "rbac": {
+    "permission_denied": "Permission denied, access forbidden",
+    "role_required": "Role permission required",
+    "super_admin_required": "Super admin privileges required",
+    "owner_required": "Tenant owner privileges required",
+    "invalid_permission": "Invalid permission code",
+    "permission_not_found": "Permission not found",
+    "cannot_access_resource": "No permission to access this resource",
+    "insufficient_privileges": "Insufficient privilege level"
+  },
   "permission": {
     "read": "View",
     "create": "Create",

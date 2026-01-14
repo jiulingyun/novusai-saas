@@ -130,6 +130,16 @@
     "model_not_available": "模型暂不可用",
     "context_too_long": "上下文长度超出限制"
   },
+  "rbac": {
+    "permission_denied": "权限不足，拒绝访问",
+    "role_required": "需要角色权限",
+    "super_admin_required": "需要超级管理员权限",
+    "owner_required": "需要租户所有者权限",
+    "invalid_permission": "无效的权限代码",
+    "permission_not_found": "权限不存在",
+    "cannot_access_resource": "无权访问该资源",
+    "insufficient_privileges": "权限级别不足"
+  },
   "permission": {
     "read": "查看",
     "create": "创建",
