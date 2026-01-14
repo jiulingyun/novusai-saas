@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.base_model import BaseModel
 from app.core.base_repository import BaseRepository, TenantRepository
 from app.core.base_schema import PageParams, PageResponse
+from app.schemas.common.query import QuerySpec, FilterRule
 
 # 泛型类型变量
 ModelType = TypeVar("ModelType", bound=BaseModel)
@@ -211,6 +212,31 @@ class BaseService(Generic[ModelType, RepoType]):
             是否存在
         """
         return await self.repo.exists(id)
+    
+    async def query_list(
+        self,
+        spec: QuerySpec,
+        scope: str | None = None,
+        forced_filters: list[FilterRule] | None = None,
+    ) -> tuple[list[ModelType], int]:
+        """
+        通用列表查询
+        
+        支持 JSON:API 风格筛选、排序、分页
+        
+        Args:
+            spec: 查询规格（包含 filters/sort/page/size）
+            scope: 作用域，用于按端限制可过滤字段
+            forced_filters: 强制过滤条件
+        
+        Returns:
+            (数据列表, 总数)
+        """
+        return await self.repo.query_list(
+            spec=spec,
+            scope=scope,
+            forced_filters=forced_filters,
+        )
     
     # ========================================
     # 钩子方法（子类可重写）

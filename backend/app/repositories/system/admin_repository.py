@@ -19,6 +19,15 @@ class AdminRepository(BaseRepository[Admin]):
     
     model = Admin
     
+    # 按 scope 限制可过滤字段
+    _scope_fields = {
+        "admin": {
+            "id", "username", "email", "phone", 
+            "is_active", "is_super", "nickname", "role_id",
+            "created_at", "updated_at",
+        },
+    }
+    
     async def get_by_username(self, username: str) -> Admin | None:
         """
         根据用户名获取管理员

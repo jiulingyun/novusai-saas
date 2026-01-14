@@ -23,6 +23,20 @@ class Admin(BaseModel):
     
     __tablename__ = "admins"
     
+    # 可过滤字段声明（注意：不包含 password_hash 等敏感字段）
+    __filterable__ = {
+        "id": "id",
+        "username": "username",
+        "email": "email",
+        "phone": "phone",
+        "is_active": "is_active",
+        "is_super": "is_super",
+        "nickname": "nickname",
+        "role_id": "role_id",
+        "created_at": "created_at",
+        "updated_at": "updated_at",
+    }
+    
     # 基本信息
     username: Mapped[str] = mapped_column(
         String(50), unique=True, index=True, comment="用户名"

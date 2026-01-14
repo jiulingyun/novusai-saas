@@ -94,7 +94,20 @@
   },
   "pagination": {
     "invalid_page": "Invalid page number",
-    "invalid_page_size": "Invalid page size"
+    "invalid_page_size": "Invalid page size",
+    "size_exceeded": "Page size exceeded limit"
+  },
+  "errors": {
+    "filters": {
+      "unknown_field": "Unknown filter field",
+      "op_not_allowed": "Operator not allowed",
+      "between_requires_two_values": "Between operator requires two values",
+      "in_too_many_values": "Too many values for in operator",
+      "too_many": "Too many filter conditions"
+    },
+    "sorts": {
+      "unknown_field": "Unknown sort field"
+    }
   },
   "file": {
     "upload_success": "File uploaded successfully",

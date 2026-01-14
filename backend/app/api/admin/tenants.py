@@ -8,8 +8,8 @@ from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.core.base_controller import GlobalController
-from app.core.base_schema import PageParams
-from app.core.deps import DbSession
+from app.core.base_schema import PageResponse
+from app.core.deps import DbSession, QueryParams
 from app.core.i18n import _
 from app.core.logging import get_logger
 from app.core.response import success
@@ -76,41 +76,28 @@ class AdminTenantController(GlobalController):
         @action_read("action.tenant.list")
         async def list_tenants(
             db: DbSession,
+            spec: QueryParams,
             current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
-            page: int = Query(1, ge=1, description="页码"),
-            page_size: int = Query(20, ge=1, le=100, description="每页数量"),
-            is_active: bool | None = Query(None, description="是否启用"),
-            plan: str | None = Query(None, description="套餐类型"),
         ):
             """
             获取所有租户列表
             
-            - 支持分页
-            - 支持按状态、套餐过滤
+            - 支持通用筛选: filter[field][op]=value
+            - 支持排序: sort=-created_at,name
+            - 支持分页: page[number]=1&page[size]=20
             
             权限: tenant:read
             """
             service = TenantService(db)
-            page_params = PageParams(page=page, page_size=page_size)
-            
-            # 构建过滤条件
-            filters = {}
-            if is_active is not None:
-                filters["is_active"] = is_active
-            if plan is not None:
-                filters["plan"] = plan
-            
-            # 获取分页数据
-            page_result = await service.get_paginated(page_params, **filters)
+            items, total = await service.query_list(spec, scope="admin")
             
             return success(
-                data={
-                    "items": [TenantResponse.model_validate(item, from_attributes=True) for item in page_result.items],
-                    "total": page_result.total,
-                    "page": page_result.page,
-                    "page_size": page_result.page_size,
-                    "pages": page_result.pages,
-                },
+                data=PageResponse.create(
+                    items=[TenantResponse.model_validate(item, from_attributes=True) for item in items],
+                    total=total,
+                    page=spec.page,
+                    page_size=spec.size,
+                ),
                 message=_("common.success"),
             )
         

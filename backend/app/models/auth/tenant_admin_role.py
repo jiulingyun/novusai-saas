@@ -35,6 +35,20 @@ class TenantAdminRole(TenantModel):
     
     __tablename__ = "tenant_admin_roles"
     
+    # 可过滤字段声明
+    __filterable__ = {
+        "id": "id",
+        "tenant_id": "tenant_id",
+        "name": "name",
+        "code": "code",
+        "is_system": "is_system",
+        "is_active": "is_active",
+        "parent_id": "parent_id",
+        "level": "level",
+        "created_at": "created_at",
+        "updated_at": "updated_at",
+    }
+    
     # 角色名称
     name: Mapped[str] = mapped_column(
         String(50), comment="角色名称"

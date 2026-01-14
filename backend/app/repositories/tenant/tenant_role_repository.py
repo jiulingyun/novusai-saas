@@ -20,6 +20,20 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
     
     model = TenantAdminRole
     
+    # 按 scope 限制可过滤字段
+    _scope_fields = {
+        # 平台管理员查看租户角色
+        "admin": {
+            "id", "tenant_id", "name", "code", "is_system", "is_active",
+            "parent_id", "level", "created_at", "updated_at",
+        },
+        # 租户管理员查看本租户角色
+        "tenant": {
+            "id", "name", "code", "is_system", "is_active",
+            "parent_id", "level", "created_at", "updated_at",
+        },
+    }
+    
     async def get_by_code(self, code: str) -> TenantAdminRole | None:
         """
         根据代码获取角色（租户内）

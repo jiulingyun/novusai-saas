@@ -26,6 +26,7 @@ from app.core.security import (
     TOKEN_SCOPE_TENANT_ADMIN,
     TOKEN_SCOPE_TENANT_USER,
 )
+from app.core.query_parser import get_query_spec, QueryParams
 from app.models import Admin, TenantAdmin, TenantUser
 
 
@@ -301,4 +302,7 @@ __all__ = [
     # 通用
     "oauth2_scheme",
     "DbSession",
+    # 查询参数
+    "get_query_spec",
+    "QueryParams",
 ]

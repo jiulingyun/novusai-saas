@@ -19,6 +19,22 @@ class TenantAdminRepository(TenantRepository[TenantAdmin]):
     
     model = TenantAdmin
     
+    # 按 scope 限制可过滤字段
+    _scope_fields = {
+        # 平台管理员查看租户管理员列表
+        "admin": {
+            "id", "tenant_id", "username", "email", "phone",
+            "is_active", "is_owner", "nickname", "role_id",
+            "created_at", "updated_at",
+        },
+        # 租户管理员查看本租户管理员列表
+        "tenant": {
+            "id", "username", "email", "phone",
+            "is_active", "is_owner", "nickname", "role_id",
+            "created_at", "updated_at",
+        },
+    }
+    
     async def get_by_username(self, username: str) -> TenantAdmin | None:
         """
         根据用户名获取租户管理员（租户内）

@@ -94,7 +94,20 @@
   },
   "pagination": {
     "invalid_page": "页码无效",
-    "invalid_page_size": "每页数量无效"
+    "invalid_page_size": "每页数量无效",
+    "size_exceeded": "每页数量超出限制"
+  },
+  "errors": {
+    "filters": {
+      "unknown_field": "未知的筛选字段",
+      "op_not_allowed": "不允许的操作符",
+      "between_requires_two_values": "between 操作符需要两个值",
+      "in_too_many_values": "in 操作符值数量超出限制",
+      "too_many": "筛选条件数量超出限制"
+    },
+    "sorts": {
+      "unknown_field": "未知的排序字段"
+    }
   },
   "file": {
     "upload_success": "文件上传成功",

@@ -22,6 +22,13 @@ class Tenant(BaseModel):
     
     __tablename__ = "tenants"
     
+    # 允许前端筛选的字段
+    __filterable__ = {
+        "id", "name", "code", "contact_name", "contact_phone",
+        "contact_email", "is_active", "plan", "expires_at",
+        "created_at", "updated_at",
+    }
+    
     # 基本信息
     name: Mapped[str] = mapped_column(
         String(100), index=True, comment="租户名称"

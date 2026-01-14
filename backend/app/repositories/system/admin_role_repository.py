@@ -20,6 +20,14 @@ class AdminRoleRepository(BaseRepository[AdminRole]):
     
     model = AdminRole
     
+    # 按 scope 限制可过滤字段
+    _scope_fields = {
+        "admin": {
+            "id", "name", "code", "is_system", "is_active",
+            "parent_id", "level", "created_at", "updated_at",
+        },
+    }
+    
     async def get_by_code(self, code: str) -> AdminRole | None:
         """
         根据代码获取角色

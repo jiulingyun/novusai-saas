@@ -14,6 +14,11 @@ from app.schemas.common.permission import (
     PermissionTreeResponse,
     MenuResponse,
 )
+from app.schemas.common.query import (
+    FilterOp,
+    FilterRule,
+    QuerySpec,
+)
 
 __all__ = [
     "TokenResponse",
@@ -22,4 +27,7 @@ __all__ = [
     "PermissionResponse",
     "PermissionTreeResponse",
     "MenuResponse",
+    "FilterOp",
+    "FilterRule",
+    "QuerySpec",
 ]

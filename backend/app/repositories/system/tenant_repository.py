@@ -19,6 +19,15 @@ class TenantRepository(BaseRepository[Tenant]):
     
     model = Tenant
     
+    # 不同 scope 下允许筛选的字段
+    _scope_fields: dict[str, set[str]] = {
+        "admin": {
+            "id", "name", "code", "contact_name", "contact_phone",
+            "contact_email", "is_active", "plan", "expires_at",
+            "created_at", "updated_at",
+        },
+    }
+    
     async def get_by_code(self, code: str) -> Tenant | None:
         """
         根据编码获取租户

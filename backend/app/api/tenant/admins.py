@@ -8,10 +8,11 @@ from fastapi import Depends, HTTPException, Query, status
 from pydantic import Field
 
 from app.core.base_controller import TenantController
-from app.core.base_schema import BaseSchema, PageParams
-from app.core.deps import DbSession
+from app.core.base_schema import BaseSchema, PageParams, PageResponse
+from app.core.deps import DbSession, QueryParams
 from app.core.i18n import _
 from app.core.response import success
+from app.schemas.common.query import QuerySpec
 from app.enums.rbac import PermissionScope
 from app.models import TenantAdmin
 from app.rbac import require_tenant_admin_permissions
@@ -67,39 +68,33 @@ class TenantAdminController(TenantController):
         @action_read("action.admin.list")
         async def list_admins(
             db: DbSession,
+            spec: QueryParams,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
-            page: int = Query(1, ge=1, description="页码"),
-            page_size: int = Query(20, ge=1, le=100, description="每页数量"),
-            is_active: bool | None = Query(None, description="是否激活"),
         ):
             """
             获取当前租户的所有管理员列表
             
-            - 支持分页
-            - 支持按激活状态过滤
-            - 自动过滤当前租户数据
+            支持 JSON:API 风格筛选参数:
+            - filter[username][ilike]=xxx 用户名模糊搜索
+            - filter[email][ilike]=xxx 邮箱模糊搜索
+            - filter[is_active]=true 按激活状态筛选
+            - filter[is_owner]=true 按所有者状态筛选
+            - filter[role_id]=1 按角色筛选
+            - sort=-created_at 排序
+            - page[number]=1&page[size]=20 分页
             
             权限: tenant_user:read
             """
             service = TenantAdminService(db, tenant_id=current_admin.tenant_id)
-            page_params = PageParams(page=page, page_size=page_size)
-            
-            # 构建过滤条件
-            filters = {}
-            if is_active is not None:
-                filters["is_active"] = is_active
-            
-            # 获取分页数据
-            page_result = await service.get_paginated(page_params, **filters)
+            items, total = await service.query_list(spec, scope="tenant")
             
             return success(
-                data={
-                    "items": [TenantAdminResponse.from_model(item) for item in page_result.items],
-                    "total": page_result.total,
-                    "page": page_result.page,
-                    "page_size": page_result.page_size,
-                    "pages": page_result.pages,
-                },
+                data=PageResponse.create(
+                    items=[TenantAdminResponse.from_model(item) for item in items],
+                    total=total,
+                    page=spec.page,
+                    page_size=spec.size,
+                ),
                 message=_("common.success"),
             )
         
