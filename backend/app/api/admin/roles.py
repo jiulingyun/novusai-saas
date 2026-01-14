@@ -71,7 +71,7 @@ class AdminRoleController(GlobalController):
         @action_read("action.role.select")
         async def select_roles(
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:select")),
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -80,7 +80,7 @@ class AdminRoleController(GlobalController):
             
             用于表单中的角色选择组件
             
-            权限: role:read
+            权限: role:select
             """
             # 解析 is_active 参数
             active_filter = True  # 默认仅启用
@@ -104,7 +104,7 @@ class AdminRoleController(GlobalController):
         @action_read("action.role.list")
         async def list_roles(
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:list")),
         ):
             """
             获取平台角色列表
@@ -113,7 +113,7 @@ class AdminRoleController(GlobalController):
             - 超级管理员可以看到所有角色
             - 普通管理员只能看到自己的角色及其下级角色
             
-            权限: role:read
+            权限: role:list
             """
             # 获取可见角色 ID
             validator = AdminRoleHierarchyValidator(db, current_admin)
@@ -147,7 +147,7 @@ class AdminRoleController(GlobalController):
         @action_read("action.role.tree")
         async def get_role_tree(
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:tree")),
         ):
             """
             获取角色树形结构
@@ -156,7 +156,7 @@ class AdminRoleController(GlobalController):
             - 超级管理员可以看到完整角色树
             - 普通管理员只能看到以自己角色为根的子树
             
-            权限: role:read
+            权限: role:tree
             """
             service = AdminRoleService(db)
             
@@ -177,14 +177,14 @@ class AdminRoleController(GlobalController):
         async def get_role(
             db: DbSession,
             role_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:detail")),
         ):
             """
             获取角色详情（含权限列表）
             
             层级权限控制：只能查看可见角色的详情
             
-            权限: role:read
+            权限: role:detail
             """
             # 先查询角色是否存在
             result = await db.execute(
@@ -238,14 +238,14 @@ class AdminRoleController(GlobalController):
         async def get_role_children(
             db: DbSession,
             role_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:children")),
         ):
             """
             获取指定角色的直接子角色
             
             层级权限控制：只能查看可见角色的子角色
             
-            权限: role:read
+            权限: role:children
             """
             # 校验角色可见性
             validator = AdminRoleHierarchyValidator(db, current_admin)
@@ -281,14 +281,14 @@ class AdminRoleController(GlobalController):
         async def get_effective_permissions(
             db: DbSession,
             role_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("role:read")),
+            current_admin: Admin = Depends(require_admin_permissions("role:effective_permissions")),
         ):
             """
             获取角色的有效权限（含继承的权限）
             
             层级权限控制：只能查看可见角色的有效权限
             
-            权限: role:read
+            权限: role:effective_permissions
             """
             # 校验角色可见性
             validator = AdminRoleHierarchyValidator(db, current_admin)

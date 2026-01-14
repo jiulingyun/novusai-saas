@@ -77,7 +77,7 @@ class AdminTenantController(GlobalController):
         @action_read("action.tenant.select")
         async def select_tenants(
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
+            current_admin: Admin = Depends(require_admin_permissions("tenant:select")),
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -86,7 +86,7 @@ class AdminTenantController(GlobalController):
             
             用于筛选器或表单中的租户选择组件
             
-            权限: tenant:read
+            权限: tenant:select
             """
             # 解析 is_active 参数
             active_filter = True  # 默认仅启用
@@ -111,7 +111,7 @@ class AdminTenantController(GlobalController):
         async def list_tenants(
             db: DbSession,
             spec: QueryParams,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
+            current_admin: Admin = Depends(require_admin_permissions("tenant:list")),
         ):
             """
             获取所有租户列表
@@ -120,7 +120,7 @@ class AdminTenantController(GlobalController):
             - 支持排序: sort=-created_at,name
             - 支持分页: page[number]=1&page[size]=20
             
-            权限: tenant:read
+            权限: tenant:list
             """
             service = TenantService(db)
             items, total = await service.query_list(spec, scope="admin")
@@ -140,12 +140,12 @@ class AdminTenantController(GlobalController):
         async def get_tenant(
             db: DbSession,
             tenant_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
+            current_admin: Admin = Depends(require_admin_permissions("tenant:detail")),
         ):
             """
             获取租户详情
             
-            权限: tenant:read
+            权限: tenant:detail
             """
             service = TenantService(db)
             tenant = await service.get_by_id(tenant_id)

@@ -69,7 +69,7 @@ class AdminAdminController(GlobalController):
         @action_read("action.admin.select")
         async def select_admins(
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:read")),
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:select")),
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -78,7 +78,7 @@ class AdminAdminController(GlobalController):
             
             用于表单中的管理员选择组件
             
-            权限: admin_user:read
+            权限: admin_user:select
             """
             # 解析 is_active 参数
             active_filter = True  # 默认仅启用
@@ -103,7 +103,7 @@ class AdminAdminController(GlobalController):
         async def list_admins(
             db: DbSession,
             spec: QueryParams,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:read")),
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:list")),
         ):
             """
             获取所有平台管理员列表
@@ -117,7 +117,7 @@ class AdminAdminController(GlobalController):
             - sort=-created_at 排序
             - page[number]=1&page[size]=20 分页
             
-            权限: admin_user:read
+            权限: admin_user:list
             """
             service = AdminService(db)
             items, total = await service.query_list(spec, scope="admin")
@@ -137,12 +137,12 @@ class AdminAdminController(GlobalController):
         async def get_admin(
             db: DbSession,
             admin_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:read")),
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:detail")),
         ):
             """
             获取管理员详情
             
-            权限: admin_user:read
+            权限: admin_user:detail
             """
             service = AdminService(db)
             admin = await service.get_by_id(admin_id)
@@ -271,14 +271,14 @@ class AdminAdminController(GlobalController):
             db: DbSession,
             admin_id: int,
             data: AdminResetPasswordRequest,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:update")),
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:reset_password")),
         ):
             """
             重置管理员密码（超管操作）
             
             - 只有超级管理员可以重置其他管理员的密码
             
-            权限: admin_user:update + 超级管理员
+            权限: admin_user:reset_password + 超级管理员
             """
             # 验证当前用户是超级管理员
             if not current_admin.is_super:
@@ -300,7 +300,7 @@ class AdminAdminController(GlobalController):
             db: DbSession,
             admin_id: int,
             is_active: bool = Query(..., description="是否激活"),
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:update")),
+            current_admin: Admin = Depends(require_admin_permissions("admin_user:toggle_status")),
         ):
             """
             启用或禁用管理员
@@ -308,7 +308,7 @@ class AdminAdminController(GlobalController):
             - 不能禁用自己
             - 非超管不能操作超管
             
-            权限: admin_user:update
+            权限: admin_user:toggle_status
             """
             # 不能禁用自己
             if admin_id == current_admin.id:

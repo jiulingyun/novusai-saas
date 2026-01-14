@@ -69,7 +69,7 @@ class TenantAdminController(TenantController):
         @action_read("action.admin.select")
         async def select_admins(
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:select")),
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -78,7 +78,7 @@ class TenantAdminController(TenantController):
             
             用于表单中的管理员选择组件
             
-            权限: tenant_user:read
+            权限: tenant_user:select
             """
             # 解析 is_active 参数
             active_filter = True  # 默认仅启用
@@ -103,7 +103,7 @@ class TenantAdminController(TenantController):
         async def list_admins(
             db: DbSession,
             spec: QueryParams,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:list")),
         ):
             """
             获取当前租户的所有管理员列表
@@ -117,7 +117,7 @@ class TenantAdminController(TenantController):
             - sort=-created_at 排序
             - page[number]=1&page[size]=20 分页
             
-            权限: tenant_user:read
+            权限: tenant_user:list
             """
             service = TenantAdminService(db, tenant_id=current_admin.tenant_id)
             items, total = await service.query_list(spec, scope="tenant")
@@ -137,12 +137,12 @@ class TenantAdminController(TenantController):
         async def get_admin(
             db: DbSession,
             admin_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:detail")),
         ):
             """
             获取管理员详情
             
-            权限: tenant_user:read
+            权限: tenant_user:detail
             """
             service = TenantAdminService(db, tenant_id=current_admin.tenant_id)
             admin = await service.get_by_id(admin_id)
@@ -267,14 +267,14 @@ class TenantAdminController(TenantController):
             db: DbSession,
             admin_id: int,
             data: TenantAdminResetPasswordRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:update")),
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:reset_password")),
         ):
             """
             重置管理员密码（租户所有者操作）
             
             - 只有租户所有者可以重置其他管理员的密码
             
-            权限: tenant_user:update + 租户所有者
+            权限: tenant_user:reset_password + 租户所有者
             """
             # 验证当前用户是租户所有者
             if not current_admin.is_owner:
@@ -295,7 +295,7 @@ class TenantAdminController(TenantController):
             db: DbSession,
             admin_id: int,
             is_active: bool = Query(..., description="是否激活"),
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:update")),
+            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:toggle_status")),
         ):
             """
             启用或禁用管理员
