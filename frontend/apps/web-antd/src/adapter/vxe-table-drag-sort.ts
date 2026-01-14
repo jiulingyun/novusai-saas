@@ -47,9 +47,9 @@ export interface DragSortConfig {
   errorMessage?: string;
 }
 
-let sortableInstance: Sortable | null = null;
+let sortableInstance: null | Sortable = null;
 let currentConfig: DragSortConfig | null = null;
-let currentGridRef: { value: VxeGridInstance | undefined } | null = null;
+let currentGridRef: null | { value: undefined | VxeGridInstance } = null;
 
 /**
  * 初始化 Sortable 拖拽
@@ -104,7 +104,13 @@ async function handleDragEnd(evt: Sortable.SortableEvent) {
   const grid = currentGridRef.value;
   if (!grid) return;
 
-  const { sortField = 'sortOrder', keyField = 'id', onUpdate, successMessage, errorMessage } = currentConfig;
+  const {
+    sortField = 'sortOrder',
+    keyField = 'id',
+    onUpdate,
+    successMessage,
+    errorMessage,
+  } = currentConfig;
 
   // vxe-grid 使用 getTableData().fullData 获取全量数据
   const { fullData } = grid.getTableData();
@@ -139,7 +145,7 @@ async function handleDragEnd(evt: Sortable.SortableEvent) {
  * 简化版：自动处理初始化和销毁
  */
 export function useTableDragSort(
-  gridRef: { value: VxeGridInstance | undefined },
+  gridRef: { value: undefined | VxeGridInstance },
   config: DragSortConfig,
 ) {
   currentConfig = config;

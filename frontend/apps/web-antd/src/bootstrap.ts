@@ -1,23 +1,22 @@
 import { createApp, watchEffect } from 'vue';
 
-import { registerCustomAccessDirective } from './directives/access';
 import { registerLoadingDirective } from '@vben/common-ui/es/loading';
 import { preferences } from '@vben/preferences';
 import { initStores } from '@vben/stores';
 import '@vben/styles';
 import '@vben/styles/antd';
 
-import { TokenStorage } from './store/shared/token-storage';
-
 import { useTitle } from '@vueuse/core';
 
 import { $t, setupI18n } from '#/locales';
-import { setupConsoleFilter } from './utils/console-filter';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
 import App from './app.vue';
+import { registerCustomAccessDirective } from './directives/access';
 import { router } from './router';
+import { TokenStorage } from './store/shared/token-storage';
+import { setupConsoleFilter } from './utils/console-filter';
 
 async function bootstrap(namespace: string) {
   // 初始化 TokenStorage（多端 Token 分离存储）

@@ -1,0 +1,113 @@
+{
+  "title": "System Management",
+  "admin": {
+    "title": "Admin Management",
+    "list": "Admin List",
+    "create": "Create Admin",
+    "edit": "Edit Admin",
+    "username": "Username",
+    "nickname": "Nickname",
+    "email": "Email",
+    "phone": "Phone",
+    "avatar": "Avatar",
+    "role": "Role",
+    "status": "Status",
+    "type": "Type",
+    "superAdmin": "Super Admin",
+    "normalAdmin": "Normal Admin",
+    "createdAt": "Created At",
+    "lastLoginAt": "Last Login",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "resetPassword": "Reset Password",
+    "newPassword": "New Password",
+    "stats": {
+      "total": "Total Admins",
+      "active": "Active",
+      "inactive": "Inactive",
+      "super": "Super Admins"
+    },
+    "messages": {
+      "toggleStatusConfirm": "Are you sure you want to {action} user \"{name}\"?",
+      "toggleStatusTitle": "Toggle Status",
+      "deleteConfirm": "Are you sure you want to delete user \"{name}\"? This action cannot be undone.",
+      "deleteTitle": "Delete Confirmation",
+      "deleting": "Deleting {name}...",
+      "deleteSuccess": "Deleted successfully",
+      "resetPasswordSuccess": "Password reset successfully",
+      "resetPasswordFor": "Resetting password for user \"{name}\"",
+      "passwordMismatch": "Passwords do not match",
+      "createSuccess": "Created successfully",
+      "updateSuccess": "Updated successfully"
+    },
+    "placeholder": {
+      "searchUsername": "Search username",
+      "searchEmail": "Search email",
+      "searchPhone": "Search phone",
+      "allStatus": "All Status",
+      "inputUsername": "Please enter username",
+      "inputNickname": "Please enter nickname",
+      "inputPassword": "Please enter password (at least 6 characters)",
+      "inputEmail": "Please enter email",
+      "inputPhone": "Please enter phone",
+      "selectRole": "Please select role",
+      "inputNewPassword": "Please enter new password",
+      "confirmPassword": "Please confirm new password"
+    },
+    "help": {
+      "usernameEdit": "Username cannot be modified after creation",
+      "usernameCreate": "Username will be used for login",
+      "roleHelp": "Role determines user permissions",
+      "superAdminHelp": "Super admin has all permissions"
+    }
+  },
+  "role": {
+    "title": "Role Management",
+    "list": "Role List",
+    "create": "Create Role",
+    "edit": "Edit Role",
+    "code": "Role Code",
+    "name": "Role Name",
+    "description": "Description",
+    "status": "Status",
+    "sortOrder": "Sort Order",
+    "permissions": "Permissions",
+    "createdAt": "Created At",
+    "stats": {
+      "total": "Total Roles",
+      "withPermissions": "With Permissions",
+      "withoutPermissions": "Without Permissions"
+    },
+    "messages": {
+      "deleteConfirm": "Are you sure you want to delete role \"{name}\"? This action cannot be undone.",
+      "deleteTitle": "Delete Confirmation",
+      "deleting": "Deleting {name}...",
+      "deleteSuccess": "Deleted successfully",
+      "createSuccess": "Created successfully",
+      "updateSuccess": "Updated successfully"
+    },
+    "placeholder": {
+      "inputCode": "Please enter role code",
+      "inputName": "Please enter role name",
+      "inputDescription": "Please enter role description",
+      "inputSortOrder": "Please enter sort order",
+      "selectParent": "Select parent role (empty for root role)"
+    },
+    "tip": "Manage platform roles and configure role permissions",
+    "addChild": "Add Child Role",
+    "parentRole": "Parent Role",
+    "permissionCount": "permissions",
+    "noPermissions": "No permissions"
+  },
+  "permission": {
+    "title": "Permission Management",
+    "list": "Permission List",
+    "description": "Display all platform permissions. Permissions are defined in backend code, this page is read-only.",
+    "type": {
+      "menu": "Menu",
+      "button": "Button",
+      "api": "API"
+    },
+    "noData": "No permission data"
+  }
+}

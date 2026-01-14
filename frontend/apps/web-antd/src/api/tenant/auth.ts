@@ -12,8 +12,9 @@ import type {
   TenantAdminInfo,
 } from '../shared/types';
 
-import { baseRequestClient, requestClient } from '../request';
 import { useAccessStore } from '@vben/stores';
+
+import { baseRequestClient, requestClient } from '../request';
 
 // Logout 使用 baseRequestClient 避免 401 时循环调用
 
@@ -63,7 +64,9 @@ export async function tenantLogoutApi() {
     const token = accessStore?.accessToken;
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, { headers });
+    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, {
+      headers,
+    });
   } catch {
     // 登出失败不影响主流程
   }
@@ -117,4 +120,32 @@ export async function tenantChangePasswordApi(data: ChangePasswordParams) {
     new_password: data.newPassword,
     confirm_password: data.confirmPassword,
   });
+}
+
+// ============================================================
+// 平台管理员一键登录
+// ============================================================
+
+/** 一键登录 Token 验证请求 */
+export interface ImpersonateTokenRequest {
+  impersonate_token: string;
+}
+
+/**
+ * 平台管理员一键登录
+ * POST /tenant/auth/impersonate
+ * 验证 impersonate token 并换取正式 Token
+ */
+export async function impersonateLoginApi(
+  impersonateToken: string,
+): Promise<LoginResult> {
+  const response = await baseRequestClient.post<{ data: LoginResultRaw }>(
+    `${API_PREFIX}/impersonate`,
+    { impersonate_token: impersonateToken },
+  );
+  const raw = (response as any).data;
+  return {
+    accessToken: raw.access_token,
+    refreshToken: raw.refresh_token,
+  };
 }

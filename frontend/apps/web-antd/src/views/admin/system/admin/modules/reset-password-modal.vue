@@ -14,9 +14,9 @@ import { useVbenForm } from '#/adapter/form';
 import { adminApi as admin } from '#/api';
 import { $t } from '#/locales';
 
-type AdminInfo = adminApi.AdminInfo;
-
 import { useResetPasswordSchema } from '../data';
+
+type AdminInfo = adminApi.AdminInfo;
 
 const emits = defineEmits<{
   success: [];
@@ -74,7 +74,11 @@ const [Modal, modalApi] = useVbenModal({
 <template>
   <Modal>
     <div v-if="adminData" class="mb-4 text-gray-500">
-      {{ $t('admin.system.admin.messages.resetPasswordFor', { name: adminData.username }) }}
+      {{
+        $t('admin.system.admin.messages.resetPasswordFor', {
+          name: adminData.username,
+        })
+      }}
     </div>
     <Form />
   </Modal>

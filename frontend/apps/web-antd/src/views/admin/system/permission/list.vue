@@ -71,14 +71,14 @@ function transformTreeData(nodes: PermissionNode[]): any[] {
  */
 function getTypeIcon(type: string): string {
   switch (type) {
-    case 'menu': {
-      return 'mdi:menu';
+    case 'api': {
+      return 'mdi:api';
     }
     case 'button': {
       return 'mdi:gesture-tap-button';
     }
-    case 'api': {
-      return 'mdi:api';
+    case 'menu': {
+      return 'mdi:menu';
     }
     default: {
       return 'mdi:folder';
@@ -91,14 +91,14 @@ function getTypeIcon(type: string): string {
  */
 function getTypeColor(type: string): string {
   switch (type) {
-    case 'menu': {
-      return 'blue';
+    case 'api': {
+      return 'orange';
     }
     case 'button': {
       return 'green';
     }
-    case 'api': {
-      return 'orange';
+    case 'menu': {
+      return 'blue';
     }
     default: {
       return 'default';
@@ -111,14 +111,14 @@ function getTypeColor(type: string): string {
  */
 function getTypeText(type: string): string {
   switch (type) {
-    case 'menu': {
-      return $t('admin.system.permission.type.menu');
+    case 'api': {
+      return $t('admin.system.permission.type.api');
     }
     case 'button': {
       return $t('admin.system.permission.type.button');
     }
-    case 'api': {
-      return $t('admin.system.permission.type.api');
+    case 'menu': {
+      return $t('admin.system.permission.type.menu');
     }
     default: {
       return type;
@@ -138,7 +138,10 @@ onMounted(() => {
   >
     <Card>
       <Spin :spinning="loading">
-        <Empty v-if="!loading && permissions.length === 0" :description="$t('admin.system.permission.noData')" />
+        <Empty
+          v-if="!loading && permissions.length === 0"
+          :description="$t('admin.system.permission.noData')"
+        />
         <Tree
           v-else
           v-model:expanded-keys="expandedKeys"

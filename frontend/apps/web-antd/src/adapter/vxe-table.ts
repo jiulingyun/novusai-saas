@@ -13,9 +13,17 @@ import { useAccessStore } from '@vben/stores';
 import { get, isFunction, isString } from '@vben/utils';
 
 import { objectOmit } from '@vueuse/core';
-import { Button, Image, Popconfirm, Switch, Tag, Tooltip } from 'ant-design-vue';
+import {
+  Button,
+  Image,
+  Popconfirm,
+  Switch,
+  Tag,
+  Tooltip,
+} from 'ant-design-vue';
 
 import { $t } from '#/locales';
+import { checkPermission } from '#/utils/access';
 
 import { useVbenForm } from './form';
 import { exportToExcel } from './vxe-table-extensions';
@@ -151,6 +159,24 @@ setupVbenVxeTable({
     /**
      * 注册表格的操作按钮渲染器
      * 现代化样式：纯图标按钮 + Tooltip 提示
+     *
+     * 权限控制：
+     * - 设置 attrs.resource 后，CRUD 按钮自动根据 {resource}:{action} 格式检查权限
+     * - 自动映射：edit -> {resource}:update, delete -> {resource}:delete
+     * - 自定义按钮可通过 accessCodes 手动指定权限码
+     * - 超级管理员（拥有 '*' 权限）自动拥有所有权限
+     *
+     * @example
+     * ```ts
+     * cellRender: {
+     *   name: 'CellOperation',
+     *   attrs: {
+     *     resource: 'admin_user',  // 自动检查 admin_user:update, admin_user:delete
+     *     onClick: onActionClick,
+     *   },
+     *   options: ['edit', 'delete'],  // 标准 CRUD 按钮，自动鉴权
+     * }
+     * ```
      */
     vxeUI.renderer.add('CellOperation', {
       renderTableDefault({ attrs, options }, { column, row }) {
@@ -169,6 +195,16 @@ setupVbenVxeTable({
             break;
           }
         }
+
+        // 标准 CRUD 操作与权限动作的映射
+        const crudActionMap: Record<string, string> = {
+          edit: 'update',
+          delete: 'delete',
+          create: 'create',
+          view: 'read',
+          detail: 'read',
+        };
+
         // 预设操作配置
         const presets: Recordable<Recordable<any>> = {
           delete: {
@@ -185,21 +221,29 @@ setupVbenVxeTable({
             icon: 'lucide:key-round',
           },
         };
+
         // 获取当前用户的权限码
         const accessStore = useAccessStore();
         const userCodes = accessStore.accessCodes;
-        const isSuperAdmin = userCodes.includes('*');
+        const resource = attrs?.resource as string | undefined;
 
         /**
-         * 检查操作按钮的权限
+         * 计算操作按钮的实际权限码
+         * 优先使用手动指定的 accessCodes，否则根据 resource 自动计算
          */
-        function hasAccess(accessCodes?: string | string[]): boolean {
-          if (!accessCodes || accessCodes.length === 0) return true;
-          if (isSuperAdmin) return true;
-          const codes = Array.isArray(accessCodes)
-            ? accessCodes
-            : [accessCodes];
-          return codes.some((code) => userCodes.includes(code));
+        function getAccessCodes(
+          opt: Recordable<any>,
+        ): string[] | undefined {
+          // 1. 如果手动指定了 accessCodes，直接使用
+          if (opt.accessCodes) {
+            return opt.accessCodes;
+          }
+          // 2. 如果设置了 resource 且是标准 CRUD 操作，自动计算权限码
+          if (resource && crudActionMap[opt.code]) {
+            return [`${resource}:${crudActionMap[opt.code]}`];
+          }
+          // 3. 其他情况不限制权限（返回 undefined 表示不检查）
+          return undefined;
         }
 
         const operations: Array<Recordable<any>> = (
@@ -225,8 +269,8 @@ setupVbenVxeTable({
             return optBtn;
           })
           .filter((opt) => opt.show !== false)
-          // 按权限码过滤操作按钮
-          .filter((opt) => hasAccess(opt.accessCodes));
+          // 按权限码过滤操作按钮（使用自动计算的权限码）
+          .filter((opt) => checkPermission(getAccessCodes(opt), userCodes));
 
         // 渲染图标按钮（带 Tooltip）
         function renderIconBtn(opt: Recordable<any>, listen = true) {
@@ -354,21 +398,61 @@ export type OnActionClickParams<T = Recordable<any>> = {
 export type OnActionClickFn<T = Recordable<any>> = (
   params: OnActionClickParams<T>,
 ) => void;
-export type * from '@vben/plugins/vxe-table';
+
+/**
+ * 标准列表搜索表单配置
+ *
+ * 用于列表页面的搜索表单，提供统一的配置：
+ * - 启用输入即搜索 (submitOnChange)
+ * - 隐藏搜索按钮（因为已启用输入即搜索）
+ * - 重置按钮使用文字样式，与收起按钮一致
+ *
+ * @param schema 表单 schema
+ * @returns formOptions 配置对象
+ *
+ * @example
+ * ```ts
+ * const [Grid, gridApi] = useVbenVxeGrid({
+ *   formOptions: useGridSearchFormOptions(useGridFormSchema()),
+ *   gridOptions: { ... },
+ * });
+ * ```
+ */
+export function useGridSearchFormOptions(schema: any[]) {
+  return {
+    schema,
+    submitOnChange: true,
+    // 隐藏搜索按钮（因为已启用 submitOnChange）
+    submitButtonOptions: {
+      show: false,
+    },
+    // 重置按钮使用文字样式，与收起按钮一致
+    resetButtonOptions: {
+      variant: 'ghost' as const,
+      size: 'sm' as const,
+    },
+  };
+}
+// 拖拽排序
+export {
+  dragColumn,
+  type DragSortConfig,
+  useTableDragSort,
+} from './vxe-table-drag-sort';
 
 /**
  * 增强版 useVbenVxeGrid
  * - 添加 exportExcel 方法
- * 
+ *
  * @example
  * ```ts
  * const [Grid, gridApi] = useVbenVxeGrid({ gridOptions });
- * 
+ *
  * // 导出 Excel
  * gridApi.exportExcel({ filename: '用户列表' });
  * ```
  */
-export function useVbenVxeGrid<T = any>(
+export function useVbenVxeGrid(
   options: Parameters<typeof useGrid>[0],
 ) {
   // 调用原始的 useGrid
@@ -376,36 +460,108 @@ export function useVbenVxeGrid<T = any>(
 
   // 扩展 gridApi，添加导出方法
   const [Grid, originalGridApi] = result;
-  
+
   // 添加导出方法到原始 API
-  (originalGridApi as any).exportExcel = (exportOptions?: Parameters<typeof exportToExcel>[1]) => {
+  (originalGridApi as any).exportExcel = (
+    exportOptions?: Parameters<typeof exportToExcel>[1],
+  ) => {
     return exportToExcel(originalGridApi.grid, exportOptions);
   };
 
   return [Grid, originalGridApi] as const;
 }
 
-// 拖拽排序
-export {
-  dragColumn,
-  useTableDragSort,
-  type DragSortConfig,
-} from './vxe-table-drag-sort';
+/**
+ * 表格配置工厂函数 - 极简化表格配置
+ *
+ * 提供合理的默认值，用户只需传入必要配置
+ *
+ * @example
+ * ```ts
+ * const [Grid, gridApi] = useVbenVxeGrid({
+ *   formOptions: useGridSearchFormOptions(useGridFormSchema()),
+ *   gridOptions: useGridOptions({
+ *     columns: useColumns(onActionClick, onToggleStatus),
+ *     queryApi: (params) => api.getListApi(params),
+ *   }),
+ * });
+ * ```
+ */
+export interface GridOptionsConfig<T = any> {
+  /** 列配置（必填） */
+  columns: VxeTableGridOptions<T>['columns'];
+  /** 查询 API 函数（必填） */
+  queryApi: (params: Record<string, any>) => Promise<any>;
+  /** 默认排序字段，默认 '-created_at' */
+  defaultSort?: string;
+  /** 行高，默认 64 */
+  rowHeight?: number;
+  /** 是否启用分页，默认 true */
+  pager?: boolean;
+  /** 工具栏配置，默认显示全部 */
+  toolbar?: {
+    custom?: boolean;
+    export?: boolean;
+    refresh?: boolean;
+    search?: boolean;
+    zoom?: boolean;
+  };
+  /** 其他自定义配置 */
+  [key: string]: any;
+}
+
+export function useGridOptions<T = any>(
+  config: GridOptionsConfig<T>,
+): VxeTableGridOptions<T> {
+  const {
+    columns,
+    queryApi,
+    defaultSort = '-created_at',
+    rowHeight = 64,
+    pager = true,
+    toolbar = { custom: true, export: true, refresh: true, search: true, zoom: true },
+    ...rest
+  } = config;
+
+  return {
+    columns,
+    keepSource: true,
+    pagerConfig: { enabled: pager },
+    proxyConfig: {
+      ajax: {
+        query: async ({ page }, formValues) => {
+          return await queryApi({
+            ...formValues,
+            'page[number]': page.currentPage,
+            'page[size]': page.pageSize,
+            'sort': defaultSort,
+          });
+        },
+      },
+    },
+    cellConfig: { height: rowHeight },
+    rowConfig: { keyField: 'id' },
+    toolbarConfig: toolbar,
+    ...rest,
+  } as VxeTableGridOptions<T>;
+}
 
 // 表格扩展功能
 export {
   // 批量选择
   checkboxColumn,
-  seqColumn,
-  getSelectedRows,
-  getSelectedIds,
   clearSelection,
-  // Excel 导出
-  exportToExcel,
-  type ExportColumn,
-  type ExportOptions,
+  createExpandConfig,
   // 展开行
   expandColumn,
-  createExpandConfig,
   type ExpandConfig,
+  type ExportColumn,
+  type ExportOptions,
+  // Excel 导出
+  exportToExcel,
+  getSelectedIds,
+  getSelectedRows,
+  seqColumn,
 } from './vxe-table-extensions';
+
+export type * from '@vben/plugins/vxe-table';

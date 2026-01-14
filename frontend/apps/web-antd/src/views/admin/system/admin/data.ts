@@ -7,7 +7,6 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
 
 import { $t } from '#/locales';
-import { ADMIN_PERMISSIONS } from '#/utils/access';
 
 type AdminInfo = adminApi.AdminInfo;
 
@@ -77,30 +76,21 @@ export function useColumns<T = AdminInfo>(
       align: 'center',
       cellRender: {
         attrs: {
+          resource: 'admin_user',  // 自动检查 admin_user:update, admin_user:delete
           nameField: 'username',
           nameTitle: $t('admin.system.admin.username'),
           onClick: onActionClick,
         },
         name: 'CellOperation',
         options: [
-          {
-            code: 'edit',
-            text: $t('common.edit'),
-            icon: 'lucide:pencil',
-            accessCodes: [ADMIN_PERMISSIONS.ADMIN_UPDATE],
-          },
+          'edit',  // 自动鉴权: admin_user:update
           {
             code: 'resetPassword',
             text: $t('admin.system.admin.resetPassword'),
             icon: 'lucide:key-round',
-            accessCodes: [ADMIN_PERMISSIONS.ADMIN_RESET_PASSWORD],
+            accessCodes: ['admin_user:reset_password'],  // 自定义权限
           },
-          {
-            code: 'delete',
-            text: $t('common.delete'),
-            icon: 'lucide:trash-2',
-            accessCodes: [ADMIN_PERMISSIONS.ADMIN_DELETE],
-          },
+          'delete',  // 自动鉴权: admin_user:delete
         ],
       },
       field: 'operation',
@@ -113,6 +103,7 @@ export function useColumns<T = AdminInfo>(
 
 /**
  * 搜索表单 Schema
+ * 字段名直接使用 JSON:API 格式
  */
 export function useGridFormSchema(): VbenFormSchema[] {
   return [
@@ -122,7 +113,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
         allowClear: true,
         placeholder: $t('admin.system.admin.placeholder.searchUsername'),
       },
-      fieldName: 'username',
+      fieldName: 'filter[username][ilike]',
       label: $t('admin.system.admin.username'),
     },
     {
@@ -131,8 +122,17 @@ export function useGridFormSchema(): VbenFormSchema[] {
         allowClear: true,
         placeholder: $t('admin.system.admin.placeholder.searchEmail'),
       },
-      fieldName: 'email',
+      fieldName: 'filter[email][ilike]',
       label: $t('admin.system.admin.email'),
+    },
+    {
+      component: 'Input',
+      componentProps: {
+        allowClear: true,
+        placeholder: $t('admin.system.admin.placeholder.searchPhone'),
+      },
+      fieldName: 'filter[phone][ilike]',
+      label: $t('admin.system.admin.phone'),
     },
     {
       component: 'Select',
@@ -144,7 +144,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
         ],
         placeholder: $t('admin.system.admin.placeholder.allStatus'),
       },
-      fieldName: 'is_active',
+      fieldName: 'filter[is_active]',
       label: $t('admin.system.admin.status'),
     },
   ];

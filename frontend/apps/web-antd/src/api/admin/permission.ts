@@ -9,7 +9,7 @@ import { requestClient } from '../request';
 // ============================================================
 
 /** 权限类型 */
-export type PermissionType = 'menu' | 'button' | 'api';
+export type PermissionType = 'api' | 'button' | 'menu';
 
 /** 权限节点（树形结构，后端原始格式） */
 export interface PermissionNodeRaw {
@@ -17,8 +17,10 @@ export interface PermissionNodeRaw {
   code: string;
   name: string;
   type: PermissionType;
-  parent_id: number | null;
+  parent_id: null | number;
   sort_order: number;
+  /** 图标（Iconify 格式，如 lucide:gauge） */
+  icon?: null | string;
   children?: PermissionNodeRaw[];
 }
 
@@ -28,8 +30,10 @@ export interface PermissionNode {
   code: string;
   name: string;
   type: PermissionType;
-  parentId: number | null;
+  parentId: null | number;
   sortOrder: number;
+  /** 图标（Iconify 格式，如 lucide:gauge） */
+  icon?: null | string;
   children?: PermissionNode[];
 }
 
@@ -39,7 +43,7 @@ export interface PermissionItemRaw {
   code: string;
   name: string;
   type: PermissionType;
-  parent_id: number | null;
+  parent_id: null | number;
 }
 
 /** 权限项（平铺列表，前端格式） */
@@ -48,7 +52,7 @@ export interface PermissionItem {
   code: string;
   name: string;
   type: PermissionType;
-  parentId: number | null;
+  parentId: null | number;
 }
 
 // ============================================================
@@ -64,6 +68,7 @@ function transformPermissionNode(raw: PermissionNodeRaw): PermissionNode {
     type: raw.type,
     parentId: raw.parent_id,
     sortOrder: raw.sort_order,
+    icon: raw.icon,
     children: raw.children?.map(transformPermissionNode),
   };
 }

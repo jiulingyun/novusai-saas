@@ -1,12 +1,8 @@
 <script lang="ts" setup>
 /**
  * 租户列表页面
- * 遵循 vben-admin 规范
  */
-import type {
-  OnActionClickParams,
-  VxeTableGridOptions,
-} from '#/adapter/vxe-table';
+import type { OnActionClickParams, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
 
 import { computed, onMounted, ref } from 'vue';
@@ -14,12 +10,15 @@ import { computed, onMounted, ref } from 'vue';
 import { Page, useVbenDrawer } from '@vben/common-ui';
 import { IconifyIcon, Plus } from '@vben/icons';
 
-import { Card, Col, message, Modal, Row, Statistic } from 'ant-design-vue';
+import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
-import { useVbenVxeGrid } from '#/adapter/vxe-table';
+import {
+  useGridSearchFormOptions,
+  useVbenVxeGrid,
+} from '#/adapter/vxe-table';
 import { adminApi as admin } from '#/api';
+import { useCrudActions } from '#/composables';
 import { $t } from '#/locales';
-import { ADMIN_PERMISSIONS } from '#/utils/access';
 
 import { PLAN_OPTIONS, useColumns, useGridFormSchema } from './data';
 import Form from './modules/form.vue';
@@ -32,133 +31,84 @@ const [FormDrawer, formDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
+// CRUD 操作引用（用于函数提前引用）
+let crud: ReturnType<typeof useCrudActions<TenantInfo>>;
+
+/** 操作按钮点击 */
+function onActionClick(e: OnActionClickParams<TenantInfo>) {
+  switch (e.code) {
+    case 'delete': { crud.onDelete(e.row); break; }
+    case 'edit': { crud.onEdit(e.row); break; }
+    case 'impersonate': { onImpersonate(e.row); break; }
+  }
+}
+
+/** 状态切换 */
+function handleToggleStatus(newStatus: boolean, row: TenantInfo) {
+  return crud.onToggleStatus(newStatus, row);
+}
+
 // 表格
 const [Grid, gridApi] = useVbenVxeGrid({
-  formOptions: {
-    schema: useGridFormSchema(),
-    submitOnChange: true,
-  },
+  formOptions: useGridSearchFormOptions(useGridFormSchema()),
   gridOptions: {
-    columns: useColumns(onActionClick, onStatusChange),
+    columns: useColumns<TenantInfo>(onActionClick, handleToggleStatus),
     keepSource: true,
-    pagerConfig: {
-      enabled: true,
-    },
+    pagerConfig: { enabled: true },
     proxyConfig: {
       ajax: {
         query: async ({ page }, formValues) => {
           return await admin.getTenantListApi({
-            page: page.currentPage,
-            page_size: page.pageSize,
             ...formValues,
+            'page[number]': page.currentPage,
+            'page[size]': page.pageSize,
+            'sort': '-created_at',
           });
         },
       },
     },
-    rowConfig: {
-      keyField: 'id',
-    },
-    toolbarConfig: {
-      custom: true,
-      refresh: true,
-      search: true,
-      zoom: true,
-    },
+    cellConfig: { height: 64 },
+    rowConfig: { keyField: 'id' },
+    toolbarConfig: { custom: true, refresh: true, search: true, zoom: true },
   } as VxeTableGridOptions<TenantInfo>,
 });
 
-/**
- * 操作按钮点击回调
- */
-function onActionClick(e: OnActionClickParams<TenantInfo>) {
-  switch (e.code) {
-    case 'delete': {
-      onDelete(e.row);
-      break;
-    }
-    case 'edit': {
-      onEdit(e.row);
-      break;
-    }
-  }
-}
+// CRUD 操作
+crud = useCrudActions<TenantInfo>({
+  gridApi,
+  formDrawerApi,
+  deleteApi: admin.deleteTenantApi,
+  toggleStatusApi: admin.toggleTenantStatusApi,
+  i18nPrefix: 'admin.tenant',
+});
+
+const { onCreate, onRefresh } = crud;
 
 /**
- * 状态切换回调
+ * 一键登录租户后台
  */
-async function onStatusChange(newStatus: boolean, row: TenantInfo) {
-  const action = newStatus
-    ? $t('admin.common.enable')
-    : $t('admin.common.disable');
-  try {
-    await new Promise<void>((resolve, reject) => {
-      Modal.confirm({
-        content: $t('admin.tenant.messages.toggleStatusConfirm', {
-          action,
-          name: row.name,
-        }),
-        onCancel: () => reject(new Error('cancelled')),
-        onOk: () => resolve(),
-        title: $t('admin.tenant.messages.toggleStatusTitle'),
-      });
-    });
-    await admin.toggleTenantStatusApi(row.id, { is_active: newStatus });
-    message.success(`${action}${$t('ui.actionMessage.operationSuccess')}`);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * 编辑
- */
-function onEdit(row: TenantInfo) {
-  formDrawerApi.setData({ ...row, isEdit: true }).open();
-}
-
-/**
- * 删除
- */
-function onDelete(row: TenantInfo) {
-  Modal.confirm({
-    content: $t('admin.tenant.messages.deleteConfirm', { name: row.name }),
-    okButtonProps: { danger: true },
-    okText: $t('common.delete'),
-    onOk: async () => {
-      const hideLoading = message.loading({
-        content: $t('admin.tenant.messages.deleting', { name: row.name }),
-        duration: 0,
-        key: 'delete_tenant',
-      });
-      try {
-        await admin.deleteTenantApi(row.id);
-        message.success({
-          content: $t('admin.tenant.messages.deleteSuccess'),
-          key: 'delete_tenant',
-        });
-        onRefresh();
-      } catch {
-        hideLoading();
-      }
-    },
-    title: $t('admin.tenant.messages.deleteTitle'),
-    type: 'warning',
+async function onImpersonate(row: TenantInfo) {
+  const hideLoading = message.loading({
+    content: $t('admin.tenant.messages.impersonating', { name: row.name }),
+    duration: 0,
+    key: 'impersonate_tenant',
   });
-}
-
-/**
- * 刷新列表
- */
-function onRefresh() {
-  gridApi.query();
-}
-
-/**
- * 新建
- */
-function onCreate() {
-  formDrawerApi.setData({ isEdit: false }).open();
+  try {
+    const result = await admin.tenantImpersonateApi(row.id);
+    message.success({
+      content: $t('admin.tenant.messages.impersonateSuccess'),
+      key: 'impersonate_tenant',
+    });
+    // 构建跳转 URL 并在新窗口打开
+    const targetUrl = `/tenant/impersonate?token=${encodeURIComponent(result.impersonateToken)}`;
+    window.open(targetUrl, '_blank');
+  } catch {
+    hideLoading();
+    message.error({
+      content: $t('admin.tenant.messages.impersonateFailed'),
+      key: 'impersonate_tenant',
+    });
+  }
 }
 
 // ============ 统计数据 ============
@@ -190,8 +140,11 @@ const planStats = computed(() => {
 async function loadStats() {
   loadingStats.value = true;
   try {
-    // 获取数据计算统计（后端 page_size 最大 100）
-    const res = await admin.getTenantListApi({ page: 1, page_size: 100 });
+    // 获取数据计算统计
+    const res = await admin.getTenantListApi({
+      'page[number]': 1,
+      'page[size]': 100,
+    });
     const items = res.items || [];
     const now = new Date();
 
@@ -317,12 +270,14 @@ onMounted(() => {
       <Grid>
         <template #toolbar-tools>
           <Card size="small" class="mr-4 !border-primary/20 !bg-primary/5">
-            <span class="text-sm text-gray-600">{{ $t('admin.tenant.tip') }}</span>
+            <span class="text-sm text-gray-600">{{
+              $t('admin.tenant.tip')
+            }}</span>
           </Card>
-          <Card
-            v-access:code="[ADMIN_PERMISSIONS.TENANT_CREATE]"
+        <Card
+            v-access:code="['tenant:create']"
             size="small"
-            class="mr-2 cursor-pointer transition-all hover:shadow-md"
+            class="mr-2 cursor-pointer transition-shadow duration-200 hover:shadow-md"
             @click="onCreate"
           >
             <div class="flex items-center gap-2 text-primary">
@@ -339,11 +294,11 @@ onMounted(() => {
 <style scoped>
 .stat-card {
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
 }
 
 .stat-card-small {

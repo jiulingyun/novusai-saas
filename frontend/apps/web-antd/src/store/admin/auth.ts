@@ -4,6 +4,8 @@
  */
 import type { Recordable, UserInfo } from '@vben/types';
 
+import type { AdminUserInfo } from '#/api';
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -12,10 +14,11 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { adminApi, type AdminUserInfo } from '#/api';
+import { adminApi } from '#/api';
 import { ADMIN_HOME_PATH, ADMIN_LOGIN_PATH } from '#/constants/endpoints';
 import { $t } from '#/locales';
 import { EndpointType } from '#/types/endpoint';
+
 import { TokenStorage } from '../shared/token-storage';
 
 export const useAdminAuthStore = defineStore('admin-auth', () => {
@@ -156,7 +159,7 @@ export const useAdminAuthStore = defineStore('admin-auth', () => {
   /**
    * 获取当前Token
    */
-  function getToken(): string | null {
+  function getToken(): null | string {
     return TokenStorage.getToken(EndpointType.ADMIN);
   }
 

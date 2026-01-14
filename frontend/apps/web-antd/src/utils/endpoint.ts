@@ -49,7 +49,10 @@ export function getApiEndpoint(path: string): ApiEndpoint {
  * @param path 路由路径
  * @param endpoint 端类型
  */
-export function isPathOfEndpoint(path: string, endpoint: EndpointType): boolean {
+export function isPathOfEndpoint(
+  path: string,
+  endpoint: EndpointType,
+): boolean {
   return getEndpointFromPath(path) === endpoint;
 }
 

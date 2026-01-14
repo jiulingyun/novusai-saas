@@ -3,6 +3,8 @@ import type {
   GenerateMenuAndRoutesOptions,
 } from '@vben/types';
 
+import type { ApiEndpoint } from '#/api';
+
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
 
@@ -10,7 +12,6 @@ import { message } from 'ant-design-vue';
 
 import {
   adminApi,
-  type ApiEndpoint,
   getApiEndpoint,
   setExistingComponents,
   tenantApi,

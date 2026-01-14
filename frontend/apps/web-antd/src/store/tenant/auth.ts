@@ -4,6 +4,8 @@
  */
 import type { Recordable, UserInfo } from '@vben/types';
 
+import type { TenantAdminInfo } from '#/api';
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -12,10 +14,11 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { tenantApi, type TenantAdminInfo } from '#/api';
+import { tenantApi } from '#/api';
 import { TENANT_HOME_PATH, TENANT_LOGIN_PATH } from '#/constants/endpoints';
 import { $t } from '#/locales';
 import { EndpointType } from '#/types/endpoint';
+
 import { TokenStorage } from '../shared/token-storage';
 
 export const useTenantAuthStore = defineStore('tenant-auth', () => {
@@ -24,7 +27,7 @@ export const useTenantAuthStore = defineStore('tenant-auth', () => {
   const router = useRouter();
 
   const loginLoading = ref(false);
-  const tenantAdminInfo = ref<TenantAdminInfo | null>(null);
+  const tenantAdminInfo = ref<null | TenantAdminInfo>(null);
 
   /**
    * 租户管理员登录
@@ -35,7 +38,7 @@ export const useTenantAuthStore = defineStore('tenant-auth', () => {
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    let userInfo: TenantAdminInfo | null = null;
+    let userInfo: null | TenantAdminInfo = null;
 
     try {
       loginLoading.value = true;
@@ -156,14 +159,14 @@ export const useTenantAuthStore = defineStore('tenant-auth', () => {
   /**
    * 获取当前Token
    */
-  function getToken(): string | null {
+  function getToken(): null | string {
     return TokenStorage.getToken(EndpointType.TENANT);
   }
 
   /**
    * 获取当前租户ID
    */
-  function getTenantId(): number | string | null {
+  function getTenantId(): null | number | string {
     return tenantAdminInfo.value?.tenantId || null;
   }
 

@@ -4,3 +4,6 @@
 
 // 端类型定义
 export * from './endpoint';
+
+// 通用筛选类型
+export * from './query';

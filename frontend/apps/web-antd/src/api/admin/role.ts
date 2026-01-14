@@ -2,6 +2,8 @@
  * 平台角色管理 API
  * 对接后端 /admin/roles/* 接口
  */
+import type { SelectOption, SelectResponse } from '#/types';
+
 import { requestClient } from '../request';
 
 // ============================================================
@@ -10,21 +12,22 @@ import { requestClient } from '../request';
 
 /** 创建角色请求 */
 export interface RoleCreateRequest {
-  code: string;
+  code?: string; // 后端生成，无需前端填写
   name: string;
-  description?: string | null;
+  description?: null | string;
   is_active?: boolean;
   sort_order?: number;
+  parent_id?: null | number;
   permission_ids?: number[];
 }
 
 /** 更新角色请求 */
 export interface RoleUpdateRequest {
-  name?: string | null;
-  description?: string | null;
+  name?: null | string;
+  description?: null | string;
   is_active?: boolean | null;
-  sort_order?: number | null;
-  permission_ids?: number[] | null;
+  sort_order?: null | number;
+  permission_ids?: null | number[];
 }
 
 /** 分配权限请求 */
@@ -49,6 +52,8 @@ export interface RoleInfoRaw {
   is_active: boolean;
   sort_order: number;
   permissions?: PermissionBasicInfo[];
+  permission_ids?: number[]; // 角色详情返回的权限 ID 列表
+  permissions_count?: number;
   created_at: string;
   updated_at?: string;
 }
@@ -61,9 +66,18 @@ export interface RoleInfo {
   description?: string;
   isActive: boolean;
   sortOrder: number;
+  parentId?: null | number;
   permissions?: PermissionBasicInfo[];
+  permissionIds?: number[]; // 角色详情返回的权限 ID 列表
+  permissionsCount?: number;
+  children?: RoleInfo[];
   createdAt: string;
   updatedAt?: string;
+}
+
+/** 移动角色请求 */
+export interface RoleMoveRequest {
+  new_parent_id: null | number;
 }
 
 // ============================================================
@@ -79,7 +93,14 @@ function transformRoleInfo(raw: RoleInfoRaw): RoleInfo {
     description: raw.description,
     isActive: raw.is_active,
     sortOrder: raw.sort_order,
+    parentId: (raw as any).parent_id,
     permissions: raw.permissions,
+    permissionIds: raw.permission_ids,
+    permissionsCount:
+      (raw as any).permissions_count ??
+      raw.permission_ids?.length ??
+      (raw.permissions ? raw.permissions.length : 0),
+    children: (raw as any).children?.map(transformRoleInfo),
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };
@@ -114,7 +135,9 @@ export async function getRoleDetailApi(roleId: number): Promise<RoleInfo> {
  * 创建角色
  * POST /admin/roles
  */
-export async function createRoleApi(data: RoleCreateRequest): Promise<RoleInfo> {
+export async function createRoleApi(
+  data: RoleCreateRequest,
+): Promise<RoleInfo> {
   const raw = await requestClient.post<RoleInfoRaw>(API_PREFIX, data);
   return transformRoleInfo(raw);
 }
@@ -155,4 +178,55 @@ export async function assignRolePermissionsApi(
     data,
   );
   return transformRoleInfo(raw);
+}
+
+/**
+ * 获取角色树
+ * GET /admin/roles/tree
+ * 返回树形结构，包含层级关系
+ */
+export async function getRoleTreeApi(): Promise<RoleInfo[]> {
+  const response = await requestClient.get<RoleInfoRaw[]>(`${API_PREFIX}/tree`);
+  return response.map(transformRoleInfo);
+}
+
+/**
+ * 获取子角色
+ * GET /admin/roles/{role_id}/children
+ */
+export async function getRoleChildrenApi(roleId: number): Promise<RoleInfo[]> {
+  const response = await requestClient.get<RoleInfoRaw[]>(
+    `${API_PREFIX}/${roleId}/children`,
+  );
+  return response.map(transformRoleInfo);
+}
+
+/**
+ * 移动角色
+ * PUT /admin/roles/{role_id}/move
+ */
+export async function moveRoleApi(
+  roleId: number,
+  data: RoleMoveRequest,
+): Promise<RoleInfo> {
+  const raw = await requestClient.put<RoleInfoRaw>(
+    `${API_PREFIX}/${roleId}/move`,
+    data,
+  );
+  return transformRoleInfo(raw);
+}
+
+/**
+ * 获取角色下拉选项
+ * GET /admin/roles/select
+ * 用于下拉选择器，返回简化的选项列表
+ */
+export async function getRoleSelectApi(
+  params?: Record<string, unknown>,
+): Promise<SelectResponse> {
+  const response = await requestClient.get<SelectOption[]>(
+    `${API_PREFIX}/select`,
+    { params },
+  );
+  return { items: response };
 }

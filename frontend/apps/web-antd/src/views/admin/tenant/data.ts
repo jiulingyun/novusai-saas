@@ -7,7 +7,7 @@ import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
 
 import { $t } from '#/locales';
-import { ADMIN_PERMISSIONS } from '#/utils/access';
+import { formatDate, formatDateOnly } from '#/utils/common';
 
 type TenantInfo = adminApi.TenantInfo;
 type TenantPlan = adminApi.TenantPlan;
@@ -150,7 +150,7 @@ export function useColumns<T = TenantInfo>(
       field: 'expiresAt',
       formatter: ({ cellValue }) => {
         if (!cellValue) return $t('admin.tenant.expiryStatus.permanent');
-        return new Date(cellValue).toLocaleDateString();
+        return formatDateOnly(cellValue);
       },
       title: $t('admin.tenant.expiresAt'),
       width: 120,
@@ -158,10 +158,7 @@ export function useColumns<T = TenantInfo>(
     },
     {
       field: 'createdAt',
-      formatter: ({ cellValue }) => {
-        if (!cellValue) return '-';
-        return new Date(cellValue).toLocaleString();
-      },
+      formatter: ({ cellValue }) => formatDate(cellValue),
       title: $t('admin.tenant.createdAt'),
       width: 170,
     },
@@ -169,6 +166,7 @@ export function useColumns<T = TenantInfo>(
       align: 'center',
       cellRender: {
         attrs: {
+          resource: 'tenant',  // 自动检查 tenant:update, tenant:delete
           nameField: 'name',
           nameTitle: $t('admin.tenant.name'),
           onClick: onActionClick,
@@ -176,29 +174,26 @@ export function useColumns<T = TenantInfo>(
         name: 'CellOperation',
         options: [
           {
-            code: 'edit',
-            text: $t('common.edit'),
-            icon: 'lucide:edit',
-            accessCodes: [ADMIN_PERMISSIONS.TENANT_UPDATE],
+            code: 'impersonate',
+            text: $t('admin.tenant.enterBackend'),
+            icon: 'lucide:log-in',
+            accessCodes: ['tenant:impersonate'],  // 自定义权限
           },
-          {
-            code: 'delete',
-            text: $t('common.delete'),
-            icon: 'lucide:trash-2',
-            accessCodes: [ADMIN_PERMISSIONS.TENANT_DELETE],
-          },
+          'edit',  // 自动鉴权: tenant:update
+          'delete',  // 自动鉴权: tenant:delete
         ],
       },
       field: 'operation',
       fixed: 'right',
       title: $t('admin.common.operation'),
-      width: 80,
+      width: 120,
     },
   ];
 }
 
 /**
  * 搜索表单 Schema
+ * 字段名直接使用 JSON:API 格式
  */
 export function useGridFormSchema(): VbenFormSchema[] {
   return [
@@ -206,10 +201,37 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Input',
       componentProps: {
         allowClear: true,
+        placeholder: $t('admin.tenant.placeholder.searchCode'),
+      },
+      fieldName: 'filter[code][ilike]',
+      label: $t('admin.tenant.code'),
+    },
+    {
+      component: 'Input',
+      componentProps: {
+        allowClear: true,
         placeholder: $t('admin.tenant.placeholder.searchName'),
       },
-      fieldName: 'name',
+      fieldName: 'filter[name][ilike]',
       label: $t('admin.tenant.name'),
+    },
+    {
+      component: 'Input',
+      componentProps: {
+        allowClear: true,
+        placeholder: $t('admin.tenant.placeholder.searchContact'),
+      },
+      fieldName: 'filter[contact_name][ilike]',
+      label: $t('admin.tenant.contactName'),
+    },
+    {
+      component: 'Input',
+      componentProps: {
+        allowClear: true,
+        placeholder: $t('admin.tenant.placeholder.searchPhone'),
+      },
+      fieldName: 'filter[contact_phone][ilike]',
+      label: $t('admin.tenant.contactPhone'),
     },
     {
       component: 'Select',
@@ -221,7 +243,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
         ],
         placeholder: $t('admin.tenant.placeholder.allStatus'),
       },
-      fieldName: 'is_active',
+      fieldName: 'filter[is_active]',
       label: $t('admin.tenant.status'),
     },
     {
@@ -231,7 +253,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
         options: getPlanOptions(),
         placeholder: $t('admin.tenant.placeholder.allPlan'),
       },
-      fieldName: 'plan',
+      fieldName: 'filter[plan]',
       label: $t('admin.tenant.plan'),
     },
   ];
@@ -242,21 +264,25 @@ export function useGridFormSchema(): VbenFormSchema[] {
  * @param isEdit 是否编辑模式
  */
 export function useFormSchema(isEdit: boolean = false): VbenFormSchema[] {
-  return [
-    {
+  const schema: VbenFormSchema[] = [];
+
+  // 编辑模式时显示租户编码（只读）
+  if (isEdit) {
+    schema.push({
       component: 'Input',
       componentProps: {
-        disabled: isEdit,
-        placeholder: $t('admin.tenant.placeholder.inputCode'),
+        disabled: true,
       },
       fieldName: 'code',
-      help: $t('admin.tenant.help.codeFormat'),
       label: $t('admin.tenant.code'),
-      rules: isEdit ? undefined : 'required',
-    },
+    });
+  }
+
+  schema.push(
     {
       component: 'Input',
       componentProps: {
+        maxLength: 100,
         placeholder: $t('admin.tenant.placeholder.inputName'),
       },
       fieldName: 'name',
@@ -317,5 +343,7 @@ export function useFormSchema(isEdit: boolean = false): VbenFormSchema[] {
       fieldName: 'remark',
       label: $t('admin.tenant.remark'),
     },
-  ];
+  );
+
+  return schema;
 }

@@ -9,39 +9,35 @@ import { requestClient } from '../request';
 // ============================================================
 
 /** 套餐类型 */
-export type TenantPlan = 'free' | 'basic' | 'pro' | 'enterprise';
+export type TenantPlan = 'basic' | 'enterprise' | 'free' | 'pro';
 
 /** 租户列表查询参数 */
-export interface TenantListParams {
-  page?: number;
-  page_size?: number;
-  is_active?: boolean | null;
-  plan?: TenantPlan | null;
-}
+export type TenantListParams = Record<string, unknown>;
 
 /** 创建租户请求 */
 export interface TenantCreateRequest {
-  code: string;
+  /** 租户编码（可选，后端自动生成） */
+  code?: string;
   name: string;
-  contact_name?: string | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
+  contact_name?: null | string;
+  contact_phone?: null | string;
+  contact_email?: null | string;
   plan?: TenantPlan;
-  quota?: Record<string, any> | null;
-  expires_at?: string | null;
-  remark?: string | null;
+  quota?: null | Record<string, any>;
+  expires_at?: null | string;
+  remark?: null | string;
 }
 
 /** 更新租户请求 */
 export interface TenantUpdateRequest {
-  name?: string | null;
-  contact_name?: string | null;
-  contact_phone?: string | null;
-  contact_email?: string | null;
-  plan?: TenantPlan | null;
-  quota?: Record<string, any> | null;
-  expires_at?: string | null;
-  remark?: string | null;
+  name?: null | string;
+  contact_name?: null | string;
+  contact_phone?: null | string;
+  contact_email?: null | string;
+  plan?: null | TenantPlan;
+  quota?: null | Record<string, any>;
+  expires_at?: null | string;
+  remark?: null | string;
 }
 
 /** 切换状态请求 */
@@ -129,9 +125,9 @@ export async function getTenantListApi(
 ): Promise<TenantListResponse> {
   const response = await requestClient.get<{
     items: TenantInfoRaw[];
-    total: number;
     page: number;
     page_size: number;
+    total: number;
   }>(API_PREFIX, { params });
 
   return {
@@ -146,7 +142,9 @@ export async function getTenantListApi(
  * 获取租户详情
  * GET /admin/tenants/{tenant_id}
  */
-export async function getTenantDetailApi(tenantId: number): Promise<TenantInfo> {
+export async function getTenantDetailApi(
+  tenantId: number,
+): Promise<TenantInfo> {
   const raw = await requestClient.get<TenantInfoRaw>(
     `${API_PREFIX}/${tenantId}`,
   );
@@ -200,4 +198,50 @@ export async function toggleTenantStatusApi(
     data,
   );
   return transformTenantInfo(raw);
+}
+
+// ============================================================
+// 一键登录相关
+// ============================================================
+
+/** 一键登录请求 */
+export interface TenantImpersonateRequest {
+  role_id?: null | number;
+}
+
+/** 一键登录响应 */
+export interface TenantImpersonateResponse {
+  impersonateToken: string;
+  tenantCode: string;
+  tenantName: string;
+  expiresIn: number;
+}
+
+/** 后端原始响应 */
+interface TenantImpersonateResponseRaw {
+  impersonate_token: string;
+  tenant_code: string;
+  tenant_name: string;
+  expires_in: number;
+}
+
+/**
+ * 一键登录租户后台
+ * POST /admin/tenants/{tenant_id}/impersonate
+ * 生成一键登录 Token（60秒过期，一次性使用）
+ */
+export async function tenantImpersonateApi(
+  tenantId: number,
+  data?: TenantImpersonateRequest,
+): Promise<TenantImpersonateResponse> {
+  const raw = await requestClient.post<TenantImpersonateResponseRaw>(
+    `${API_PREFIX}/${tenantId}/impersonate`,
+    data || {},
+  );
+  return {
+    impersonateToken: raw.impersonate_token,
+    tenantCode: raw.tenant_code,
+    tenantName: raw.tenant_name,
+    expiresIn: raw.expires_in,
+  };
 }

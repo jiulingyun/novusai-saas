@@ -4,6 +4,8 @@
  */
 import type { Recordable, UserInfo } from '@vben/types';
 
+import type { TenantUserInfo } from '#/api';
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -12,10 +14,11 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { type TenantUserInfo, userApi } from '#/api';
+import { userApi } from '#/api';
 import { USER_HOME_PATH, USER_LOGIN_PATH } from '#/constants/endpoints';
 import { $t } from '#/locales';
 import { EndpointType } from '#/types/endpoint';
+
 import { TokenStorage } from '../shared/token-storage';
 
 export const useUserAuthStore = defineStore('user-auth', () => {
@@ -24,7 +27,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
   const router = useRouter();
 
   const loginLoading = ref(false);
-  const userInfo = ref<TenantUserInfo | null>(null);
+  const userInfo = ref<null | TenantUserInfo>(null);
 
   /**
    * 用户登录
@@ -35,7 +38,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    let info: TenantUserInfo | null = null;
+    let info: null | TenantUserInfo = null;
 
     try {
       loginLoading.value = true;
@@ -156,7 +159,7 @@ export const useUserAuthStore = defineStore('user-auth', () => {
   /**
    * 获取当前Token
    */
-  function getToken(): string | null {
+  function getToken(): null | string {
     return TokenStorage.getToken(EndpointType.USER);
   }
 

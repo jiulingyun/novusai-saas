@@ -8,6 +8,8 @@
  */
 import type { Recordable, UserInfo } from '@vben/types';
 
+import type { ApiEndpoint, BaseUserInfo } from '#/api';
+
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -16,15 +18,9 @@ import { useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import {
-  adminApi,
-  type ApiEndpoint,
-  type BaseUserInfo,
-  getApiEndpoint,
-  tenantApi,
-  userApi,
-} from '#/api';
+import { adminApi, getApiEndpoint, tenantApi, userApi } from '#/api';
 import { $t } from '#/locales';
+
 import { TokenStorage } from './token-storage';
 
 /** 各端登录路径 */
@@ -288,7 +284,7 @@ export const useMultiAuthStore = defineStore('multi-auth', () => {
    * 获取指定端的 Access Token
    * @param endpoint 端类型
    */
-  function getToken(endpoint?: ApiEndpoint): string | null {
+  function getToken(endpoint?: ApiEndpoint): null | string {
     const ep = endpoint || currentEndpoint.value;
     return TokenStorage.getToken(ep);
   }

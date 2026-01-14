@@ -25,9 +25,6 @@
   "imports": {
     "#/*": "./src/*"
   },
-  "devDependencies": {
-    "@types/sortablejs": "catalog:"
-  },
   "dependencies": {
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
@@ -52,5 +49,9 @@
     "vue-router": "catalog:",
     "vxe-table": "catalog:",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@iconify-json/lucide": "^1.2.85",
+    "@types/sortablejs": "catalog:"
   }
 }

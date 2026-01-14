@@ -24,8 +24,9 @@ import { useAccessStore } from '@vben/stores';
 
 import { message } from 'ant-design-vue';
 
-import { getApiEndpoint } from './shared/types';
 import { LOGIN_PATHS, TokenStorage } from '#/store';
+
+import { getApiEndpoint } from './shared/types';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
@@ -51,7 +52,7 @@ function getRefreshTokenUrl(endpoint: string): string {
  * 根据请求 URL 获取对应端的 Token
  * @param requestUrl 请求 URL
  */
-function getTokenByRequestUrl(requestUrl: string): string | null {
+function getTokenByRequestUrl(requestUrl: string): null | string {
   const endpoint = getEndpointByRequestUrl(requestUrl);
   return TokenStorage.getToken(endpoint);
 }
@@ -107,12 +108,11 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       // 重定向模式，直接跳转到对应端的登录页
       // 不调用 multiAuthStore.logout() 避免循环调用
       const loginPath = LOGIN_PATHS[endpoint];
-      const currentFullPath =
-        window.location.pathname + window.location.search;
+      const currentFullPath = window.location.pathname + window.location.search;
       const redirect =
-        currentFullPath !== loginPath
-          ? `?redirect=${encodeURIComponent(currentFullPath)}`
-          : '';
+        currentFullPath === loginPath
+          ? ''
+          : `?redirect=${encodeURIComponent(currentFullPath)}`;
       window.location.href = loginPath + redirect;
     }
   }

@@ -57,8 +57,8 @@ export const REFRESH_TOKEN_KEYS: Record<ApiEndpoint, string> = {
 
 /** 单端 Token 数据 */
 export interface EndpointTokenData {
-  accessToken: string | null;
-  refreshToken: string | null;
+  accessToken: null | string;
+  refreshToken: null | string;
 }
 
 /** 所有端的 Token 数据 */
@@ -81,75 +81,14 @@ class TokenStorageClass {
   private namespace: string = '';
 
   /**
-   * 初始化 namespace
-   * 应在应用启动时调用（bootstrap.ts 中）
+   * 清除所有端的 Token
    */
-  init(namespace: string): void {
-    this.namespace = namespace;
-  }
-
-  /**
-   * 获取带 namespace 前缀的完整存储 key
-   */
-  private getFullKey(key: string): string {
-    if (!this.namespace) {
-      console.warn(
-        '[TokenStorage] namespace 未初始化，请先调用 TokenStorage.init()',
-      );
-      return key;
+  clearAllTokens(): void {
+    const endpoints: ApiEndpoint[] = ['admin', 'tenant', 'user'];
+    for (const endpoint of endpoints) {
+      this.clearToken(endpoint);
     }
-    return `${this.namespace}_${key}`;
   }
-
-  // ============================================================
-  // Access Token 操作
-  // ============================================================
-
-  /**
-   * 获取指定端的 Access Token
-   * @param endpoint API 端类型
-   */
-  getToken(endpoint: ApiEndpoint): string | null {
-    const key = this.getFullKey(TOKEN_KEYS[endpoint]);
-    return localStorage.getItem(key);
-  }
-
-  /**
-   * 设置指定端的 Access Token
-   * @param endpoint API 端类型
-   * @param token Access Token
-   */
-  setToken(endpoint: ApiEndpoint, token: string): void {
-    const key = this.getFullKey(TOKEN_KEYS[endpoint]);
-    localStorage.setItem(key, token);
-  }
-
-  // ============================================================
-  // Refresh Token 操作
-  // ============================================================
-
-  /**
-   * 获取指定端的 Refresh Token
-   * @param endpoint API 端类型
-   */
-  getRefreshToken(endpoint: ApiEndpoint): string | null {
-    const key = this.getFullKey(REFRESH_TOKEN_KEYS[endpoint]);
-    return localStorage.getItem(key);
-  }
-
-  /**
-   * 设置指定端的 Refresh Token
-   * @param endpoint API 端类型
-   * @param token Refresh Token
-   */
-  setRefreshToken(endpoint: ApiEndpoint, token: string): void {
-    const key = this.getFullKey(REFRESH_TOKEN_KEYS[endpoint]);
-    localStorage.setItem(key, token);
-  }
-
-  // ============================================================
-  // 清除操作
-  // ============================================================
 
   /**
    * 清除指定端的所有 Token（Access Token + Refresh Token）
@@ -162,39 +101,9 @@ class TokenStorageClass {
     localStorage.removeItem(refreshTokenKey);
   }
 
-  /**
-   * 清除所有端的 Token
-   */
-  clearAllTokens(): void {
-    const endpoints: ApiEndpoint[] = ['admin', 'tenant', 'user'];
-    for (const endpoint of endpoints) {
-      this.clearToken(endpoint);
-    }
-  }
-
   // ============================================================
-  // 状态查询
+  // Access Token 操作
   // ============================================================
-
-  /**
-   * 检查指定端是否有有效的 Access Token
-   * @param endpoint API 端类型
-   */
-  hasToken(endpoint: ApiEndpoint): boolean {
-    const token = this.getToken(endpoint);
-    return token !== null && token !== '';
-  }
-
-  /**
-   * 获取指定端的完整 Token 数据
-   * @param endpoint API 端类型
-   */
-  getTokenData(endpoint: ApiEndpoint): EndpointTokenData {
-    return {
-      accessToken: this.getToken(endpoint),
-      refreshToken: this.getRefreshToken(endpoint),
-    };
-  }
 
   /**
    * 获取所有端的 Token 数据
@@ -213,6 +122,97 @@ class TokenStorageClass {
   getAuthenticatedEndpoints(): ApiEndpoint[] {
     const endpoints: ApiEndpoint[] = ['admin', 'tenant', 'user'];
     return endpoints.filter((endpoint) => this.hasToken(endpoint));
+  }
+
+  // ============================================================
+  // Refresh Token 操作
+  // ============================================================
+
+  /**
+   * 获取指定端的 Refresh Token
+   * @param endpoint API 端类型
+   */
+  getRefreshToken(endpoint: ApiEndpoint): null | string {
+    const key = this.getFullKey(REFRESH_TOKEN_KEYS[endpoint]);
+    return localStorage.getItem(key);
+  }
+
+  /**
+   * 获取指定端的 Access Token
+   * @param endpoint API 端类型
+   */
+  getToken(endpoint: ApiEndpoint): null | string {
+    const key = this.getFullKey(TOKEN_KEYS[endpoint]);
+    return localStorage.getItem(key);
+  }
+
+  // ============================================================
+  // 清除操作
+  // ============================================================
+
+  /**
+   * 获取指定端的完整 Token 数据
+   * @param endpoint API 端类型
+   */
+  getTokenData(endpoint: ApiEndpoint): EndpointTokenData {
+    return {
+      accessToken: this.getToken(endpoint),
+      refreshToken: this.getRefreshToken(endpoint),
+    };
+  }
+
+  /**
+   * 检查指定端是否有有效的 Access Token
+   * @param endpoint API 端类型
+   */
+  hasToken(endpoint: ApiEndpoint): boolean {
+    const token = this.getToken(endpoint);
+    return token !== null && token !== '';
+  }
+
+  // ============================================================
+  // 状态查询
+  // ============================================================
+
+  /**
+   * 初始化 namespace
+   * 应在应用启动时调用（bootstrap.ts 中）
+   */
+  init(namespace: string): void {
+    this.namespace = namespace;
+  }
+
+  /**
+   * 设置指定端的 Refresh Token
+   * @param endpoint API 端类型
+   * @param token Refresh Token
+   */
+  setRefreshToken(endpoint: ApiEndpoint, token: string): void {
+    const key = this.getFullKey(REFRESH_TOKEN_KEYS[endpoint]);
+    localStorage.setItem(key, token);
+  }
+
+  /**
+   * 设置指定端的 Access Token
+   * @param endpoint API 端类型
+   * @param token Access Token
+   */
+  setToken(endpoint: ApiEndpoint, token: string): void {
+    const key = this.getFullKey(TOKEN_KEYS[endpoint]);
+    localStorage.setItem(key, token);
+  }
+
+  /**
+   * 获取带 namespace 前缀的完整存储 key
+   */
+  private getFullKey(key: string): string {
+    if (!this.namespace) {
+      console.warn(
+        '[TokenStorage] namespace 未初始化，请先调用 TokenStorage.init()',
+      );
+      return key;
+    }
+    return `${this.namespace}_${key}`;
   }
 }
 

@@ -4,6 +4,7 @@
  * 遵循 vben-admin 规范
  */
 import type { adminApi } from '#/api';
+import type { FormMode } from '#/composables';
 
 import { computed, nextTick, ref } from 'vue';
 
@@ -13,18 +14,19 @@ import { useVbenForm } from '#/adapter/form';
 import { adminApi as admin } from '#/api';
 import { $t } from '#/locales';
 
-type TenantInfo = adminApi.TenantInfo;
-
 import { useFormSchema } from '../data';
+
+type TenantInfo = adminApi.TenantInfo;
 
 const emits = defineEmits<{
   success: [];
 }>();
 
 // 表单数据
-const formData = ref<TenantInfo & { isEdit?: boolean }>();
-const isEdit = ref(false);
+const formData = ref<TenantInfo & { mode?: FormMode }>();
+const mode = ref<FormMode>('add');
 const tenantId = ref<number>();
+const isEdit = computed(() => mode.value === 'edit');
 
 // 表单
 const [Form, formApi] = useVbenForm({
@@ -54,9 +56,8 @@ const [Drawer, drawerApi] = useVbenDrawer({
           remark: values.remark || null,
         });
       } else {
-        // 新建模式
+        // 新建模式（code 由后端自动生成）
         await admin.createTenantApi({
-          code: values.code,
           name: values.name,
           contact_name: values.contact_name || null,
           contact_phone: values.contact_phone || null,
@@ -75,9 +76,9 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
   async onOpenChange(isOpen) {
     if (isOpen) {
-      const data = drawerApi.getData<TenantInfo & { isEdit?: boolean }>();
+      const data = drawerApi.getData<TenantInfo & { mode?: FormMode }>();
       formData.value = data;
-      isEdit.value = data?.isEdit ?? false;
+      mode.value = data?.mode ?? 'add';
       tenantId.value = data?.id;
 
       // 重置表单

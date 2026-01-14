@@ -5,7 +5,8 @@
     "codeLogin": "Code Login",
     "qrcodeLogin": "Qr Code Login",
     "forgetPassword": "Forget Password",
-    "profile": "Profile"
+    "profile": "Profile",
+    "impersonate": "Quick Login"
   },
   "dashboard": {
     "title": "Dashboard",

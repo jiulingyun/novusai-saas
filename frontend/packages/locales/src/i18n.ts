@@ -18,6 +18,9 @@ const i18n = createI18n({
   legacy: false,
   locale: '',
   messages: {},
+  fallbackLocale: false,
+  silentFallbackWarn: true,
+  silentTranslationWarn: true,
 });
 
 const modules = import.meta.glob('./langs/**/*.json');
@@ -75,12 +78,43 @@ function loadLocalesMapFromDir(
     }
   }
 
+  // Helper function to set nested object value
+  const setNestedValue = (
+    obj: Record<string, any>,
+    path: string,
+    value: any,
+  ) => {
+    const keys = path.split('/');
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i]!;
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    }
+    const lastKey = keys[keys.length - 1]!;
+    // Merge if both are objects, otherwise assign
+    if (
+      current[lastKey] &&
+      typeof current[lastKey] === 'object' &&
+      typeof value === 'object'
+    ) {
+      Object.assign(current[lastKey], value);
+    } else {
+      current[lastKey] = value;
+    }
+  };
+
   // Convert raw locale data into async import functions
   for (const [locale, files] of Object.entries(localesRaw)) {
     localesMap[locale] = async () => {
       const messages: Record<string, any> = {};
       for (const [fileName, importFn] of Object.entries(files)) {
-        messages[fileName] = ((await importFn()) as any)?.default;
+        const content = ((await importFn()) as any)?.default;
+        // Build nested structure from path
+        // e.g., 'admin/tenant' creates { admin: { tenant: {...content} } }
+        setNestedValue(messages, fileName, content);
       }
       return { default: messages };
     };

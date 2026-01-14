@@ -37,7 +37,7 @@ export const seqColumn = {
  * 获取选中行的工具函数
  */
 export function getSelectedRows<T = any>(
-  gridRef: { value: VxeGridInstance | undefined } | VxeGridInstance | undefined,
+  gridRef: undefined | VxeGridInstance | { value: undefined | VxeGridInstance },
 ): T[] {
   const grid = gridRef && 'value' in gridRef ? gridRef.value : gridRef;
   if (!grid) return [];
@@ -48,7 +48,7 @@ export function getSelectedRows<T = any>(
  * 获取选中行的 ID 列表
  */
 export function getSelectedIds<T extends Record<string, any>>(
-  gridRef: { value: VxeGridInstance | undefined } | VxeGridInstance | undefined,
+  gridRef: undefined | VxeGridInstance | { value: undefined | VxeGridInstance },
   keyField: keyof T | string = 'id',
 ): Array<T[keyof T]> {
   const rows = getSelectedRows<T>(gridRef);
@@ -59,7 +59,7 @@ export function getSelectedIds<T extends Record<string, any>>(
  * 清空选中
  */
 export function clearSelection(
-  gridRef: { value: VxeGridInstance | undefined } | VxeGridInstance | undefined,
+  gridRef: undefined | VxeGridInstance | { value: undefined | VxeGridInstance },
 ): void {
   const grid = gridRef && 'value' in gridRef ? gridRef.value : gridRef;
   if (!grid) return;
@@ -101,7 +101,7 @@ export interface ExportOptions {
  * 自动支持多语言表头（使用列配置中的 title）
  */
 export async function exportToExcel(
-  gridRef: { value: VxeGridInstance | undefined } | VxeGridInstance | undefined,
+  gridRef: undefined | VxeGridInstance | { value: undefined | VxeGridInstance },
   options: ExportOptions = {},
 ): Promise<void> {
   const grid = gridRef && 'value' in gridRef ? gridRef.value : gridRef;
@@ -128,7 +128,7 @@ export async function exportToExcel(
   // 获取数据 - 使用正确的 vxe-grid API
   const { fullData, tableData: currentPageData } = grid.getTableData();
   const tableData = exportAll ? fullData : currentPageData;
-  
+
   if (!tableData || tableData.length === 0) {
     message.warning($t('shared/common.noData'));
     return;
@@ -142,7 +142,12 @@ export async function exportToExcel(
       .filter((col) => {
         // 排除特殊列
         if (!col.field) return false;
-        if (col.type === 'checkbox' || col.type === 'seq' || col.type === 'expand') return false;
+        if (
+          col.type === 'checkbox' ||
+          col.type === 'seq' ||
+          col.type === 'expand'
+        )
+          return false;
         if (col.field === '_drag' || col.field === 'operation') return false;
         return true;
       })
@@ -158,10 +163,12 @@ export async function exportToExcel(
     exportColumns.forEach((col) => {
       const value = row[col.field];
       // 使用 titleKey 进行 i18n 翻译，否则使用 title
-      const headerTitle = col.titleKey ? $t(col.titleKey) : (col.title || col.field);
+      const headerTitle = col.titleKey
+        ? $t(col.titleKey)
+        : col.title || col.field;
       rowData[headerTitle] = col.formatter
         ? col.formatter(value, row)
-        : value ?? '';
+        : (value ?? '');
     });
     return rowData;
   });

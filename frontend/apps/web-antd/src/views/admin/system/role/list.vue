@@ -1,27 +1,28 @@
 <script lang="ts" setup>
 /**
  * 平台角色列表页面
- * 遵循 vben-admin 规范
+ * 使用 Tailwind CSS 自定义树形结构
  */
-import type {
-  OnActionClickParams,
-  VxeTableGridOptions,
-} from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
 
-import { nextTick } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page, useVbenDrawer, VbenLoading } from '@vben/common-ui';
 import { IconifyIcon, Plus } from '@vben/icons';
 
-import { Button, message, Modal, Tag, Tooltip } from 'ant-design-vue';
+import { Button, Empty, message, Tooltip } from 'ant-design-vue';
 
-import { useTableDragSort, useVbenVxeGrid } from '#/adapter/vxe-table';
 import { adminApi as admin } from '#/api';
+import { RoleTreeNode } from '#/components/business/role-tree';
+import type { RoleTreeNodeData } from '#/components/business/role-tree';
 import { $t } from '#/locales';
-import { ADMIN_PERMISSIONS } from '#/utils/access';
+import {
+  buildTree,
+  confirmDelete,
+  getLevelColor,
+  useTreeExpand,
+} from '#/utils/common';
 
-import { useColumns } from './data';
 import Form from './modules/form.vue';
 
 type RoleInfo = adminApi.RoleInfo;
@@ -32,202 +33,161 @@ const [FormDrawer, formDrawerApi] = useVbenDrawer({
   destroyOnClose: true,
 });
 
-// 表格（角色列表不分页）
-const [Grid, gridApi] = useVbenVxeGrid({
-  gridOptions: {
-    columns: useColumns(onActionClick),
-    height: 'auto',
-    pagerConfig: {
-      enabled: false,
-    },
-    proxyConfig: {
-      ajax: {
-        query: async () => {
-          const roles = await admin.getRoleListApi();
-          // 按 sortOrder 排序
-          const sorted = [...roles].sort(
-            (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-          );
-          // 查询完成后初始化拖拽
-          nextTick(() => initDragSort());
-          return { items: sorted, total: sorted.length };
-        },
-      },
-    },
-    rowConfig: {
-      keyField: 'id',
-    },
-    toolbarConfig: {
-      custom: true,
-      refresh: true,
-      search: true,
-      zoom: true,
-    },
-  },
-});
+// 数据状态
+const loading = ref(false);
+const roles = ref<RoleInfo[]>([]);
 
-// 拖拽排序
-const { initDragSort, refreshTable } = useTableDragSort(
-  { get value() { return gridApi.grid; } },
-  {
-    sortField: 'sortOrder',
-    onUpdate: (id, sortOrder) => admin.updateRoleApi(id as number, { sort_order: sortOrder }),
-  },
+// 展开状态管理
+const { expandedIds, toggle, expandAll, collapseAll, isExpanded } =
+  useTreeExpand(() => roles.value, false);
+
+// 将平铺数据构建为树形结构
+const treeData = computed(() =>
+  buildTree<RoleInfo>(roles.value) as RoleTreeNodeData[]
 );
 
 /**
- * 操作按钮点击回调
+ * 加载数据
  */
-function onActionClick(e: OnActionClickParams<RoleInfo>) {
-  switch (e.code) {
-    case 'delete': {
-      onDelete(e.row);
-      break;
-    }
-    case 'edit': {
-      onEdit(e.row);
-      break;
-    }
+async function loadData() {
+  loading.value = true;
+  try {
+    roles.value = await admin.getRoleListApi();
+    // 默认展开所有
+    expandAll();
+  } catch {
+    roles.value = [];
+  } finally {
+    loading.value = false;
   }
 }
 
 /**
  * 编辑
  */
-function onEdit(row: RoleInfo) {
-  formDrawerApi.setData({ ...row, isEdit: true }).open();
+function onEdit(row: RoleTreeNodeData) {
+  formDrawerApi.setData({ ...row, mode: 'edit' }).open();
+}
+
+/**
+ * 添加子角色
+ */
+function onAddChild(row: RoleTreeNodeData) {
+  formDrawerApi.setData({ mode: 'add', parentId: row.id }).open();
 }
 
 /**
  * 删除
  */
-function onDelete(row: RoleInfo) {
-  Modal.confirm({
-    content: $t('admin.system.role.messages.deleteConfirm', { name: row.name }),
-    okButtonProps: { danger: true },
-    okText: $t('common.delete'),
-    onOk: async () => {
-      const hideLoading = message.loading({
-        content: $t('admin.system.role.messages.deleting', { name: row.name }),
-        duration: 0,
-        key: 'delete_role',
-      });
-      try {
-        await admin.deleteRoleApi(row.id);
-        message.success({
-          content: $t('admin.system.role.messages.deleteSuccess'),
-          key: 'delete_role',
-        });
-        onRefresh();
-      } catch {
-        hideLoading();
-      }
-    },
-    title: $t('admin.system.role.messages.deleteTitle'),
-    type: 'warning',
+function onDelete(row: RoleTreeNodeData) {
+  confirmDelete({
+    row,
+    nameField: 'name',
+    deleteApi: (id) => admin.deleteRoleApi(id),
+    onSuccess: loadData,
+    i18nPrefix: 'admin.system.role',
   });
-}
-
-/**
- * 刷新列表
- */
-function onRefresh() {
-  refreshTable();
 }
 
 /**
  * 新建
  */
 function onCreate() {
-  formDrawerApi.setData({ isEdit: false }).open();
+  formDrawerApi.setData({ mode: 'add' }).open();
 }
+
+/**
+ * 刷新
+ */
+function onRefresh() {
+  loadData();
+}
+
+/**
+ * 切换状态
+ */
+async function onToggleStatus(row: RoleTreeNodeData, isActive: boolean) {
+  try {
+    await admin.updateRoleApi(row.id, { is_active: isActive });
+    message.success(isActive ? $t('shared.common.statusEnabled') : $t('shared.common.statusDisabled'));
+    // 直接更新本地数据，避免重新加载
+    const target = roles.value.find((r) => r.id === row.id);
+    if (target) target.isActive = isActive;
+  } catch {
+    // 失败时不做处理，Switch 会保持原状态
+  }
+}
+
+onMounted(loadData);
 </script>
 
 <template>
   <Page auto-content-height>
     <FormDrawer @success="onRefresh" />
 
-    <Grid>
-      <template #toolbar-tools>
-        <Button
-          v-access:code="[ADMIN_PERMISSIONS.ROLE_CREATE]"
-          type="primary"
-          @click="onCreate"
-        >
-          <Plus class="mr-1 size-4" />
-          {{ $t('admin.system.role.create') }}
-        </Button>
-      </template>
-
-      <!-- 角色信息列 -->
-      <template #role_info="{ row }">
-        <div>
-          <div class="font-medium">{{ row.name }}</div>
-          <div class="text-xs text-gray-400 font-mono">{{ row.code }}</div>
+    <div class="flex h-full flex-col overflow-hidden rounded-xl bg-card shadow-sm">
+      <!-- 工具栏 -->
+      <div class="flex items-center justify-between border-b border-border/50 bg-card/80 px-6 py-4 backdrop-blur-sm">
+        <div class="flex items-center gap-3">
+          <div class="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+            <IconifyIcon icon="lucide:shield" class="size-5 text-primary" />
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold">{{ $t('admin.system.role.title') }}</h2>
+            <p class="text-xs text-muted-foreground">{{ $t('shared.common.totalCount', { count: roles.length }) }}</p>
+          </div>
         </div>
-      </template>
-
-      <!-- 描述列 -->
-      <template #desc_cell="{ row }">
-        <span v-if="row.description" class="text-gray-600 dark:text-gray-400">
-          {{ row.description }}
-        </span>
-        <span v-else class="text-gray-300">-</span>
-      </template>
-
-      <!-- 权限数量列 -->
-      <template #permissions_cell="{ row }">
-        <Tooltip v-if="row.permissions && row.permissions.length > 0">
-          <template #title>
-            <div class="max-h-48 overflow-y-auto">
-              <div v-for="perm in row.permissions" :key="perm.id" class="py-0.5">
-                {{ perm.name }}
-              </div>
-            </div>
-          </template>
-          <Tag color="processing" class="!m-0">
-            <IconifyIcon icon="lucide:key" class="mr-1" />
-            {{ row.permissions.length }} {{ $t('admin.system.role.permissionCount') }}
-          </Tag>
-        </Tooltip>
-        <Tag v-else color="warning" class="!m-0">
-          <IconifyIcon icon="lucide:alert-circle" class="mr-1" />
-          {{ $t('admin.system.role.noPermissions') }}
-        </Tag>
-      </template>
-
-      <!-- 排序列 -->
-      <template #sort_cell="{ row }">
-        <span class="inline-flex items-center justify-center size-6 rounded bg-gray-100 dark:bg-gray-700 text-xs font-medium">
-          {{ row.sortOrder ?? 0 }}
-        </span>
-      </template>
-
-      <!-- 时间列 -->
-      <template #time_cell="{ row }">
-        <div v-if="row.createdAt" class="flex flex-col text-xs">
-          <span class="text-gray-600 dark:text-gray-400">
-            <IconifyIcon icon="lucide:calendar" class="mr-1 inline-block text-gray-400" />
-            {{ new Date(row.createdAt).toLocaleDateString() }}
-          </span>
-          <span class="text-gray-400 ml-4">
-            {{ new Date(row.createdAt).toLocaleTimeString() }}
-          </span>
+        <div class="flex items-center gap-1">
+          <Tooltip :title="$t('shared.common.expandAll')">
+            <Button type="text" class="!size-9 !rounded-lg" @click="expandAll">
+              <IconifyIcon icon="lucide:unfold-vertical" class="size-4" />
+            </Button>
+          </Tooltip>
+          <Tooltip :title="$t('shared.common.collapseAll')">
+            <Button type="text" class="!size-9 !rounded-lg" @click="collapseAll">
+              <IconifyIcon icon="lucide:fold-vertical" class="size-4" />
+            </Button>
+          </Tooltip>
+          <Tooltip :title="$t('shared.common.refresh')">
+            <Button type="text" class="!size-9 !rounded-lg" @click="onRefresh">
+              <IconifyIcon icon="lucide:refresh-cw" class="size-4" />
+            </Button>
+          </Tooltip>
+          <div class="mx-2 h-5 w-px bg-border" />
+          <Button
+            v-access:code="['role:create']"
+            type="primary"
+            class="!rounded-lg !px-4"
+            @click="onCreate"
+          >
+            <Plus class="mr-1.5 size-4" />
+            {{ $t('admin.system.role.create') }}
+          </Button>
         </div>
-        <span v-else class="text-gray-300">-</span>
-      </template>
-    </Grid>
+      </div>
+
+      <!-- 树形列表 -->
+      <div class="flex-1 overflow-auto p-4">
+        <VbenLoading v-if="loading" spinning class="h-40" />
+        <Empty v-else-if="treeData.length === 0" :description="$t('shared.common.noData')" />
+        <div v-else class="space-y-0.5">
+          <RoleTreeNode
+            v-for="node in treeData"
+            :key="node.id"
+            :node="node"
+            :level="0"
+            :expanded-ids="expandedIds"
+            :get-level-color="getLevelColor"
+            :is-expanded="isExpanded"
+            i18n-prefix="admin"
+            @toggle="toggle"
+            @edit="onEdit"
+            @add-child="onAddChild"
+            @delete="onDelete"
+            @toggle-status="onToggleStatus"
+          />
+        </div>
+      </div>
+    </div>
   </Page>
 </template>
-
-<style>
-/* Sortable 拖拽样式 - 不能用 scoped，否则不能应用到动态添加的元素 */
-.sortable-ghost {
-  opacity: 0.5;
-  background: var(--ant-color-primary-bg) !important;
-}
-
-.sortable-ghost td {
-  background: inherit !important;
-}
-</style>

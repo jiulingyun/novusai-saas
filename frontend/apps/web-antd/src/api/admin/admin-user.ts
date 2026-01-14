@@ -9,33 +9,29 @@ import { requestClient } from '../request';
 // ============================================================
 
 /** 管理员列表查询参数 */
-export interface AdminListParams {
-  page?: number;
-  page_size?: number;
-  is_active?: boolean | null;
-}
+export type AdminListParams = Record<string, unknown>;
 
 /** 创建管理员请求 */
 export interface AdminCreateRequest {
   username: string;
   email: string;
   password: string;
-  phone?: string | null;
-  nickname?: string | null;
+  phone?: null | string;
+  nickname?: null | string;
   is_active?: boolean;
   is_super?: boolean;
-  role_id?: number | null;
+  role_id?: null | number;
 }
 
 /** 更新管理员请求 */
 export interface AdminUpdateRequest {
-  email?: string | null;
-  phone?: string | null;
-  nickname?: string | null;
-  avatar?: string | null;
+  email?: null | string;
+  phone?: null | string;
+  nickname?: null | string;
+  avatar?: null | string;
   is_active?: boolean | null;
   is_super?: boolean | null;
-  role_id?: number | null;
+  role_id?: null | number;
 }
 
 /** 重置密码请求 */
@@ -65,8 +61,8 @@ export interface AdminInfoRaw {
   avatar?: string;
   is_active: boolean;
   is_super: boolean;
-  role_id?: number | null;
-  role_name?: string | null;
+  role_id?: null | number;
+  role_name?: null | string;
   last_login_at?: string;
   created_at: string;
   updated_at?: string;
@@ -82,8 +78,8 @@ export interface AdminInfo {
   avatar?: string;
   isActive: boolean;
   isSuper: boolean;
-  roleId?: number | null;
-  roleName?: string | null;
+  roleId?: null | number;
+  roleName?: null | string;
   lastLoginAt?: string;
   createdAt: string;
   updatedAt?: string;
@@ -135,9 +131,9 @@ export async function getAdminListApi(
 ): Promise<AdminListResponse> {
   const response = await requestClient.get<{
     items: AdminInfoRaw[];
-    total: number;
     page: number;
     page_size: number;
+    total: number;
   }>(API_PREFIX, { params });
 
   return {

@@ -5,10 +5,7 @@
 import type { VbenFormSchema } from '#/adapter/form';
 import type { OnActionClickFn, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
-
-import { dragColumn } from '#/adapter/vxe-table';
 import { $t } from '#/locales';
-import { ADMIN_PERMISSIONS } from '#/utils/access';
 
 type RoleInfo = adminApi.RoleInfo;
 
@@ -20,11 +17,12 @@ export function useColumns<T = RoleInfo>(
   onActionClick: OnActionClickFn<T>,
 ): VxeTableGridOptions['columns'] {
   return [
-    dragColumn,
     {
       field: 'roleInfo',
       title: $t('admin.system.role.name'),
-      minWidth: 180,
+      minWidth: 260,
+      treeNode: true,
+      showOverflow: 'tooltip',
       slots: { default: 'role_info' },
     },
     {
@@ -44,8 +42,8 @@ export function useColumns<T = RoleInfo>(
       cellRender: {
         name: 'CellTag',
         options: [
-          { color: 'success', label: $t('admin.common.enabled'), value: true },
-          { color: 'error', label: $t('admin.common.disabled'), value: false },
+          { color: 'success', label: $t('shared.common.enabled'), value: true },
+          { color: 'error', label: $t('shared.common.disabled'), value: false },
         ],
       },
       field: 'isActive',
@@ -70,6 +68,7 @@ export function useColumns<T = RoleInfo>(
       align: 'center',
       cellRender: {
         attrs: {
+          resource: 'role',  // 自动检查 role:create, role:update, role:delete
           nameField: 'name',
           nameTitle: $t('admin.system.role.name'),
           onClick: onActionClick,
@@ -77,23 +76,19 @@ export function useColumns<T = RoleInfo>(
         name: 'CellOperation',
         options: [
           {
-            code: 'edit',
-            text: $t('common.edit'),
-            icon: 'lucide:pencil',
-            accessCodes: [ADMIN_PERMISSIONS.ROLE_UPDATE],
+            code: 'addChild',
+            text: $t('admin.system.role.addChild'),
+            icon: 'lucide:plus',
+            accessCodes: ['role:create'],  // addChild 映射到 create 权限
           },
-          {
-            code: 'delete',
-            text: $t('common.delete'),
-            icon: 'lucide:trash-2',
-            accessCodes: [ADMIN_PERMISSIONS.ROLE_DELETE],
-          },
+          'edit',  // 自动鉴权: role:update
+          'delete',  // 自动鉴权: role:delete
         ],
       },
       field: 'operation',
       fixed: 'right',
-      title: $t('admin.common.operation'),
-      width: 80,
+      title: $t('shared.common.operation'),
+      width: 120,
     },
   ];
 }
@@ -103,17 +98,19 @@ export function useColumns<T = RoleInfo>(
  * @param isEdit 是否编辑模式
  */
 export function useFormSchema(isEdit: boolean = false): VbenFormSchema[] {
-  return [
-    {
+  const schemas: VbenFormSchema[] = [];
+  if (isEdit) {
+    schemas.push({
       component: 'Input',
       componentProps: {
-        disabled: isEdit,
+        disabled: true,
         placeholder: $t('admin.system.role.placeholder.inputCode'),
       },
       fieldName: 'code',
       label: $t('admin.system.role.code'),
-      rules: isEdit ? undefined : 'required',
-    },
+    });
+  }
+  schemas.push(
     {
       component: 'Input',
       componentProps: {
@@ -122,6 +119,12 @@ export function useFormSchema(isEdit: boolean = false): VbenFormSchema[] {
       fieldName: 'name',
       label: $t('admin.system.role.name'),
       rules: 'required',
+    },
+    {
+      // 父角色选择器使用插槽渲染
+      component: 'Input',
+      fieldName: 'parent_id',
+      label: $t('admin.system.role.parentRole'),
     },
     {
       component: 'Textarea',
@@ -163,5 +166,6 @@ export function useFormSchema(isEdit: boolean = false): VbenFormSchema[] {
       formItemClass: 'items-start',
       label: $t('admin.system.role.permissions'),
     },
-  ];
+  );
+  return schemas;
 }

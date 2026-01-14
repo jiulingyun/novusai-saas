@@ -27,6 +27,14 @@ const authRoutes: RouteRecordRaw = {
         title: $t('page.auth.login'),
       },
     },
+    {
+      name: 'TenantImpersonate',
+      path: '/tenant/impersonate',
+      component: () => import('#/views/tenant/authentication/impersonate.vue'),
+      meta: {
+        title: $t('page.auth.impersonate'),
+      },
+    },
   ],
 };
 
@@ -51,6 +59,26 @@ const mainRoutes: RouteRecordRaw = {
         title: $t('page.dashboard.title'),
       },
     },
+    // 系统管理
+    {
+      name: 'TenantSystem',
+      path: 'system',
+      meta: {
+        icon: 'lucide:settings',
+        title: $t('tenant.system.title'),
+      },
+      children: [
+        {
+          name: 'TenantSystemRole',
+          path: 'role',
+          component: () => import('#/views/tenant/system/role/list.vue'),
+          meta: {
+            icon: 'lucide:shield',
+            title: $t('tenant.system.role.title'),
+          },
+        },
+      ],
+    },
   ],
 };
 
@@ -58,4 +86,8 @@ const mainRoutes: RouteRecordRaw = {
 export const tenantRoutes: RouteRecordRaw[] = [authRoutes, mainRoutes];
 
 /** 租户管理端路由名称列表（不需要权限拦截） */
-export const tenantCoreRouteNames = ['TenantAuthentication', 'TenantLogin'];
+export const tenantCoreRouteNames = [
+  'TenantAuthentication',
+  'TenantLogin',
+  'TenantImpersonate',
+];

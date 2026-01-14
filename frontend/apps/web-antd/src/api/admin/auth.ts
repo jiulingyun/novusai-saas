@@ -12,8 +12,9 @@ import type {
   RefreshTokenResultRaw,
 } from '../shared/types';
 
-import { baseRequestClient, requestClient } from '../request';
 import { useAccessStore } from '@vben/stores';
+
+import { baseRequestClient, requestClient } from '../request';
 
 // Logout 使用 baseRequestClient 避免 401 时循环调用
 
@@ -63,7 +64,9 @@ export async function adminLogoutApi() {
     const token = accessStore?.accessToken;
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, { headers });
+    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, {
+      headers,
+    });
   } catch {
     // 登出失败不影响主流程
   }
@@ -103,7 +106,7 @@ export async function getAdminInfoApi(): Promise<AdminUserInfo> {
     isSuperAdmin: raw.is_super,
     roles: raw.is_super ? ['super_admin'] : [],
     // 超级管理员拥有所有权限，普通管理员使用后端返回的权限码
-    permissions: raw.is_super ? ['*'] : (raw.permissions || []),
+    permissions: raw.is_super ? ['*'] : raw.permissions || [],
   };
 }
 

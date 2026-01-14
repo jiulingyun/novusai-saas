@@ -1,0 +1,75 @@
+{
+  "title": "Tenant Management",
+  "list": "Tenant List",
+  "create": "Create Tenant",
+  "edit": "Edit Tenant",
+  "code": "Tenant Code",
+  "name": "Tenant Name",
+  "contactName": "Contact Name",
+  "contactPhone": "Contact Phone",
+  "contactEmail": "Contact Email",
+  "plan": "Plan",
+  "status": "Status",
+  "expiresAt": "Expires At",
+  "remark": "Remark",
+  "createdAt": "Created At",
+  "enterBackend": "Enter Backend",
+  "planOptions": {
+    "free": "Free",
+    "basic": "Basic",
+    "pro": "Pro",
+    "enterprise": "Enterprise"
+  },
+  "expiryStatus": {
+    "permanent": "Permanent",
+    "expired": "Expired",
+    "nearExpiry": "Near Expiry"
+  },
+  "stats": {
+    "total": "Total Tenants",
+    "active": "Active",
+    "expired": "Expired",
+    "inactive": "Inactive"
+  },
+  "messages": {
+    "toggleStatusConfirm": "Are you sure to {action} tenant \"{name}\"?",
+    "toggleStatusTitle": "Toggle Status",
+    "deleteConfirm": "Are you sure to delete tenant \"{name}\"? All data under this tenant will be inaccessible.",
+    "deleteTitle": "Delete Confirmation",
+    "deleting": "Deleting {name}...",
+    "deleteSuccess": "Deleted successfully",
+    "createSuccess": "Created successfully",
+    "updateSuccess": "Updated successfully",
+    "impersonating": "Entering \"{name}\" backend...",
+    "impersonateSuccess": "Opening tenant backend",
+    "impersonateFailed": "Login failed, please try again"
+  },
+  "placeholder": {
+    "searchCode": "Search tenant code",
+    "searchName": "Search tenant name",
+    "searchContact": "Search contact name",
+    "searchPhone": "Search contact phone",
+    "allStatus": "All Status",
+    "allPlan": "All Plans",
+    "inputCode": "Enter tenant code (start with lowercase letter)",
+    "inputName": "Enter tenant name",
+    "inputContactName": "Enter contact name",
+    "inputContactPhone": "Enter contact phone",
+    "inputContactEmail": "Enter contact email",
+    "selectPlan": "Select plan",
+    "selectExpiresAt": "Select expiration date",
+    "inputRemark": "Enter remark"
+  },
+  "help": {
+    "codeFormat": "Start with lowercase letter, only lowercase letters, numbers, underscores, and hyphens allowed"
+  },
+  "validation": {
+    "codeRequired": "Please enter tenant code",
+    "codeMinLength": "Tenant code must be at least 2 characters",
+    "codeMaxLength": "Tenant code must be at most 50 characters",
+    "codePattern": "Tenant code must start with lowercase letter, only lowercase letters, numbers, underscores, hyphens allowed",
+    "nameRequired": "Please enter tenant name",
+    "nameMaxLength": "Tenant name must be at most 100 characters"
+  },
+  "tip": "Manage platform tenants, configure tenant plans and expiration"
+}

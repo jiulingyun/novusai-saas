@@ -12,8 +12,9 @@ import type {
   TenantUserInfo,
 } from '../shared/types';
 
-import { baseRequestClient, requestClient } from '../request';
 import { useAccessStore } from '@vben/stores';
+
+import { baseRequestClient, requestClient } from '../request';
 
 // Logout 使用 baseRequestClient 避免 401 时循环调用
 
@@ -63,7 +64,9 @@ export async function userLogoutApi() {
     const token = accessStore?.accessToken;
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, { headers });
+    return await baseRequestClient.post(`${API_PREFIX}/logout`, undefined, {
+      headers,
+    });
   } catch {
     // 登出失败不影响主流程
   }

@@ -13,6 +13,8 @@ import type { App, Directive, DirectiveBinding } from 'vue';
 import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 
+import { checkPermission } from '#/utils/access';
+
 /**
  * 检查是否有访问权限
  * 返回 true 表示有权限，false 表示无权限
@@ -26,24 +28,15 @@ function checkAccess(binding: DirectiveBinding<string | string[]>): boolean {
   // 没有指定权限码，默认有权限
   if (!value) return true;
 
-  // 检查是否为超级管理员
-  const isSuperAdmin = accessStore.accessCodes.includes('*');
-  if (isSuperAdmin) {
-    return true; // 超级管理员拥有所有权限
-  }
-
-  // 正常权限检查
-  const values = Array.isArray(value) ? value : [value];
-
+  // 角色模式检查
   if (preferences.app.accessMode === 'frontend' && binding.arg === 'role') {
-    // 角色检查
+    const values = Array.isArray(value) ? value : [value];
     const userRoleSet = new Set(userStore.userRoles);
     return values.some((item) => userRoleSet.has(item));
-  } else {
-    // 权限码检查
-    const userCodesSet = new Set(accessStore.accessCodes);
-    return values.some((item) => userCodesSet.has(item));
   }
+
+  // 权限码模式：使用共享的 checkPermission 函数
+  return checkPermission(value, accessStore.accessCodes);
 }
 
 /**

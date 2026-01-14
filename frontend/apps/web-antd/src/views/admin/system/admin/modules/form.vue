@@ -4,6 +4,7 @@
  * 遵循 vben-admin 规范
  */
 import type { adminApi } from '#/api';
+import type { FormMode } from '#/composables';
 
 import { computed, nextTick, ref } from 'vue';
 
@@ -11,23 +12,33 @@ import { useVbenDrawer } from '@vben/common-ui';
 
 import { useVbenForm } from '#/adapter/form';
 import { adminApi as admin } from '#/api';
+import { useRemoteSelect } from '#/composables';
 import { $t } from '#/locales';
 
-type AdminInfo = adminApi.AdminInfo;
-
 import { useFormSchema } from '../data';
+
+type AdminInfo = adminApi.AdminInfo;
 
 const emits = defineEmits<{
   success: [];
 }>();
 
 // 表单数据
-const formData = ref<AdminInfo & { isEdit?: boolean }>();
-const isEdit = ref(false);
+const formData = ref<AdminInfo & { mode?: FormMode }>();
+const mode = ref<FormMode>('add');
 const adminId = ref<number>();
+const isEdit = computed(() => mode.value === 'edit');
 
-// 角色列表
-const roleOptions = ref<{ id: number; name: string }[]>([]);
+// 使用 useRemoteSelect 获取角色选项
+const {
+  options: roleOptions,
+  refresh: refreshRoles,
+} = useRemoteSelect({
+  url: '/admin/roles/select',
+  immediate: false,  // 打开抽屉时手动加载
+  valueField: 'value',
+  labelField: 'label',
+});
 
 // 表单
 const [Form, formApi] = useVbenForm({
@@ -77,18 +88,16 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
   async onOpenChange(isOpen) {
     if (isOpen) {
-      const data = drawerApi.getData<AdminInfo & { isEdit?: boolean }>();
+      const data = drawerApi.getData<AdminInfo & { mode?: FormMode }>();
       formData.value = data;
-      isEdit.value = data?.isEdit ?? false;
+      mode.value = data?.mode ?? 'add';
       adminId.value = data?.id;
 
       // 重置表单
       await formApi.resetForm();
 
-      // 加载角色列表
-      if (roleOptions.value.length === 0) {
-        await loadRoles();
-      }
+      // 加载角色选项（使用 /select 端点）
+      await refreshRoles();
 
       // 更新表单 schema（根据编辑/新建模式）
       formApi.setState({
@@ -102,6 +111,7 @@ const [Drawer, drawerApi] = useVbenDrawer({
       formApi.updateSchema([
         {
           componentProps: {
+            fieldNames: { label: 'label', value: 'value' },
             options: roleOptions.value,
           },
           fieldName: 'role_id',
@@ -123,18 +133,6 @@ const [Drawer, drawerApi] = useVbenDrawer({
     }
   },
 });
-
-/**
- * 加载角色列表
- */
-async function loadRoles() {
-  try {
-    const roles = await admin.getRoleListApi();
-    roleOptions.value = roles.map((r) => ({ id: r.id, name: r.name }));
-  } catch {
-    roleOptions.value = [];
-  }
-}
 
 /**
  * 抽屉标题
