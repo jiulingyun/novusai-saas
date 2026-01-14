@@ -15,7 +15,19 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 @dataclass
 class MenuConfig:
-    """菜单配置"""
+    """
+    菜单配置
+    
+    Attributes:
+        icon: 菜单图标，使用 Lucide 图标库 (https://lucide.dev/icons)
+              格式: "lucide:{icon-name}"，如 "lucide:settings", "lucide:users"
+              图标名称使用 kebab-case（小写字母，单词间用连字符分隔）
+        path: 菜单路由路径
+        component: 前端组件路径
+        parent: 父菜单资源标识
+        sort_order: 排序权重，数值越小越靠前
+        hidden: 是否隐藏菜单（仅做权限控制，不在菜单中显示）
+    """
     
     icon: str | None = None
     path: str | None = None

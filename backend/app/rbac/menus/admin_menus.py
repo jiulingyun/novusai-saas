@@ -13,6 +13,12 @@
 
 name 字段使用 i18n key，前端渲染时翻译。
 格式: menu.{scope}.{resource}
+
+图标规范:
+使用 Lucide 图标库: https://lucide.dev/icons
+格式: "lucide:{icon-name}"
+示例: "lucide:settings", "lucide:users", "lucide:layout-dashboard"
+图标名称使用 kebab-case（小写字母，单词间用连字符分隔）
 """
 
 from app.enums.rbac import PermissionType, PermissionScope
