@@ -129,6 +129,11 @@ class TenantAdminRole(TenantModel):
         return len([c for c in self.children if not c.is_deleted])
     
     @property
+    def permissions_count(self) -> int:
+        """获取权限数量"""
+        return len(self.permissions)
+    
+    @property
     def has_children(self) -> bool:
         """是否有子角色"""
         return self.children_count > 0

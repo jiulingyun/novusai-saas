@@ -99,6 +99,7 @@ class TenantRoleController(TenantController):
                 .options(
                     selectinload(TenantAdminRole.children),
                     selectinload(TenantAdminRole.admins),
+                    selectinload(TenantAdminRole.permissions),
                 )
                 .order_by(TenantAdminRole.sort_order)
             )

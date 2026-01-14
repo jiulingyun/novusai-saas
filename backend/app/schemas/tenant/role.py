@@ -31,6 +31,7 @@ class TenantAdminRoleResponse(BaseSchema):
     level: int = Field(1, description="层级深度，根节点为 1")
     children_count: int = Field(0, description="子角色数量")
     has_children: bool = Field(False, description="是否有子角色")
+    permissions_count: int = Field(0, description="权限数量")
     created_at: datetime = Field(..., description="创建时间")
 
 

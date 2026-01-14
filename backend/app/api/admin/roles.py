@@ -98,6 +98,7 @@ class AdminRoleController(GlobalController):
                 .options(
                     selectinload(AdminRole.children),
                     selectinload(AdminRole.admins),
+                    selectinload(AdminRole.permissions),
                 )
                 .order_by(AdminRole.sort_order)
             )
