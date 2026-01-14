@@ -50,7 +50,6 @@ class TenantAdminRoleTreeNode(TenantAdminRoleResponse):
 class TenantAdminRoleCreateRequest(BaseSchema):
     """创建租户角色请求"""
     
-    code: str = Field(..., min_length=2, max_length=50, description="角色代码")
     name: str = Field(..., min_length=1, max_length=50, description="角色名称")
     description: str | None = Field(None, max_length=500, description="角色描述")
     is_active: bool = Field(True, description="是否启用")

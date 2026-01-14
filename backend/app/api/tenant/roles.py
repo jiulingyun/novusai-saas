@@ -324,7 +324,6 @@ class TenantRoleController(TenantController):
             try:
                 role = await service.create_role(
                     name=data.name,
-                    code=data.code,
                     description=data.description,
                     is_active=data.is_active,
                     sort_order=data.sort_order,

@@ -4,6 +4,7 @@
 提供平台角色的业务逻辑，支持层级结构和权限继承
 """
 
+import uuid
 from typing import Any
 
 from sqlalchemy import select
@@ -40,10 +41,13 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         """
         return await self.repo.get_by_code(code)
     
+    def _generate_role_code(self) -> str:
+        """生成唯一角色代码"""
+        return f"role_{uuid.uuid4().hex[:12]}"
+    
     async def create_role(
         self,
         name: str,
-        code: str,
         description: str | None = None,
         is_system: bool = False,
         is_active: bool = True,
@@ -55,7 +59,6 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         
         Args:
             name: 角色名称
-            code: 角色代码（唯一）
             description: 角色描述
             is_system: 是否系统内置
             is_active: 是否启用
@@ -66,14 +69,10 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             创建的角色
         
         Raises:
-            BusinessException: 代码已存在或父角色无效
+            BusinessException: 父角色无效
         """
-        # 检查代码是否已存在
-        if await self.repo.code_exists(code):
-            raise BusinessException(
-                message=_("role.code_exists"),
-                code=4001,
-            )
+        # 自动生成唯一代码
+        code = self._generate_role_code()
         
         # 验证父角色并获取 path 和 level
         parent_path, parent_level = await self.validate_parent(parent_id)

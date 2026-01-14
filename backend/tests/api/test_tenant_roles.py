@@ -32,11 +32,6 @@ class TestTenantRoles(BaseAPITest):
         """测试前登录"""
         if config.TENANT_ADMIN_USERNAME and config.TENANT_ADMIN_PASSWORD:
             self._do_login()
-            # 生成唯一的测试角色代码
-            ts = int(time.time())
-            self._test_data["role_code"] = f"test_role_{ts}"
-            self._test_data["child_role_code"] = f"test_child_{ts}"
-            self._test_data["grandchild_role_code"] = f"test_grandchild_{ts}"
     
     def teardown(self) -> None:
         """测试后清理（从叶子节点开始删除）"""
@@ -77,8 +72,8 @@ class TestTenantRoles(BaseAPITest):
         # 2. 创建角色
         self.run_test("创建角色", self.test_create_role, skip_reason)
         
-        # 3. 创建角色 - 重复代码
-        self.run_test("创建角色 - 重复代码", self.test_create_role_duplicate_code, skip_reason)
+        # 3. 创建角色 - 重复名称（允许）
+        self.run_test("创建角色 - 重复名称", self.test_create_role_duplicate_name, skip_reason)
         
         # 4. 获取角色详情
         self.run_test("获取角色详情", self.test_get_role_detail, skip_reason)
@@ -138,9 +133,7 @@ class TestTenantRoles(BaseAPITest):
     
     def test_create_role(self) -> None:
         """测试创建角色"""
-        role_code = self._test_data["role_code"]
         resp = self.client.post("/tenant/roles", data={
-            "code": role_code,
             "name": "测试角色",
             "description": "租户内测试角色",
             "is_active": True,
@@ -149,18 +142,22 @@ class TestTenantRoles(BaseAPITest):
         data = assert_success(resp, "创建角色失败")
         
         assert_has_keys(data["data"], ["id", "code", "name", "tenant_id"])
-        assert_equals(data["data"]["code"], role_code)
+        # code 应该是自动生成的，以 role_ 开头
+        assert_true(data["data"]["code"].startswith("role_"), "角色代码应以 role_ 开头")
         
         self._test_data["created_role_id"] = data["data"]["id"]
     
-    def test_create_role_duplicate_code(self) -> None:
-        """测试创建重复代码的角色"""
-        role_code = self._test_data["role_code"]
+    def test_create_role_duplicate_name(self) -> None:
+        """测试创建重复名称的角色（允许，因为 code 是自动生成的）"""
         resp = self.client.post("/tenant/roles", data={
-            "code": role_code,
-            "name": "重复角色",
+            "name": "测试角色",  # 同名
+            "description": "这个角色名称已存在，但应该允许",
         })
-        assert_error(resp, 400, "应返回 400 错误")
+        data = assert_success(resp, "同名角色应该允许创建")
+        
+        # 清理创建的重复角色
+        if data.get("data", {}).get("id"):
+            self.client.delete(f"/tenant/roles/{data['data']['id']}")
     
     def test_get_role_detail(self) -> None:
         """测试获取角色详情"""
@@ -242,9 +239,7 @@ class TestTenantRoles(BaseAPITest):
         if not parent_id:
             raise AssertionError("没有可用的父角色ID")
         
-        child_code = self._test_data["child_role_code"]
         resp = self.client.post("/tenant/roles", data={
-            "code": child_code,
             "name": "测试子角色",
             "description": "父角色下的子角色",
             "is_active": True,
@@ -264,9 +259,7 @@ class TestTenantRoles(BaseAPITest):
         if not parent_id:
             raise AssertionError("没有可用的子角色ID")
         
-        grandchild_code = self._test_data["grandchild_role_code"]
         resp = self.client.post("/tenant/roles", data={
-            "code": grandchild_code,
             "name": "测试孙角色",
             "description": "子角色下的孙角色",
             "is_active": True,
