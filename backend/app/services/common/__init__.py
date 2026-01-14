@@ -1,7 +1,13 @@
 """
 公共服务模块
 
-提供三端共用的服务
+提供三端共用的服务和 Mixin
 """
 
-__all__ = []
+from app.services.common.role_tree_mixin import RoleTreeMixin, MAX_ROLE_DEPTH
+
+
+__all__ = [
+    "RoleTreeMixin",
+    "MAX_ROLE_DEPTH",
+]

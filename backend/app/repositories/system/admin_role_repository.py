@@ -1,28 +1,28 @@
 """
-租户角色仓储
+平台管理员角色仓储
 
-提供租户角色的数据访问操作（租户隔离），支持层级查询
+提供平台角色的数据访问操作，支持层级查询
 """
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.orm import selectinload
 
-from app.core.base_repository import TenantRepository
-from app.models.auth.tenant_admin_role import TenantAdminRole
+from app.core.base_repository import BaseRepository
+from app.models.auth.admin_role import AdminRole
 
 
-class TenantRoleRepository(TenantRepository[TenantAdminRole]):
+class AdminRoleRepository(BaseRepository[AdminRole]):
     """
-    租户角色仓储
+    平台管理员角色仓储
     
-    提供租户角色特有的数据访问方法，自动过滤租户 ID，包含层级结构查询
+    提供平台角色特有的数据访问方法，包含层级结构查询
     """
     
-    model = TenantAdminRole
+    model = AdminRole
     
-    async def get_by_code(self, code: str) -> TenantAdminRole | None:
+    async def get_by_code(self, code: str) -> AdminRole | None:
         """
-        根据代码获取角色（租户内）
+        根据代码获取角色
         
         Args:
             code: 角色代码
@@ -30,7 +30,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         Returns:
             角色实例或 None
         """
-        return await self.get_one_by(code=code, tenant_id=self.tenant_id)
+        return await self.get_one_by(code=code)
     
     async def code_exists(
         self,
@@ -38,17 +38,16 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         exclude_id: int | None = None,
     ) -> bool:
         """
-        检查角色代码是否已存在（租户内唯一）
+        检查角色代码是否已存在
         
         Args:
             code: 角色代码
-            exclude_id: 排除的 ID
+            exclude_id: 排除的 ID（用于更新时排除自身）
         
         Returns:
             是否存在
         """
         query = select(self.model.id).where(
-            self.model.tenant_id == self.tenant_id,
             self.model.code == code,
             self.model.is_deleted == False,
         )
@@ -64,9 +63,9 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         self,
         parent_id: int | None,
         include_deleted: bool = False,
-    ) -> list[TenantAdminRole]:
+    ) -> list[AdminRole]:
         """
-        获取直接子角色列表（租户内）
+        获取直接子角色列表
         
         Args:
             parent_id: 父角色 ID，None 表示获取顶级角色
@@ -76,8 +75,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
             子角色列表
         """
         query = select(self.model).where(
-            self.model.tenant_id == self.tenant_id,
-            self.model.parent_id == parent_id if parent_id else self.model.parent_id.is_(None),
+            self.model.parent_id == parent_id if parent_id else self.model.parent_id.is_(None)
         )
         
         if not include_deleted:
@@ -92,7 +90,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         self,
         role_id: int,
         include_deleted: bool = False,
-    ) -> list[TenantAdminRole]:
+    ) -> list[AdminRole]:
         """
         获取所有祖先角色（从根到父，不含自身）
         
@@ -103,7 +101,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         Returns:
             祖先角色列表（按层级从上到下排序）
         """
-        # 先获取当前角色的 path（需要验证租户归属）
+        # 先获取当前角色的 path
         role = await self.get_by_id(role_id, include_deleted=include_deleted)
         if not role or not role.path:
             return []
@@ -113,10 +111,9 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         if not ancestor_ids:
             return []
         
-        # 查询祖先角色（同一租户内）
+        # 查询祖先角色
         query = select(self.model).where(
-            self.model.tenant_id == self.tenant_id,
-            self.model.id.in_(ancestor_ids),
+            self.model.id.in_(ancestor_ids)
         )
         
         if not include_deleted:
@@ -131,7 +128,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         self,
         role_id: int,
         include_deleted: bool = False,
-    ) -> list[TenantAdminRole]:
+    ) -> list[AdminRole]:
         """
         获取所有后代角色（不含自身）
         
@@ -144,16 +141,16 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         Returns:
             后代角色列表（按层级从上到下排序）
         """
-        # 先获取当前角色（需要验证租户归属）
+        # 先获取当前角色
         role = await self.get_by_id(role_id, include_deleted=include_deleted)
         if not role:
             return []
         
-        # 构建 path 前缀模式
+        # 构建 path 前缀模式，如 /1/3/% 匹配所有以 /1/3/ 开头的角色
+        # 当前角色的 path 已经包含自身，如 /1/3/，所以后代的 path 会是 /1/3/7/、/1/3/7/9/ 等
         path_prefix = role.path or f"/{role_id}/"
         
         query = select(self.model).where(
-            self.model.tenant_id == self.tenant_id,
             self.model.path.like(f"{path_prefix}%"),
             self.model.id != role_id,  # 排除自身
         )
@@ -188,9 +185,9 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         self,
         parent_id: int | None = None,
         include_deleted: bool = False,
-    ) -> list[TenantAdminRole]:
+    ) -> list[AdminRole]:
         """
-        获取角色树（指定节点下的所有角色，租户内）
+        获取角色树（指定节点下的所有角色）
         
         Args:
             parent_id: 父角色 ID，None 表示从根节点开始
@@ -200,20 +197,17 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
             角色列表（平铺，按层级和排序字段排序）
         """
         if parent_id is None:
-            # 获取租户内所有角色
-            query = select(self.model).where(
-                self.model.tenant_id == self.tenant_id
-            )
+            # 获取所有角色
+            query = select(self.model)
         else:
-            # 获取指定节点及其后代（需要验证租户归属）
+            # 获取指定节点及其后代
             role = await self.get_by_id(parent_id, include_deleted=include_deleted)
             if not role:
                 return []
             
             path_prefix = role.path or f"/{parent_id}/"
             query = select(self.model).where(
-                self.model.tenant_id == self.tenant_id,
-                self.model.path.like(f"{path_prefix}%"),
+                self.model.path.like(f"{path_prefix}%")
             )
         
         if not include_deleted:
@@ -235,7 +229,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         include_deleted: bool = False,
     ) -> bool:
         """
-        检查角色是否有子角色（租户内）
+        检查角色是否有子角色
         
         Args:
             role_id: 角色 ID
@@ -245,8 +239,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
             是否有子角色
         """
         query = select(func.count(self.model.id)).where(
-            self.model.tenant_id == self.tenant_id,
-            self.model.parent_id == role_id,
+            self.model.parent_id == role_id
         )
         
         if not include_deleted:
@@ -262,7 +255,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         include_deleted: bool = False,
     ) -> int:
         """
-        统计直接子角色数量（租户内）
+        统计直接子角色数量
         
         Args:
             parent_id: 父角色 ID，None 表示统计顶级角色
@@ -272,8 +265,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
             子角色数量
         """
         query = select(func.count(self.model.id)).where(
-            self.model.tenant_id == self.tenant_id,
-            self.model.parent_id == parent_id if parent_id else self.model.parent_id.is_(None),
+            self.model.parent_id == parent_id if parent_id else self.model.parent_id.is_(None)
         )
         
         if not include_deleted:
@@ -285,9 +277,9 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
     async def get_root_roles(
         self,
         include_deleted: bool = False,
-    ) -> list[TenantAdminRole]:
+    ) -> list[AdminRole]:
         """
-        获取所有顶级角色（租户内，无父角色）
+        获取所有顶级角色（无父角色）
         
         Args:
             include_deleted: 是否包含已删除记录
@@ -303,7 +295,7 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         include_deleted: bool = False,
     ) -> bool:
         """
-        检查角色是否有关联的管理员（租户内）
+        检查角色是否有关联的管理员
         
         Args:
             role_id: 角色 ID
@@ -312,19 +304,18 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         Returns:
             是否有关联管理员
         """
-        from app.models.tenant.tenant_admin import TenantAdmin
+        from app.models.system.admin import Admin
         
-        query = select(func.count(TenantAdmin.id)).where(
-            TenantAdmin.tenant_id == self.tenant_id,
-            TenantAdmin.role_id == role_id,
+        query = select(func.count(Admin.id)).where(
+            Admin.role_id == role_id
         )
         
         if not include_deleted:
-            query = query.where(TenantAdmin.is_deleted == False)
+            query = query.where(Admin.is_deleted == False)
         
         result = await self.db.execute(query)
         count = result.scalar() or 0
         return count > 0
 
 
-__all__ = ["TenantRoleRepository"]
+__all__ = ["AdminRoleRepository"]

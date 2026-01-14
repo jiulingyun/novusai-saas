@@ -133,7 +133,19 @@
     "deleted": "Role deleted successfully",
     "system_role_cannot_modify": "System role cannot be modified",
     "system_role_cannot_delete": "System role cannot be deleted",
-    "permissions_updated": "Role permissions updated successfully"
+    "permissions_updated": "Role permissions updated successfully",
+    "parent_not_found": "Parent role not found",
+    "cannot_set_self_as_parent": "Cannot set self as parent role",
+    "circular_reference": "Circular reference detected, parent role cannot be a descendant of current role",
+    "has_children": "Role has child roles, please delete or move them first",
+    "has_users": "Role has associated users, please remove user associations first",
+    "max_depth_exceeded": "Maximum role hierarchy depth exceeded",
+    "system_role_cannot_change_parent": "System role cannot change parent relationship",
+    "moved": "Role moved successfully",
+    "no_permission_to_view": "No permission to view this role",
+    "no_permission_to_manage": "No permission to manage this role",
+    "cannot_assign_permission": "Cannot assign this permission, you can only assign permissions you have",
+    "parent_must_be_visible": "Parent role must be your role or its descendant"
   },
   "tenant_admin": {
     "not_found": "Admin not found",

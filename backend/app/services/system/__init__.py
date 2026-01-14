@@ -5,10 +5,12 @@
 """
 
 from app.services.system.admin_service import AdminService
+from app.services.system.admin_role_service import AdminRoleService
 from app.services.system.tenant_service import TenantService
 
 
 __all__ = [
     "AdminService",
+    "AdminRoleService",
     "TenantService",
 ]

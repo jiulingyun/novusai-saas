@@ -14,9 +14,11 @@ from app.schemas.system.admin import (
 from app.schemas.system.role import (
     AdminRoleResponse,
     AdminRoleDetailResponse,
+    AdminRoleTreeNode,
     AdminRoleCreateRequest,
     AdminRoleUpdateRequest,
     AdminRolePermissionsRequest,
+    AdminRoleMoveRequest,
 )
 from app.schemas.system.tenant import (
     TenantResponse,
@@ -37,9 +39,11 @@ __all__ = [
     # Role
     "AdminRoleResponse",
     "AdminRoleDetailResponse",
+    "AdminRoleTreeNode",
     "AdminRoleCreateRequest",
     "AdminRoleUpdateRequest",
     "AdminRolePermissionsRequest",
+    "AdminRoleMoveRequest",
     # Tenant
     "TenantResponse",
     "TenantCreateRequest",

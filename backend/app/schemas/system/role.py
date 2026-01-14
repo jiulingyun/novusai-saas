@@ -1,10 +1,13 @@
 """
 平台角色相关 Schema
 
-定义平台角色管理的请求和响应数据结构
+定义平台角色管理的请求和响应数据结构，支持多级角色层级结构
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Optional
 
 from pydantic import Field
 
@@ -21,6 +24,12 @@ class AdminRoleResponse(BaseSchema):
     is_system: bool = Field(..., description="是否系统内置")
     is_active: bool = Field(..., description="是否启用")
     sort_order: int = Field(0, description="排序")
+    # 层级结构字段
+    parent_id: int | None = Field(None, description="父角色 ID")
+    path: str | None = Field(None, description="层级路径，如 /1/3/7/")
+    level: int = Field(1, description="层级深度，根节点为 1")
+    children_count: int = Field(0, description="子角色数量")
+    has_children: bool = Field(False, description="是否有子角色")
     created_at: datetime = Field(..., description="创建时间")
 
 
@@ -31,6 +40,12 @@ class AdminRoleDetailResponse(AdminRoleResponse):
     permission_codes: list[str] = Field(default_factory=list, description="权限代码列表")
 
 
+class AdminRoleTreeNode(AdminRoleResponse):
+    """平台角色树节点（含子节点）"""
+    
+    children: list[AdminRoleTreeNode] = Field(default_factory=list, description="子角色列表")
+
+
 class AdminRoleCreateRequest(BaseSchema):
     """创建平台角色请求"""
     
@@ -39,6 +54,7 @@ class AdminRoleCreateRequest(BaseSchema):
     description: str | None = Field(None, max_length=500, description="角色描述")
     is_active: bool = Field(True, description="是否启用")
     sort_order: int = Field(0, description="排序")
+    parent_id: int | None = Field(None, description="父角色 ID，None 表示顶级角色")
     permission_ids: list[int] = Field(default_factory=list, description="权限 ID 列表")
 
 
@@ -49,6 +65,7 @@ class AdminRoleUpdateRequest(BaseSchema):
     description: str | None = Field(None, max_length=500, description="角色描述")
     is_active: bool | None = Field(None, description="是否启用")
     sort_order: int | None = Field(None, description="排序")
+    parent_id: int | None = Field(None, description="父角色 ID")
     permission_ids: list[int] | None = Field(None, description="权限 ID 列表")
 
 
@@ -58,10 +75,18 @@ class AdminRolePermissionsRequest(BaseSchema):
     permission_ids: list[int] = Field(..., description="权限 ID 列表")
 
 
+class AdminRoleMoveRequest(BaseSchema):
+    """移动角色节点请求"""
+    
+    new_parent_id: int | None = Field(None, description="新父角色 ID，None 表示移动到根级")
+
+
 __all__ = [
     "AdminRoleResponse",
     "AdminRoleDetailResponse",
+    "AdminRoleTreeNode",
     "AdminRoleCreateRequest",
     "AdminRoleUpdateRequest",
     "AdminRolePermissionsRequest",
+    "AdminRoleMoveRequest",
 ]

@@ -133,7 +133,19 @@
     "deleted": "角色删除成功",
     "system_role_cannot_modify": "系统内置角色不可修改",
     "system_role_cannot_delete": "系统内置角色不可删除",
-    "permissions_updated": "角色权限更新成功"
+    "permissions_updated": "角色权限更新成功",
+    "parent_not_found": "父角色不存在",
+    "cannot_set_self_as_parent": "不能将自己设为父角色",
+    "circular_reference": "检测到循环引用，父角色不能是当前角色的子孙角色",
+    "has_children": "角色存在子角色，请先删除或移动子角色",
+    "has_users": "角色下存在关联用户，请先移除用户的角色关联",
+    "max_depth_exceeded": "超出最大层级深度限制",
+    "system_role_cannot_change_parent": "系统内置角色不可修改父级关系",
+    "moved": "角色移动成功",
+    "no_permission_to_view": "无权查看该角色",
+    "no_permission_to_manage": "无权管理该角色",
+    "cannot_assign_permission": "无权分配该权限，只能分配您已拥有的权限",
+    "parent_must_be_visible": "父角色必须是您的角色或其下级角色"
   },
   "tenant_admin": {
     "not_found": "管理员不存在",
