@@ -33,13 +33,6 @@ class TenantResponse(BaseSchema):
 class TenantCreateRequest(BaseSchema):
     """创建租户请求"""
     
-    code: str = Field(
-        ..., 
-        min_length=2, 
-        max_length=50, 
-        pattern=r"^[a-z][a-z0-9_-]*$",
-        description="租户编码（唯一标识，小写字母开头，只能包含小写字母、数字、下划线、中划线）"
-    )
     name: str = Field(..., min_length=1, max_length=100, description="租户名称")
     contact_name: str | None = Field(None, max_length=50, description="联系人姓名")
     contact_phone: str | None = Field(None, max_length=20, description="联系人电话")

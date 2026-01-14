@@ -151,11 +151,12 @@ class AdminTenantController(GlobalController):
             """
             创建租户
             
+            - 租户编码由系统自动生成
+            
             权限: tenant:create
             """
             service = TenantService(db)
             tenant = await service.create_tenant(
-                code=data.code,
                 name=data.name,
                 contact_name=data.contact_name,
                 contact_phone=data.contact_phone,

@@ -29,9 +29,8 @@ class TestAdminTenants(BaseAPITest):
     def setup(self) -> None:
         """测试前登录"""
         self._do_login()
-        # 生成唯一的测试租户代码
+        # 生成唯一的测试租户名称
         timestamp = int(time.time())
-        self._test_data["tenant_code"] = f"test_tenant_{timestamp}"
         self._test_data["tenant_name"] = f"测试租户_{timestamp}"
     
     def teardown(self) -> None:
@@ -55,25 +54,22 @@ class TestAdminTenants(BaseAPITest):
         # 3. 获取租户列表 - 按状态过滤
         self.run_test("获取租户列表 - 按状态过滤", self.test_list_tenants_filter_status)
         
-        # 4. 创建租户
+        # 4. 创建租户（编码自动生成）
         self.run_test("创建租户", self.test_create_tenant)
         
-        # 5. 创建租户 - 重复代码
-        self.run_test("创建租户 - 重复代码", self.test_create_tenant_duplicate_code)
-        
-        # 6. 获取租户详情
+        # 5. 获取租户详情
         self.run_test("获取租户详情", self.test_get_tenant_detail)
         
-        # 7. 获取租户详情 - 不存在
+        # 6. 获取租户详情 - 不存在
         self.run_test("获取租户详情 - 不存在", self.test_get_tenant_not_found)
         
-        # 8. 更新租户
+        # 7. 更新租户
         self.run_test("更新租户", self.test_update_tenant)
         
-        # 9. 切换租户状态
+        # 8. 切换租户状态
         self.run_test("切换租户状态", self.test_toggle_tenant_status)
         
-        # 10. 删除租户
+        # 9. 删除租户
         self.run_test("删除租户", self.test_delete_tenant)
     
     def test_list_tenants(self) -> None:
@@ -103,9 +99,8 @@ class TestAdminTenants(BaseAPITest):
             assert_true(tenant["is_active"], "租户应为激活状态")
     
     def test_create_tenant(self) -> None:
-        """测试创建租户"""
+        """测试创建租户（编码自动生成）"""
         resp = self.client.post("/admin/tenants", data={
-            "code": self._test_data["tenant_code"],
             "name": self._test_data["tenant_name"],
             "contact_name": "测试联系人",
             "contact_phone": "13800138000",
@@ -116,18 +111,14 @@ class TestAdminTenants(BaseAPITest):
         data = assert_success(resp, "创建租户失败")
         
         assert_has_keys(data["data"], ["id", "code", "name", "is_active"])
-        assert_equals(data["data"]["code"], self._test_data["tenant_code"])
+        # 验证编码是自动生成的格式: t + 8位字符
+        code = data["data"]["code"]
+        assert_true(code.startswith("t"), "租户编码应以 t 开头")
+        assert_true(len(code) == 9, "租户编码长度应为 9 位")
         
-        # 保存租户ID供后续测试使用
+        # 保存租户ID和编码供后续测试使用
         self._test_data["created_tenant_id"] = data["data"]["id"]
-    
-    def test_create_tenant_duplicate_code(self) -> None:
-        """测试创建重复代码的租户"""
-        resp = self.client.post("/admin/tenants", data={
-            "code": self._test_data["tenant_code"],
-            "name": "重复租户",
-        })
-        assert_error(resp, 400, "应返回 400 错误")
+        self._test_data["created_tenant_code"] = code
     
     def test_get_tenant_detail(self) -> None:
         """测试获取租户详情"""

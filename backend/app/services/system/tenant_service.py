@@ -4,6 +4,8 @@
 提供租户的业务逻辑
 """
 
+import secrets
+import string
 from datetime import datetime
 from typing import Any
 
@@ -36,9 +38,33 @@ class TenantService(GlobalService[Tenant, TenantRepository]):
         """
         return await self.repo.get_by_code(code)
     
+    async def _generate_tenant_code(self) -> str:
+        """
+        生成唯一的租户编码
+        
+        格式: t + 8位小写字母数字（如 t3a8k2m9x）
+        
+        Returns:
+            唯一的租户编码
+        """
+        charset = string.ascii_lowercase + string.digits
+        max_attempts = 10
+        
+        for _ in range(max_attempts):
+            # 生成 t + 8位随机字符
+            random_part = ''.join(secrets.choice(charset) for _ in range(8))
+            code = f"t{random_part}"
+            
+            # 检查是否已存在
+            if not await self.repo.code_exists(code):
+                return code
+        
+        # 极端情况：多次尝试后仍重复，加长随机部分
+        random_part = ''.join(secrets.choice(charset) for _ in range(12))
+        return f"t{random_part}"
+    
     async def create_tenant(
         self,
-        code: str,
         name: str,
         contact_name: str | None = None,
         contact_phone: str | None = None,
@@ -52,7 +78,6 @@ class TenantService(GlobalService[Tenant, TenantRepository]):
         创建租户
         
         Args:
-            code: 租户编码
             name: 租户名称
             contact_name: 联系人姓名
             contact_phone: 联系人电话
@@ -64,16 +89,9 @@ class TenantService(GlobalService[Tenant, TenantRepository]):
         
         Returns:
             创建的租户
-        
-        Raises:
-            BusinessException: 编码已存在
         """
-        # 检查编码是否已存在
-        if await self.repo.code_exists(code):
-            raise BusinessException(
-                message=_("tenant.code_exists"),
-                code=4001,
-            )
+        # 自动生成租户编码
+        code = await self._generate_tenant_code()
         
         # 创建租户
         data = {
