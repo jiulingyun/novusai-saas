@@ -142,13 +142,13 @@ def permission_action(
     在路由注册时自动将操作权限注册到 permission_registry。
     
     Args:
-        action: 操作标识，如 "create", "read", "update", "delete"
-        name: 操作名称，如 "创建用户"
+        action: 操作标识，如 "create", "list", "detail", "update", "delete"
+        name: 操作名称（i18n key），如 "action.user.list"
         description: 描述
         auto_check: 是否自动检查权限（默认 True，由依赖注入处理）
     
     Example:
-        @action_read("查看用户列表")
+        @permission_action("list", "action.user.list")
         async def list_users(...):
             ...
     """
@@ -171,34 +171,61 @@ def permission_action(
 
 # ==================== 快捷装饰器 ====================
 
+def _extract_action_from_name(name: str, default_action: str) -> str:
+    """
+    从 i18n name 中提取细粒度 action
+    
+    例如: "action.admin.list" -> "list"
+          "action.role.detail" -> "detail"
+          "查看列表" -> default_action
+    """
+    if name.startswith("action.") and name.count(".") >= 2:
+        # 格式: action.{resource}.{action}
+        return name.split(".")[-1]
+    return default_action
+
+
 def action_read(name: str = "查看", **kwargs: Any) -> Callable[[F], F]:
-    """查看权限快捷装饰器"""
-    return permission_action("read", name, **kwargs)
+    """
+    查看权限快捷装饰器
+    
+    支持细粒度权限：
+    - @action_read("action.user.list") -> 权限 code: user:list
+    - @action_read("action.user.detail") -> 权限 code: user:detail
+    - @action_read("查看") -> 权限 code: user:read
+    """
+    action = _extract_action_from_name(name, "read")
+    return permission_action(action, name, **kwargs)
 
 
 def action_create(name: str = "创建", **kwargs: Any) -> Callable[[F], F]:
     """创建权限快捷装饰器"""
-    return permission_action("create", name, **kwargs)
+    action = _extract_action_from_name(name, "create")
+    return permission_action(action, name, **kwargs)
 
 
 def action_update(name: str = "编辑", **kwargs: Any) -> Callable[[F], F]:
     """编辑权限快捷装饰器"""
-    return permission_action("update", name, **kwargs)
+    action = _extract_action_from_name(name, "update")
+    return permission_action(action, name, **kwargs)
 
 
 def action_delete(name: str = "删除", **kwargs: Any) -> Callable[[F], F]:
     """删除权限快捷装饰器"""
-    return permission_action("delete", name, **kwargs)
+    action = _extract_action_from_name(name, "delete")
+    return permission_action(action, name, **kwargs)
 
 
 def action_export(name: str = "导出", **kwargs: Any) -> Callable[[F], F]:
     """导出权限快捷装饰器"""
-    return permission_action("export", name, **kwargs)
+    action = _extract_action_from_name(name, "export")
+    return permission_action(action, name, **kwargs)
 
 
 def action_import(name: str = "导入", **kwargs: Any) -> Callable[[F], F]:
     """导入权限快捷装饰器"""
-    return permission_action("import", name, **kwargs)
+    action = _extract_action_from_name(name, "import")
+    return permission_action(action, name, **kwargs)
 
 
 # ==================== 操作权限自动注册 ====================
