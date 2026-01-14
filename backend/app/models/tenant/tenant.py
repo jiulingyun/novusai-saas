@@ -24,9 +24,17 @@ class Tenant(BaseModel):
     
     # 允许前端筛选的字段
     __filterable__ = {
-        "id", "name", "code", "contact_name", "contact_phone",
-        "contact_email", "is_active", "plan", "expires_at",
-        "created_at", "updated_at",
+        "id": "id",
+        "name": "name",
+        "code": "code",
+        "contact_name": "contact_name",
+        "contact_phone": "contact_phone",
+        "contact_email": "contact_email",
+        "is_active": "is_active",
+        "plan": "plan",
+        "expires_at": "expires_at",
+        "created_at": "created_at",
+        "updated_at": "updated_at",
     }
     
     # 下拉选项配置

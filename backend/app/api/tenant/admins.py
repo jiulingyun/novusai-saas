@@ -70,8 +70,8 @@ class TenantAdminController(TenantController):
         async def select_admins(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
-            search: str = "",
-            is_active: bool = True,
+            search: str = Query("", description="搜索关键词"),
+            is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
             """
             获取管理员下拉选项
@@ -80,11 +80,18 @@ class TenantAdminController(TenantController):
             
             权限: tenant_user:read
             """
+            # 解析 is_active 参数
+            active_filter = True  # 默认仅启用
+            if is_active.lower() == "false":
+                active_filter = False
+            elif is_active.lower() == "true":
+                active_filter = True
+            
             service = TenantAdminService(db, tenant_id=current_admin.tenant_id)
             options = await service.get_select_options(
                 search=search,
                 limit=50,
-                is_active=is_active,
+                is_active=active_filter,
             )
             return success(
                 data=SelectResponse(items=options),

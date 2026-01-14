@@ -78,8 +78,8 @@ class AdminTenantController(GlobalController):
         async def select_tenants(
             db: DbSession,
             current_admin: Admin = Depends(require_admin_permissions("tenant:read")),
-            search: str = "",
-            is_active: bool = True,
+            search: str = Query("", description="搜索关键词"),
+            is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
             """
             获取租户下拉选项
@@ -88,11 +88,18 @@ class AdminTenantController(GlobalController):
             
             权限: tenant:read
             """
+            # 解析 is_active 参数
+            active_filter = True  # 默认仅启用
+            if is_active.lower() == "false":
+                active_filter = False
+            elif is_active.lower() == "true":
+                active_filter = True
+            
             service = TenantService(db)
             options = await service.get_select_options(
                 search=search,
                 limit=50,
-                is_active=is_active,
+                is_active=active_filter,
             )
             return success(
                 data=SelectResponse(items=options),
