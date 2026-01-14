@@ -21,6 +21,7 @@ from app.core.security import (
     TOKEN_SCOPE_ADMIN,
 )
 from app.models import Admin
+from app.rbac.decorators import public, auth_only
 from app.schemas.common import TokenResponse, RefreshTokenRequest
 from app.schemas.system import (
     AdminLoginRequest,
@@ -33,6 +34,7 @@ router = APIRouter(prefix="/auth", tags=["平台管理员认证"])
 
 
 @router.post("/login", summary="管理员登录")
+@public
 async def admin_login(
     db: DbSession,
     request: Request,
@@ -81,6 +83,7 @@ async def admin_login(
 
 
 @router.post("/refresh", summary="刷新 Token")
+@public
 async def refresh_token(
     db: DbSession,
     refresh_data: RefreshTokenRequest,
@@ -127,6 +130,7 @@ async def refresh_token(
 
 
 @router.post("/logout", summary="管理员登出")
+@auth_only
 async def admin_logout(
     current_admin: ActiveAdmin,
 ):
@@ -139,6 +143,7 @@ async def admin_logout(
 
 
 @router.get("/me", summary="获取当前管理员信息")
+@auth_only
 async def get_current_admin_info(
     current_admin: ActiveAdmin,
 ):
@@ -152,6 +157,7 @@ async def get_current_admin_info(
 
 
 @router.put("/password", summary="修改密码")
+@auth_only
 async def change_password(
     db: DbSession,
     current_admin: ActiveAdmin,

@@ -19,6 +19,61 @@ from app.core.i18n import _
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+# ==================== 访问控制标记 ====================
+# 用于标记端点的访问级别
+
+# 公开访问（无需认证）
+ACCESS_PUBLIC = "__access_public__"
+# 仅需认证（无需权限检查）
+ACCESS_AUTH_ONLY = "__access_auth_only__"
+# 需要权限检查（默认，由 @permission_action 标记）
+ACCESS_PERMISSION = "__access_permission__"
+
+
+def public(func: F) -> F:
+    """
+    公开访问装饰器
+    
+    标记端点为公开访问，无需认证和权限检查。
+    
+    适用场景：
+    - 登录接口
+    - Token 刷新接口
+    - 健康检查
+    - 公开资源
+    
+    Example:
+        @router.post("/login")
+        @public
+        async def login(data: LoginRequest):
+            ...
+    """
+    func._access_level = ACCESS_PUBLIC  # type: ignore
+    return func
+
+
+def auth_only(func: F) -> F:
+    """
+    仅需认证装饰器
+    
+    标记端点只需要登录认证，无需额外的权限检查。
+    
+    适用场景：
+    - 获取当前用户信息
+    - 获取当前用户菜单
+    - 修改当前用户密码
+    - 用户登出
+    
+    Example:
+        @router.get("/me")
+        @auth_only
+        async def get_me(current_admin: ActiveAdmin):
+            ...
+    """
+    func._access_level = ACCESS_AUTH_ONLY  # type: ignore
+    return func
+
+
 @dataclass
 class MenuConfig:
     """
@@ -176,6 +231,9 @@ def permission_action(
         # 标记需要的权限（用于依赖注入检查）
         func._required_permission_action = action  # type: ignore
         
+        # 标记访问级别为需要权限检查
+        func._access_level = ACCESS_PERMISSION  # type: ignore
+        
         if not auto_check:
             return func
         
@@ -215,6 +273,7 @@ def permission_action(
         # 复制原始函数的属性到 wrapper
         wrapper._permission_action = func._permission_action  # type: ignore
         wrapper._required_permission_action = func._required_permission_action  # type: ignore
+        wrapper._access_level = ACCESS_PERMISSION  # type: ignore
         
         return wrapper  # type: ignore
     
@@ -367,6 +426,14 @@ def register_action_permissions(controller_cls: type, router: Any) -> None:
 
 
 __all__ = [
+    # 访问控制标记
+    "ACCESS_PUBLIC",
+    "ACCESS_AUTH_ONLY",
+    "ACCESS_PERMISSION",
+    # 访问控制装饰器
+    "public",
+    "auth_only",
+    # 权限装饰器
     "MenuConfig",
     "PermissionMeta",
     "permission_resource",

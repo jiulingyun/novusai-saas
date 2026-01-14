@@ -132,6 +132,7 @@
   },
   "rbac": {
     "permission_denied": "Permission denied, access forbidden",
+    "endpoint_not_declared": "Endpoint access level not declared, access forbidden",
     "role_required": "Role permission required",
     "super_admin_required": "Super admin privileges required",
     "owner_required": "Tenant owner privileges required",

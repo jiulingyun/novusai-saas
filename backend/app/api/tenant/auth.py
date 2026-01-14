@@ -23,6 +23,7 @@ from app.core.security import (
     TOKEN_SCOPE_TENANT_ADMIN,
 )
 from app.models import TenantAdmin, Tenant, Admin
+from app.rbac.decorators import public, auth_only
 from app.schemas.common import TokenResponse, RefreshTokenRequest, ImpersonateTokenRequest
 from app.schemas.tenant import (
     TenantAdminLoginRequest,
@@ -38,6 +39,7 @@ router = APIRouter(prefix="/auth", tags=["租户管理员认证"])
 
 
 @router.post("/login", summary="租户管理员登录")
+@public
 async def tenant_admin_login(
     db: DbSession,
     request: Request,
@@ -105,6 +107,7 @@ async def tenant_admin_login(
 
 
 @router.post("/refresh", summary="刷新 Token")
+@public
 async def refresh_token(
     db: DbSession,
     refresh_data: RefreshTokenRequest,
@@ -155,6 +158,7 @@ async def refresh_token(
 
 
 @router.post("/logout", summary="租户管理员登出")
+@auth_only
 async def tenant_admin_logout(
     current_admin: ActiveTenantAdmin,
 ):
@@ -167,6 +171,7 @@ async def tenant_admin_logout(
 
 
 @router.get("/me", summary="获取当前租户管理员信息")
+@auth_only
 async def get_current_tenant_admin_info(
     current_admin: ActiveTenantAdmin,
 ):
@@ -180,6 +185,7 @@ async def get_current_tenant_admin_info(
 
 
 @router.put("/password", summary="修改密码")
+@auth_only
 async def change_password(
     db: DbSession,
     current_admin: ActiveTenantAdmin,
@@ -205,6 +211,7 @@ async def change_password(
 
 
 @router.post("/impersonate", summary="平台管理员一键登录")
+@public
 async def impersonate_login(
     db: DbSession,
     request: Request,

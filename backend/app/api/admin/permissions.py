@@ -18,6 +18,7 @@ from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
     action_read,
+    auth_only,
 )
 from app.rbac.services import PermissionService
 from app.schemas.common import PermissionResponse, PermissionTreeResponse, MenuResponse
@@ -189,6 +190,7 @@ class AdminPermissionController(GlobalController):
             return success(data=tree, message=_("common.success"))
         
         @router.get("/menus", summary="获取当前用户菜单")
+        @auth_only
         async def get_current_user_menus(
             request: Request,
             db: DbSession,

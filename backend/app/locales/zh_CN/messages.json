@@ -132,6 +132,7 @@
   },
   "rbac": {
     "permission_denied": "权限不足，拒绝访问",
+    "endpoint_not_declared": "接口未声明访问权限，拒绝访问",
     "role_required": "需要角色权限",
     "super_admin_required": "需要超级管理员权限",
     "owner_required": "需要租户所有者权限",
