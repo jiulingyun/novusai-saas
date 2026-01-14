@@ -197,6 +197,10 @@ class TenantPermissionController(TenantController):
             获取当前租户管理员的菜单列表
             
             根据角色权限过滤，用于前端动态渲染菜单
+            
+            菜单可见性规则：
+            - 用户明确拥有的菜单权限（menu:xxx）
+            - 用户拥有任意操作权限时，自动显示操作权限的父级菜单及其所有祖先菜单
             """
             perm_service = PermissionService(db)
             
@@ -206,8 +210,31 @@ class TenantPermissionController(TenantController):
                 menus = build_menu_tree(all_permissions)
                 return success(data=menus, message=_("common.success"))
             
-            # 获取用户权限
-            user_perms = await perm_service.get_tenant_admin_permissions(current_admin)
+            # 获取用户的有效权限 ID 集合
+            effective_ids = await perm_service.get_tenant_admin_effective_permission_ids(current_admin)
+            
+            if not effective_ids:
+                return success(data=[], message=_("common.success"))
+            
+            # 查询用户拥有的所有权限（包括菜单和操作权限）
+            result = await db.execute(
+                select(Permission)
+                .where(
+                    Permission.id.in_(effective_ids),
+                    Permission.is_enabled == True,
+                    Permission.is_deleted == False,
+                )
+            )
+            user_permissions = list(result.scalars().all())
+            
+            # 收集用户拥有的菜单 ID 和操作权限的 parent_id（即操作权限所属的菜单）
+            menu_ids = set()
+            for perm in user_permissions:
+                if perm.type == "menu":
+                    menu_ids.add(perm.id)
+                elif perm.type == "operation" and perm.parent_id:
+                    # 操作权限的 parent_id 指向其所属的菜单
+                    menu_ids.add(perm.parent_id)
             
             # 获取所有菜单权限
             result = await db.execute(
@@ -222,18 +249,20 @@ class TenantPermissionController(TenantController):
             )
             all_menus = list(result.scalars().all())
             
-            # 过滤出用户有权限的菜单
-            user_menu_codes = {p for p in user_perms if p.startswith("menu:")}
-            filtered_menus = [m for m in all_menus if m.code in user_menu_codes]
+            # 构建菜单 ID 到菜单的映射
+            menu_by_id = {m.id: m for m in all_menus}
             
-            # 补充父级菜单（确保树形结构完整）
-            filtered_ids = {m.id for m in filtered_menus}
-            for menu in all_menus:
-                if menu.id not in filtered_ids:
-                    has_child = any(m.parent_id == menu.id for m in filtered_menus)
-                    if has_child:
-                        filtered_menus.append(menu)
-                        filtered_ids.add(menu.id)
+            # 补充所有祖先菜单（确保树形结构完整）
+            ids_to_process = list(menu_ids)
+            while ids_to_process:
+                menu_id = ids_to_process.pop()
+                menu = menu_by_id.get(menu_id)
+                if menu and menu.parent_id and menu.parent_id not in menu_ids:
+                    menu_ids.add(menu.parent_id)
+                    ids_to_process.append(menu.parent_id)
+            
+            # 根据过滤后的 ID 获取菜单列表
+            filtered_menus = [m for m in all_menus if m.id in menu_ids]
             
             menus = build_menu_tree(filtered_menus)
             
