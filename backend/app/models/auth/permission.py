@@ -4,7 +4,7 @@
 定义系统中的所有权限点，支持装饰器自动同步
 """
 
-from sqlalchemy import String, Integer, Text, Boolean, ForeignKey
+from sqlalchemy import String, Integer, Text, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base_model import BaseModel
@@ -16,15 +16,20 @@ class Permission(BaseModel):
     
     - 定义系统中的权限点
     - 支持菜单权限和操作权限
-    - 权限代码全局唯一
+    - 权限代码在同一 scope 内唯一（code + scope 联合唯一）
     - 通过装饰器自动注册并同步到数据库
     """
     
     __tablename__ = "permissions"
     
-    # 权限代码（唯一标识）
+    # 联合唯一约束：code + scope
+    __table_args__ = (
+        UniqueConstraint("code", "scope", name="uq_permissions_code_scope"),
+    )
+    
+    # 权限代码（同一 scope 内唯一）
     code: Mapped[str] = mapped_column(
-        String(100), unique=True, index=True, comment="权限代码（如：user:create, menu:tenant.user）"
+        String(100), index=True, comment="权限代码（如：user:create, menu:tenant.user）"
     )
     
     # 权限名称

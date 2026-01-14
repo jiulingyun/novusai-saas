@@ -211,6 +211,14 @@ def register_action_permissions(controller_cls: type, router: Any) -> None:
     if not resource or not scope:
         return
     
+    # 构造父菜单权限 code（操作权限挂载到对应菜单下）
+    from app.enums.rbac import PermissionScope
+    scope_prefix = "admin" if scope == PermissionScope.ADMIN else "tenant"
+    parent_menu_code = f"menu:{scope_prefix}.{resource}"
+    
+    # 检查父菜单是否存在（不存在则不设置 parent_code）
+    parent_code = parent_menu_code if parent_menu_code in permission_registry else None
+    
     # 已注册的操作（避免重复）
     registered_actions: set[str] = set()
     
@@ -233,7 +241,7 @@ def register_action_permissions(controller_cls: type, router: Any) -> None:
             continue
         registered_actions.add(action)
         
-        # 注册操作权限
+        # 注册操作权限（挂载到对应菜单下）
         action_perm = PermissionMeta(
             code=f"{resource}:{action}",
             name=action_info["name"],
@@ -242,6 +250,7 @@ def register_action_permissions(controller_cls: type, router: Any) -> None:
             resource=resource,
             action=action,
             description=action_info.get("description", ""),
+            parent_code=parent_code,
         )
         permission_registry.register(action_perm)
 

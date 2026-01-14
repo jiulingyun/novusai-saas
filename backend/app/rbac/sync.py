@@ -65,45 +65,63 @@ class PermissionSyncService:
         # 按深度排序，深度小的（父级）先处理
         return sorted(permissions, key=lambda p: get_depth(p))
     
+    def _make_key(self, code: str, scope: str) -> str:
+        """生成权限唯一标识（code + scope）"""
+        return f"{code}:{scope}"
+    
     async def sync_permissions(self) -> dict[str, int]:
         """
         同步权限到数据库
+        
+        使用 (code, scope) 组合作为唯一标识，因为同一个 code 在不同 scope 下是不同权限。
         
         Returns:
             {"created": n, "updated": n, "disabled": n}
         """
         registered_permissions = permission_registry.get_all()
-        registered_codes = {p.code for p in registered_permissions}
+        # 使用 code:scope 作为唯一标识
+        registered_keys = {
+            self._make_key(p.code, p.scope.value) for p in registered_permissions
+        }
         
         # 获取数据库中现有权限
         result = await self.db.execute(select(Permission))
         existing_permissions = result.scalars().all()
-        existing_codes = {p.code for p in existing_permissions}
-        existing_map = {p.code: p for p in existing_permissions}
+        # 使用 code:scope 作为唯一标识
+        existing_keys = {
+            self._make_key(p.code, p.scope): p for p in existing_permissions
+        }
+        existing_map = existing_keys  # key -> Permission
         
         created_count = 0
         updated_count = 0
         disabled_count = 0
         
-        # code -> db_id 映射（用于父子关联）
-        code_to_id: dict[str, int] = {p.code: p.id for p in existing_permissions}
+        # (code, scope) -> db_id 映射（用于父子关联）
+        # 注意：parent_code 不含 scope，需要根据同 scope 查找
+        code_scope_to_id: dict[str, int] = {
+            self._make_key(p.code, p.scope): p.id for p in existing_permissions
+        }
         
         # 拓扑排序，确保父级先于子级处理
         sorted_permissions = self._topological_sort(registered_permissions)
         
         for perm_meta in sorted_permissions:
-            # 解析父级 ID
+            perm_key = self._make_key(perm_meta.code, perm_meta.scope.value)
+            
+            # 解析父级 ID（父级 code 与当前权限同 scope）
             parent_id = None
             if perm_meta.parent_code:
-                parent_id = code_to_id.get(perm_meta.parent_code)
+                parent_key = self._make_key(perm_meta.parent_code, perm_meta.scope.value)
+                parent_id = code_scope_to_id.get(parent_key)
                 if parent_id is None:
                     logger.warning(
-                        f"权限 {perm_meta.code} 的父级 {perm_meta.parent_code} 不存在"
+                        f"权限 {perm_meta.code} ({perm_meta.scope.value}) 的父级 {perm_meta.parent_code} 不存在"
                     )
             
-            if perm_meta.code in existing_codes:
+            if perm_key in existing_map:
                 # 更新已存在的权限
-                db_perm = existing_map[perm_meta.code]
+                db_perm = existing_map[perm_key]
                 db_perm.name = perm_meta.name
                 db_perm.description = perm_meta.description
                 db_perm.type = perm_meta.type.value
@@ -140,17 +158,17 @@ class PermissionSyncService:
                 )
                 self.db.add(db_perm)
                 await self.db.flush()  # 获取 ID
-                code_to_id[perm_meta.code] = db_perm.id
+                code_scope_to_id[perm_key] = db_perm.id
                 created_count += 1
         
         # 禁用代码中已删除的权限
-        orphan_codes = existing_codes - registered_codes
-        for code in orphan_codes:
-            db_perm = existing_map[code]
+        orphan_keys = set(existing_map.keys()) - registered_keys
+        for key in orphan_keys:
+            db_perm = existing_map[key]
             if db_perm.is_enabled:
                 db_perm.is_enabled = False
                 disabled_count += 1
-                logger.debug(f"禁用权限: {code}")
+                logger.debug(f"禁用权限: {key}")
         
         await self.db.commit()
         
