@@ -125,6 +125,52 @@
     "export": "导出",
     "import": "导入"
   },
+  "action": {
+    "role": {
+      "list": "查看角色列表",
+      "tree": "查看角色树",
+      "detail": "查看角色详情",
+      "children": "查看子角色",
+      "effective_permissions": "查看有效权限",
+      "create": "创建角色",
+      "update": "更新角色",
+      "move": "移动角色",
+      "delete": "删除角色",
+      "assign_permissions": "分配角色权限"
+    },
+    "admin": {
+      "list": "查看管理员列表",
+      "detail": "查看管理员详情",
+      "create": "创建管理员",
+      "update": "更新管理员",
+      "delete": "删除管理员",
+      "reset_password": "重置管理员密码",
+      "toggle_status": "切换管理员状态"
+    },
+    "permission": {
+      "tree": "查看权限树",
+      "list": "查看权限列表"
+    },
+    "tenant": {
+      "list": "查看租户列表",
+      "detail": "查看租户详情",
+      "create": "创建租户",
+      "update": "更新租户",
+      "delete": "删除租户",
+      "toggle_status": "切换租户状态",
+      "impersonate": "一键登录租户后台"
+    },
+    "tenant_settings": {
+      "view": "查看租户设置",
+      "update": "更新租户设置",
+      "domain_list": "查看域名列表",
+      "domain_add": "添加自定义域名",
+      "domain_detail": "查看域名详情",
+      "domain_update": "更新域名设置",
+      "domain_delete": "删除自定义域名",
+      "domain_verify": "验证域名"
+    }
+  },
   "role": {
     "not_found": "角色不存在",
     "code_exists": "角色代码已存在",

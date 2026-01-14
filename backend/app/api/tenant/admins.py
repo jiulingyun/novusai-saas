@@ -64,7 +64,7 @@ class TenantAdminController(TenantController):
         router = self.router
         
         @router.get("", summary="获取管理员列表")
-        @action_read("查看管理员列表")
+        @action_read(_("action.admin.list"))
         async def list_admins(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:read")),
@@ -104,7 +104,7 @@ class TenantAdminController(TenantController):
             )
         
         @router.get("/{admin_id}", summary="获取管理员详情")
-        @action_read("查看管理员详情")
+        @action_read(_("action.admin.detail"))
         async def get_admin(
             db: DbSession,
             admin_id: int,
@@ -130,7 +130,7 @@ class TenantAdminController(TenantController):
             )
         
         @router.post("", summary="创建管理员")
-        @action_create("创建管理员")
+        @action_create(_("action.admin.create"))
         async def create_admin(
             db: DbSession,
             data: TenantAdminCreateRequest,
@@ -160,7 +160,7 @@ class TenantAdminController(TenantController):
             )
         
         @router.put("/{admin_id}", summary="更新管理员")
-        @action_update("更新管理员")
+        @action_update(_("action.admin.update"))
         async def update_admin(
             db: DbSession,
             admin_id: int,
@@ -189,7 +189,7 @@ class TenantAdminController(TenantController):
             )
         
         @router.delete("/{admin_id}", summary="删除管理员")
-        @action_delete("删除管理员")
+        @action_delete(_("action.admin.delete"))
         async def delete_admin(
             db: DbSession,
             admin_id: int,
@@ -233,7 +233,7 @@ class TenantAdminController(TenantController):
             return success(message=_("tenant_admin.deleted"))
         
         @router.put("/{admin_id}/reset-password", summary="重置密码")
-        @action_update("重置管理员密码")
+        @action_update(_("action.admin.reset_password"))
         async def reset_password(
             db: DbSession,
             admin_id: int,
@@ -261,7 +261,7 @@ class TenantAdminController(TenantController):
             return success(message=_("tenant_admin.password_reset"))
         
         @router.put("/{admin_id}/status", summary="切换管理员状态")
-        @action_update("切换管理员状态")
+        @action_update(_("action.admin.toggle_status"))
         async def toggle_admin_status(
             db: DbSession,
             admin_id: int,

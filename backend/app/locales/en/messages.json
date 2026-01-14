@@ -125,6 +125,52 @@
     "export": "Export",
     "import": "Import"
   },
+  "action": {
+    "role": {
+      "list": "View Role List",
+      "tree": "View Role Tree",
+      "detail": "View Role Details",
+      "children": "View Child Roles",
+      "effective_permissions": "View Effective Permissions",
+      "create": "Create Role",
+      "update": "Update Role",
+      "move": "Move Role",
+      "delete": "Delete Role",
+      "assign_permissions": "Assign Role Permissions"
+    },
+    "admin": {
+      "list": "View Admin List",
+      "detail": "View Admin Details",
+      "create": "Create Admin",
+      "update": "Update Admin",
+      "delete": "Delete Admin",
+      "reset_password": "Reset Admin Password",
+      "toggle_status": "Toggle Admin Status"
+    },
+    "permission": {
+      "tree": "View Permission Tree",
+      "list": "View Permission List"
+    },
+    "tenant": {
+      "list": "View Tenant List",
+      "detail": "View Tenant Details",
+      "create": "Create Tenant",
+      "update": "Update Tenant",
+      "delete": "Delete Tenant",
+      "toggle_status": "Toggle Tenant Status",
+      "impersonate": "Login as Tenant"
+    },
+    "tenant_settings": {
+      "view": "View Tenant Settings",
+      "update": "Update Tenant Settings",
+      "domain_list": "View Domain List",
+      "domain_add": "Add Custom Domain",
+      "domain_detail": "View Domain Details",
+      "domain_update": "Update Domain Settings",
+      "domain_delete": "Delete Custom Domain",
+      "domain_verify": "Verify Domain"
+    }
+  },
   "role": {
     "not_found": "Role not found",
     "code_exists": "Role code already exists",

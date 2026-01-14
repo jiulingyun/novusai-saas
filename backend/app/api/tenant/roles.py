@@ -67,7 +67,7 @@ class TenantRoleController(TenantController):
         router = self.router
         
         @router.get("", summary="获取角色列表")
-        @action_read("查看角色列表")
+        @action_read(_("action.role.list"))
         async def list_roles(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:read")),
@@ -111,7 +111,7 @@ class TenantRoleController(TenantController):
             )
         
         @router.get("/tree", summary="获取角色树")
-        @action_read("查看角色树")
+        @action_read(_("action.role.tree"))
         async def get_role_tree(
             db: DbSession,
             current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:read")),
@@ -140,7 +140,7 @@ class TenantRoleController(TenantController):
             return success(data=tree, message=_("common.success"))
         
         @router.get("/{role_id}", summary="获取角色详情")
-        @action_read("查看角色详情")
+        @action_read(_("action.role.detail"))
         async def get_role(
             db: DbSession,
             role_id: int,
@@ -206,7 +206,7 @@ class TenantRoleController(TenantController):
             )
         
         @router.get("/{role_id}/children", summary="获取子角色")
-        @action_read("查看子角色")
+        @action_read(_("action.role.children"))
         async def get_role_children(
             db: DbSession,
             role_id: int,
@@ -249,7 +249,7 @@ class TenantRoleController(TenantController):
             )
         
         @router.get("/{role_id}/permissions/effective", summary="获取有效权限")
-        @action_read("查看有效权限")
+        @action_read(_("action.role.effective_permissions"))
         async def get_effective_permissions(
             db: DbSession,
             role_id: int,
@@ -286,7 +286,7 @@ class TenantRoleController(TenantController):
             )
         
         @router.post("", summary="创建角色")
-        @action_create("创建角色")
+        @action_create(_("action.role.create"))
         async def create_role(
             db: DbSession,
             data: TenantAdminRoleCreateRequest,
@@ -376,7 +376,7 @@ class TenantRoleController(TenantController):
                 )
         
         @router.put("/{role_id}", summary="更新角色")
-        @action_update("更新角色")
+        @action_update(_("action.role.update"))
         async def update_role(
             db: DbSession,
             role_id: int,
@@ -479,7 +479,7 @@ class TenantRoleController(TenantController):
                 )
         
         @router.put("/{role_id}/move", summary="移动角色")
-        @action_update("移动角色")
+        @action_update(_("action.role.move"))
         async def move_role(
             db: DbSession,
             role_id: int,
@@ -546,7 +546,7 @@ class TenantRoleController(TenantController):
                 )
         
         @router.delete("/{role_id}", summary="删除角色")
-        @action_delete("删除角色")
+        @action_delete(_("action.role.delete"))
         async def delete_role(
             db: DbSession,
             role_id: int,
@@ -602,7 +602,7 @@ class TenantRoleController(TenantController):
                 )
         
         @router.put("/{role_id}/permissions", summary="分配角色权限")
-        @action_update("分配角色权限")
+        @action_update(_("action.role.assign_permissions"))
         async def assign_permissions(
             db: DbSession,
             role_id: int,
