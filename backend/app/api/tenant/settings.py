@@ -7,17 +7,16 @@
 import secrets
 from datetime import datetime, timezone
 
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, Request, status
 from sqlalchemy import select, func
 
 from app.core.base_controller import TenantController
 from app.core.config import settings
-from app.core.deps import DbSession
+from app.core.deps import DbSession, ActiveTenantAdmin
 from app.core.i18n import _
 from app.core.response import success
 from app.enums.rbac import PermissionScope
 from app.models import Tenant, TenantDomain, TenantAdmin
-from app.rbac import require_tenant_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -66,8 +65,9 @@ class TenantSettingsController(TenantController):
         @router.get("", summary="获取租户设置")
         @action_read("action.tenant_settings.view")
         async def get_tenant_settings(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:read")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取当前租户的设置信息
@@ -119,9 +119,10 @@ class TenantSettingsController(TenantController):
         @router.put("", summary="更新租户设置")
         @action_update("action.tenant_settings.update")
         async def update_tenant_settings(
+            request: Request,
             db: DbSession,
             data: TenantSettingsUpdateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             更新当前租户的设置
@@ -201,8 +202,9 @@ class TenantSettingsController(TenantController):
         @router.get("/domains", summary="获取域名列表")
         @action_read("action.tenant_settings.domain_list")
         async def list_tenant_domains(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:read")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取当前租户绑定的自定义域名列表
@@ -247,9 +249,10 @@ class TenantSettingsController(TenantController):
         @router.post("/domains", summary="添加自定义域名")
         @action_create("action.tenant_settings.domain_add")
         async def add_tenant_domain(
+            request: Request,
             db: DbSession,
             data: TenantDomainCreateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:create")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             添加自定义域名
@@ -359,9 +362,10 @@ class TenantSettingsController(TenantController):
         @router.get("/domains/{domain_id}", summary="获取域名详情")
         @action_read("action.tenant_settings.domain_detail")
         async def get_tenant_domain(
+            request: Request,
             db: DbSession,
             domain_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:read")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取域名详情及验证信息
@@ -410,10 +414,11 @@ class TenantSettingsController(TenantController):
         @router.put("/domains/{domain_id}", summary="更新域名设置")
         @action_update("action.tenant_settings.domain_update")
         async def update_tenant_domain(
+            request: Request,
             db: DbSession,
             domain_id: int,
             data: TenantDomainUpdateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             更新域名设置（如设为主域名）
@@ -487,9 +492,10 @@ class TenantSettingsController(TenantController):
         @router.delete("/domains/{domain_id}", summary="删除域名")
         @action_delete("action.tenant_settings.domain_delete")
         async def delete_tenant_domain(
+            request: Request,
             db: DbSession,
             domain_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:delete")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             删除自定义域名
@@ -525,9 +531,10 @@ class TenantSettingsController(TenantController):
         @router.post("/domains/{domain_id}/verify", summary="验证域名")
         @action_update("action.tenant_settings.domain_verify")
         async def verify_tenant_domain(
+            request: Request,
             db: DbSession,
             domain_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_settings:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             验证域名 DNS 配置

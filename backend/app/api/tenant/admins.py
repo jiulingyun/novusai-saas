@@ -4,18 +4,17 @@
 提供租户内管理员 CRUD 接口
 """
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import HTTPException, Query, Request, status
 from pydantic import Field
 
 from app.core.base_controller import TenantController
 from app.core.base_schema import BaseSchema, PageParams, PageResponse
-from app.core.deps import DbSession, QueryParams
+from app.core.deps import DbSession, QueryParams, ActiveTenantAdmin
 from app.core.i18n import _
 from app.core.response import success
 from app.schemas.common.query import QuerySpec
 from app.enums.rbac import PermissionScope
 from app.models import TenantAdmin
-from app.rbac import require_tenant_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -68,8 +67,9 @@ class TenantAdminController(TenantController):
         @router.get("/select", summary="获取管理员下拉选项")
         @action_read("action.admin.select")
         async def select_admins(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:select")),
+            current_admin: ActiveTenantAdmin,
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -101,9 +101,10 @@ class TenantAdminController(TenantController):
         @router.get("", summary="获取管理员列表")
         @action_read("action.admin.list")
         async def list_admins(
+            request: Request,
             db: DbSession,
             spec: QueryParams,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:list")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取当前租户的所有管理员列表
@@ -135,9 +136,10 @@ class TenantAdminController(TenantController):
         @router.get("/{admin_id}", summary="获取管理员详情")
         @action_read("action.admin.detail")
         async def get_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:detail")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取管理员详情
@@ -161,9 +163,10 @@ class TenantAdminController(TenantController):
         @router.post("", summary="创建管理员")
         @action_create("action.admin.create")
         async def create_admin(
+            request: Request,
             db: DbSession,
             data: TenantAdminCreateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:create")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             创建租户管理员
@@ -191,10 +194,11 @@ class TenantAdminController(TenantController):
         @router.put("/{admin_id}", summary="更新管理员")
         @action_update("action.admin.update")
         async def update_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
             data: TenantAdminUpdateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             更新租户管理员信息
@@ -220,9 +224,10 @@ class TenantAdminController(TenantController):
         @router.delete("/{admin_id}", summary="删除管理员")
         @action_delete("action.admin.delete")
         async def delete_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:delete")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             删除租户管理员（软删除）
@@ -264,10 +269,11 @@ class TenantAdminController(TenantController):
         @router.put("/{admin_id}/reset-password", summary="重置密码")
         @action_update("action.admin.reset_password")
         async def reset_password(
+            request: Request,
             db: DbSession,
             admin_id: int,
             data: TenantAdminResetPasswordRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:reset_password")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             重置管理员密码（租户所有者操作）
@@ -292,10 +298,11 @@ class TenantAdminController(TenantController):
         @router.put("/{admin_id}/status", summary="切换管理员状态")
         @action_update("action.admin.toggle_status")
         async def toggle_admin_status(
+            request: Request,
             db: DbSession,
             admin_id: int,
+            current_admin: ActiveTenantAdmin,
             is_active: bool = Query(..., description="是否激活"),
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("tenant_user:toggle_status")),
         ):
             """
             启用或禁用管理员

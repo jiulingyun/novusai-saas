@@ -4,12 +4,12 @@
 提供租户 CRUD 接口（平台管理员专用）
 """
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import HTTPException, Query, Request, status
 from sqlalchemy import select
 
 from app.core.base_controller import GlobalController
 from app.core.base_schema import PageResponse
-from app.core.deps import DbSession, QueryParams
+from app.core.deps import DbSession, QueryParams, ActiveAdmin
 from app.core.i18n import _
 from app.core.logging import get_logger
 from app.core.response import success
@@ -21,7 +21,6 @@ from app.core.security import (
 from app.enums.rbac import PermissionScope
 from app.models import Admin, TenantAdmin
 from app.models.auth.tenant_admin_role import TenantAdminRole
-from app.rbac import require_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     permission_action,
@@ -76,8 +75,9 @@ class AdminTenantController(GlobalController):
         @router.get("/select", summary="获取租户下拉选项")
         @action_read("action.tenant.select")
         async def select_tenants(
+            request: Request,
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:select")),
+            current_admin: ActiveAdmin,
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -109,9 +109,10 @@ class AdminTenantController(GlobalController):
         @router.get("", summary="获取租户列表")
         @action_read("action.tenant.list")
         async def list_tenants(
+            request: Request,
             db: DbSession,
             spec: QueryParams,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:list")),
+            current_admin: ActiveAdmin,
         ):
             """
             获取所有租户列表
@@ -138,9 +139,10 @@ class AdminTenantController(GlobalController):
         @router.get("/{tenant_id}", summary="获取租户详情")
         @action_read("action.tenant.detail")
         async def get_tenant(
+            request: Request,
             db: DbSession,
             tenant_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:detail")),
+            current_admin: ActiveAdmin,
         ):
             """
             获取租户详情
@@ -165,9 +167,10 @@ class AdminTenantController(GlobalController):
         @router.post("", summary="创建租户")
         @action_create("action.tenant.create")
         async def create_tenant(
+            request: Request,
             db: DbSession,
             data: TenantCreateRequest,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:create")),
+            current_admin: ActiveAdmin,
         ):
             """
             创建租户
@@ -197,10 +200,11 @@ class AdminTenantController(GlobalController):
         @router.put("/{tenant_id}", summary="更新租户")
         @action_update("action.tenant.update")
         async def update_tenant(
+            request: Request,
             db: DbSession,
             tenant_id: int,
             data: TenantUpdateRequest,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:update")),
+            current_admin: ActiveAdmin,
         ):
             """
             更新租户信息
@@ -223,9 +227,10 @@ class AdminTenantController(GlobalController):
         @router.delete("/{tenant_id}", summary="删除租户")
         @action_delete("action.tenant.delete")
         async def delete_tenant(
+            request: Request,
             db: DbSession,
             tenant_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:delete")),
+            current_admin: ActiveAdmin,
         ):
             """
             删除租户（软删除）
@@ -253,10 +258,11 @@ class AdminTenantController(GlobalController):
         @router.put("/{tenant_id}/status", summary="切换租户状态")
         @action_update("action.tenant.toggle_status")
         async def toggle_tenant_status(
+            request: Request,
             db: DbSession,
             tenant_id: int,
             data: TenantStatusRequest,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:update")),
+            current_admin: ActiveAdmin,
         ):
             """
             启用或禁用租户
@@ -277,10 +283,11 @@ class AdminTenantController(GlobalController):
         @router.post("/{tenant_id}/impersonate", summary="一键登录租户后台")
         @permission_action("impersonate", "action.tenant.impersonate")
         async def impersonate_tenant(
+            request: Request,
             db: DbSession,
             tenant_id: int,
+            current_admin: ActiveAdmin,
             data: TenantImpersonateRequest | None = None,
-            current_admin: Admin = Depends(require_admin_permissions("tenant:impersonate")),
         ):
             """
             生成一键登录租户后台的 Token

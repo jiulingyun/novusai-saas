@@ -4,7 +4,7 @@
 提供平台管理员 CRUD 接口
 """
 
-from fastapi import Depends, Query
+from fastapi import Query, Request
 from pydantic import Field
 
 from app.core.base_controller import GlobalController
@@ -15,7 +15,6 @@ from app.core.response import success
 from app.schemas.common.query import QuerySpec
 from app.enums.rbac import PermissionScope
 from app.models import Admin
-from app.rbac import require_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -68,8 +67,9 @@ class AdminAdminController(GlobalController):
         @router.get("/select", summary="获取管理员下拉选项")
         @action_read("action.admin.select")
         async def select_admins(
+            request: Request,
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:select")),
+            current_admin: ActiveAdmin,
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -101,9 +101,10 @@ class AdminAdminController(GlobalController):
         @router.get("", summary="获取管理员列表")
         @action_read("action.admin.list")
         async def list_admins(
+            request: Request,
             db: DbSession,
             spec: QueryParams,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:list")),
+            current_admin: ActiveAdmin,
         ):
             """
             获取所有平台管理员列表
@@ -135,9 +136,10 @@ class AdminAdminController(GlobalController):
         @router.get("/{admin_id}", summary="获取管理员详情")
         @action_read("action.admin.detail")
         async def get_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:detail")),
+            current_admin: ActiveAdmin,
         ):
             """
             获取管理员详情
@@ -162,9 +164,10 @@ class AdminAdminController(GlobalController):
         @router.post("", summary="创建管理员")
         @action_create("action.admin.create")
         async def create_admin(
+            request: Request,
             db: DbSession,
             data: AdminCreateRequest,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:create")),
+            current_admin: ActiveAdmin,
         ):
             """
             创建平台管理员
@@ -192,10 +195,11 @@ class AdminAdminController(GlobalController):
         @router.put("/{admin_id}", summary="更新管理员")
         @action_update("action.admin.update")
         async def update_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
             data: AdminUpdateRequest,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:update")),
+            current_admin: ActiveAdmin,
         ):
             """
             更新平台管理员信息
@@ -221,9 +225,10 @@ class AdminAdminController(GlobalController):
         @router.delete("/{admin_id}", summary="删除管理员")
         @action_delete("action.admin.delete")
         async def delete_admin(
+            request: Request,
             db: DbSession,
             admin_id: int,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:delete")),
+            current_admin: ActiveAdmin,
         ):
             """
             删除平台管理员（软删除）
@@ -268,10 +273,11 @@ class AdminAdminController(GlobalController):
         @router.put("/{admin_id}/reset-password", summary="重置密码")
         @action_update("action.admin.reset_password")
         async def reset_password(
+            request: Request,
             db: DbSession,
             admin_id: int,
             data: AdminResetPasswordRequest,
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:reset_password")),
+            current_admin: ActiveAdmin,
         ):
             """
             重置管理员密码（超管操作）
@@ -297,10 +303,11 @@ class AdminAdminController(GlobalController):
         @router.put("/{admin_id}/status", summary="切换管理员状态")
         @action_update("action.admin.toggle_status")
         async def toggle_admin_status(
+            request: Request,
             db: DbSession,
             admin_id: int,
+            current_admin: ActiveAdmin,
             is_active: bool = Query(..., description="是否激活"),
-            current_admin: Admin = Depends(require_admin_permissions("admin_user:toggle_status")),
         ):
             """
             启用或禁用管理员

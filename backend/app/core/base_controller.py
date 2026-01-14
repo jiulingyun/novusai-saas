@@ -73,10 +73,37 @@ class BaseController:
             instance = cls()
             instance._register_routes()
             
+            # 将 resource 注入到操作方法（用于自动权限检查）
+            cls._inject_resource_to_actions()
+            
             # 自动扫描并注册操作权限
             from app.rbac.decorators import register_action_permissions
             register_action_permissions(cls, cls._router)
         return cls._router
+    
+    @classmethod
+    def _inject_resource_to_actions(cls) -> None:
+        """
+        将 _permission_resource 注入到所有带权限装饰器的方法
+        
+        这样装饰器在运行时可以获取 resource 来构造完整的权限码
+        """
+        resource = getattr(cls, "_permission_resource", None)
+        if not resource:
+            return
+        
+        if not cls._router:
+            return
+        
+        # 扫描路由器上的所有路由
+        for route in cls._router.routes:
+            endpoint = getattr(route, "endpoint", None)
+            if not endpoint:
+                continue
+            
+            # 如果有 _permission_action 属性，注入 resource
+            if hasattr(endpoint, "_permission_action"):
+                endpoint._permission_resource = resource  # type: ignore
     
     @property
     def router(self) -> APIRouter:

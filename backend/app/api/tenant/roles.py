@@ -4,20 +4,19 @@
 提供租户端角色 CRUD、权限分配、层级管理等接口
 """
 
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import HTTPException, Query, Request, status
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.core.base_controller import TenantController
-from app.core.deps import DbSession
+from app.core.deps import DbSession, ActiveTenantAdmin
 from app.core.i18n import _
 from app.core.response import success
 from app.enums.rbac import PermissionScope
 from app.exceptions import BusinessException, NotFoundException
 from app.models import TenantAdmin, Permission
 from app.models.auth.tenant_admin_role import TenantAdminRole
-from app.rbac import require_tenant_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -70,8 +69,9 @@ class TenantRoleController(TenantController):
         @router.get("/select", summary="获取角色下拉选项")
         @action_read("action.role.select")
         async def select_roles(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:select")),
+            current_admin: ActiveTenantAdmin,
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
         ):
@@ -103,8 +103,9 @@ class TenantRoleController(TenantController):
         @router.get("", summary="获取角色列表")
         @action_read("action.role.list")
         async def list_roles(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:list")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取租户角色列表
@@ -147,8 +148,9 @@ class TenantRoleController(TenantController):
         @router.get("/tree", summary="获取角色树")
         @action_read("action.role.tree")
         async def get_role_tree(
+            request: Request,
             db: DbSession,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:tree")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取角色树形结构
@@ -176,9 +178,10 @@ class TenantRoleController(TenantController):
         @router.get("/{role_id}", summary="获取角色详情")
         @action_read("action.role.detail")
         async def get_role(
+            request: Request,
             db: DbSession,
             role_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:detail")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取角色详情（含权限列表）
@@ -242,9 +245,10 @@ class TenantRoleController(TenantController):
         @router.get("/{role_id}/children", summary="获取子角色")
         @action_read("action.role.children")
         async def get_role_children(
+            request: Request,
             db: DbSession,
             role_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:children")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取指定角色的直接子角色
@@ -285,9 +289,10 @@ class TenantRoleController(TenantController):
         @router.get("/{role_id}/permissions/effective", summary="获取有效权限")
         @action_read("action.role.effective_permissions")
         async def get_effective_permissions(
+            request: Request,
             db: DbSession,
             role_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:effective_permissions")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             获取角色的有效权限（含继承的权限）
@@ -322,9 +327,10 @@ class TenantRoleController(TenantController):
         @router.post("", summary="创建角色")
         @action_create("action.role.create")
         async def create_role(
+            request: Request,
             db: DbSession,
             data: TenantAdminRoleCreateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:create")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             创建租户角色
@@ -412,10 +418,11 @@ class TenantRoleController(TenantController):
         @router.put("/{role_id}", summary="更新角色")
         @action_update("action.role.update")
         async def update_role(
+            request: Request,
             db: DbSession,
             role_id: int,
             data: TenantAdminRoleUpdateRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             更新租户角色
@@ -515,10 +522,11 @@ class TenantRoleController(TenantController):
         @router.put("/{role_id}/move", summary="移动角色")
         @action_update("action.role.move")
         async def move_role(
+            request: Request,
             db: DbSession,
             role_id: int,
             data: TenantAdminRoleMoveRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             移动角色到新的父节点
@@ -582,9 +590,10 @@ class TenantRoleController(TenantController):
         @router.delete("/{role_id}", summary="删除角色")
         @action_delete("action.role.delete")
         async def delete_role(
+            request: Request,
             db: DbSession,
             role_id: int,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:delete")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             删除租户角色（软删除）
@@ -638,10 +647,11 @@ class TenantRoleController(TenantController):
         @router.put("/{role_id}/permissions", summary="分配角色权限")
         @action_update("action.role.assign_permissions")
         async def assign_permissions(
+            request: Request,
             db: DbSession,
             role_id: int,
             data: TenantAdminRolePermissionsRequest,
-            current_admin: TenantAdmin = Depends(require_tenant_admin_permissions("role:update")),
+            current_admin: ActiveTenantAdmin,
         ):
             """
             分配角色权限

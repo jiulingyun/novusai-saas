@@ -2,13 +2,19 @@
 权限装饰器
 
 通过装饰器在控制器上声明式定义权限，应用启动时自动扫描并同步到数据库
+
+新版本支持单一声明原则：装饰器同时负责「权限注册」和「权限检查」，消除重复声明
 """
 
 from dataclasses import dataclass, field
 from functools import wraps
 from typing import Any, Callable, TypeVar
+import inspect
+
+from fastapi import HTTPException, Request, status
 
 from app.enums.rbac import PermissionType, PermissionScope
+from app.core.i18n import _
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -139,13 +145,19 @@ def permission_action(
     """
     操作权限装饰器（用于控制器方法）
     
-    在路由注册时自动将操作权限注册到 permission_registry。
+    功能：
+    1. 注册操作权限到 registry（应用启动时同步到数据库）
+    2. 运行时自动检查权限（通过 request.state 获取用户权限）
+    
+    权限码自动推导规则：
+    - 从所属类的 _permission_resource 获取 resource
+    - 最终权限码 = f"{resource}:{action}"
     
     Args:
         action: 操作标识，如 "create", "list", "detail", "update", "delete"
         name: 操作名称（i18n key），如 "action.user.list"
         description: 描述
-        auto_check: 是否自动检查权限（默认 True，由依赖注入处理）
+        auto_check: 是否自动检查权限（默认 True）
     
     Example:
         @permission_action("list", "action.user.list")
@@ -153,7 +165,7 @@ def permission_action(
             ...
     """
     def decorator(func: F) -> F:
-        # 保存操作元信息到函数属性
+        # 保存操作元信息到函数属性（用于权限注册）
         func._permission_action = {  # type: ignore
             "action": action,
             "name": name,
@@ -164,9 +176,69 @@ def permission_action(
         # 标记需要的权限（用于依赖注入检查）
         func._required_permission_action = action  # type: ignore
         
-        return func
+        if not auto_check:
+            return func
+        
+        # 包装函数，添加自动权限检查
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            # 从 kwargs 中获取 request 对象
+            request: Request | None = kwargs.get("request")
+            
+            # 如果 kwargs 中没有，尝试从 args 中查找
+            if request is None:
+                for arg in args:
+                    if isinstance(arg, Request):
+                        request = arg
+                        break
+            
+            # 获取权限码（resource 由 base_controller 注入）
+            resource = getattr(wrapper, "_permission_resource", None)
+            
+            if resource and request:
+                permission_code = f"{resource}:{action}"
+                
+                # 从 request.state 获取用户权限信息
+                user_permissions: set[str] = getattr(request.state, "user_permissions", set())
+                
+                # 检查权限
+                has_permission = _check_permission(user_permissions, permission_code)
+                
+                if not has_permission:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=_("rbac.permission_denied"),
+                    )
+            
+            return await func(*args, **kwargs)
+        
+        # 复制原始函数的属性到 wrapper
+        wrapper._permission_action = func._permission_action  # type: ignore
+        wrapper._required_permission_action = func._required_permission_action  # type: ignore
+        
+        return wrapper  # type: ignore
     
     return decorator
+
+
+def _check_permission(user_perms: set[str], required: str) -> bool:
+    """
+    检查用户是否拥有指定权限
+    
+    支持：
+    - 精确匹配: admin_user:list
+    - 通配符: * (所有权限)
+    - 资源通配符: admin_user:* (某资源的所有操作)
+    """
+    if "*" in user_perms:
+        return True
+    if required in user_perms:
+        return True
+    if ":" in required:
+        resource = required.split(":")[0]
+        if f"{resource}:*" in user_perms:
+            return True
+    return False
 
 
 # ==================== 快捷装饰器 ====================

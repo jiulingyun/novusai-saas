@@ -4,7 +4,7 @@
 提供平台端权限树、菜单等接口
 """
 
-from fastapi import Depends
+from fastapi import Request
 
 from sqlalchemy import select
 
@@ -14,7 +14,6 @@ from app.core.i18n import _
 from app.core.response import success
 from app.enums.rbac import PermissionScope
 from app.models import Permission, Admin
-from app.rbac import require_admin_permissions
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -119,8 +118,9 @@ class AdminPermissionController(GlobalController):
         @router.get("", summary="获取权限树")
         @action_read("action.permission.tree")
         async def get_permission_tree(
+            request: Request,
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("permission:read")),
+            current_admin: ActiveAdmin,
         ):
             """
             获取平台端权限（树形结构）
@@ -190,6 +190,7 @@ class AdminPermissionController(GlobalController):
         
         @router.get("/menus", summary="获取当前用户菜单")
         async def get_current_user_menus(
+            request: Request,
             db: DbSession,
             current_admin: ActiveAdmin,
         ):
@@ -274,8 +275,9 @@ class AdminPermissionController(GlobalController):
         @router.get("/list", summary="获取权限列表（平铺）")
         @action_read("action.permission.list")
         async def get_permission_list(
+            request: Request,
             db: DbSession,
-            current_admin: Admin = Depends(require_admin_permissions("permission:read")),
+            current_admin: ActiveAdmin,
             type: str | None = None,
         ):
             """
