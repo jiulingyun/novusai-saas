@@ -357,14 +357,26 @@ class TenantAdminRoleService(TenantService[TenantAdminRole, TenantRoleRepository
         await self.repo.update(role_id, {"leader_id": leader_id})
         return await self.repo.get_by_id(role_id)
     
-    async def get_organization_tree(self) -> list[TenantAdminRole]:
+    async def get_organization_root_nodes(self) -> list[TenantAdminRole]:
         """
-        获取组织架构树（含成员信息，租户内）
+        获取组织架构根节点列表（用于按需加载树，租户内）
         
         Returns:
-            角色列表（平铺，按层级排序）
+            根节点列表（level=1），每个节点包含 has_children 标记
         """
-        return await self.repo.get_organization_tree()
+        return await self.repo.get_organization_root_nodes()
+    
+    async def get_organization_children(self, parent_id: int) -> list[TenantAdminRole]:
+        """
+        获取指定节点的直接子节点（用于按需加载，租户内）
+        
+        Args:
+            parent_id: 父节点 ID
+        
+        Returns:
+            子节点列表
+        """
+        return await self.repo.get_children_with_details(parent_id)
     
     async def add_member(
         self,

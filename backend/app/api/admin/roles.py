@@ -177,7 +177,7 @@ class AdminRoleController(GlobalController):
             tree = await service.get_tree(parent_id=current_admin.role_id)
             return success(data=tree, message=_("common.success"))
         
-        @router.get("/organization", summary="获取组织架构树")
+        @router.get("/organization", summary="获取组织架构树（根节点）")
         @action_read("action.role.organization")
         async def get_organization_tree(
             request: Request,
@@ -185,12 +185,15 @@ class AdminRoleController(GlobalController):
             current_admin: ActiveAdmin,
         ):
             """
-            获取组织架构树（含成员信息）
+            获取组织架构根节点列表（按需加载）
+            
+            返回 level=1 的根节点，每个节点包含 has_children 标记。
+            前端可通过 GET /roles/{id}/children 按需加载子节点。
             
             权限: role:organization
             """
             service = AdminRoleService(db)
-            roles = await service.get_organization_tree()
+            roles = await service.get_organization_root_nodes()
             
             return success(
                 data=[AdminRoleResponse.model_validate(r, from_attributes=True) for r in roles],
@@ -259,7 +262,7 @@ class AdminRoleController(GlobalController):
                 message=_("common.success"),
             )
         
-        @router.get("/{role_id}/children", summary="获取子角色")
+        @router.get("/{role_id}/children", summary="获取子节点")
         @action_read("action.role.children")
         async def get_role_children(
             request: Request,
@@ -268,7 +271,7 @@ class AdminRoleController(GlobalController):
             current_admin: ActiveAdmin,
         ):
             """
-            获取指定角色的直接子角色
+            获取指定节点的直接子节点（用于按需加载组织架构树）
             
             层级权限控制：只能查看可见角色的子角色
             
@@ -283,20 +286,7 @@ class AdminRoleController(GlobalController):
                 )
             
             service = AdminRoleService(db)
-            children = await service.get_children(role_id)
-            
-            # 加载关联以确保 property 可访问
-            if children:
-                role_ids = [c.id for c in children]
-                result = await db.execute(
-                    select(AdminRole)
-                    .where(AdminRole.id.in_(role_ids))
-                    .options(
-                        selectinload(AdminRole.children),
-                        selectinload(AdminRole.admins),
-                    )
-                )
-                children = result.scalars().all()
+            children = await service.get_organization_children(role_id)
             
             return success(
                 data=[AdminRoleResponse.model_validate(r, from_attributes=True) for r in children],

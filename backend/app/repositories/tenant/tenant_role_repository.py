@@ -476,21 +476,22 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
-    async def get_organization_tree(
+    async def get_organization_root_nodes(
         self,
         include_deleted: bool = False,
     ) -> list[TenantAdminRole]:
         """
-        获取组织架构树（含成员信息，租户内）
+        获取组织架构根节点列表（用于按需加载树，租户内）
         
         Args:
             include_deleted: 是否包含已删除记录
         
         Returns:
-            角色列表（平铺，按层级排序，含成员列表）
+            根节点列表（level=1 且 parent_id=None），含关联数据
         """
         query = select(self.model).where(
-            self.model.tenant_id == self.tenant_id
+            self.model.tenant_id == self.tenant_id,
+            self.model.parent_id.is_(None),
         )
         
         if not include_deleted:
@@ -503,7 +504,43 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
             selectinload(self.model.leader),
         )
         query = query.order_by(
-            self.model.level.asc(),
+            self.model.sort_order.asc(),
+            self.model.id.asc(),
+        )
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+    
+    async def get_children_with_details(
+        self,
+        parent_id: int,
+        include_deleted: bool = False,
+    ) -> list[TenantAdminRole]:
+        """
+        获取指定节点的直接子节点（含关联数据，租户内）
+        
+        Args:
+            parent_id: 父节点 ID
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            子节点列表，含成员等关联数据
+        """
+        query = select(self.model).where(
+            self.model.tenant_id == self.tenant_id,
+            self.model.parent_id == parent_id,
+        )
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        # 加载关联数据
+        query = query.options(
+            selectinload(self.model.children),
+            selectinload(self.model.admins),
+            selectinload(self.model.leader),
+        )
+        query = query.order_by(
             self.model.sort_order.asc(),
             self.model.id.asc(),
         )
