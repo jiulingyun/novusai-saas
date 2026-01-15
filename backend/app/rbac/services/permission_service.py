@@ -10,11 +10,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.i18n import _
 from app.models import Admin, TenantAdmin, Permission
 from app.models.auth.admin_role import AdminRole
 from app.models.auth.tenant_admin_role import TenantAdminRole
 from app.repositories.system.admin_role_repository import AdminRoleRepository
 from app.repositories.tenant.tenant_role_repository import TenantRoleRepository
+from app.schemas.common import MenuResponse
 
 
 class PermissionService:
@@ -485,6 +487,207 @@ class PermissionService:
             .order_by(Permission.sort_order)
         )
         return list(result.scalars().all())
+    
+    # ==================== 菜单构建方法 ====================
+    
+    @staticmethod
+    def _translate_name(name: str) -> str:
+        """
+        翻译权限/菜单名称
+        
+        Args:
+            name: 权限名称（可能是 i18n key）
+        
+        Returns:
+            翻译后的名称
+        """
+        if name and "." in name:
+            translated = _(name)
+            if translated == name:
+                return name.split(".")[-1]
+            return translated
+        return name or ""
+    
+    @classmethod
+    def _build_menu_tree(
+        cls,
+        permissions: list[Permission],
+        user_permission_codes: set[str] | None = None,
+        parent_id: int | None = None,
+    ) -> list[MenuResponse]:
+        """
+        构建菜单树（内部递归方法）
+        
+        Args:
+            permissions: 所有权限列表（包含菜单和操作权限）
+            user_permission_codes: 用户拥有的权限码集合（用于过滤 permissions 字段）
+                                   None 表示返回所有操作权限（超管/所有者场景）
+            parent_id: 父级 ID
+        
+        Returns:
+            菜单树，每个菜单节点包含该菜单下用户拥有的操作权限码
+        """
+        tree = []
+        for perm in permissions:
+            if perm.parent_id == parent_id and perm.type == "menu":
+                # 递归构建子菜单
+                children = cls._build_menu_tree(permissions, user_permission_codes, perm.id)
+                
+                # 收集该菜单下的操作权限码
+                menu_permissions = []
+                for p in permissions:
+                    if p.type == "operation" and p.parent_id == perm.id:
+                        # 如果提供了用户权限码集合，只返回用户拥有的
+                        if user_permission_codes is None or p.code in user_permission_codes:
+                            menu_permissions.append(p.code)
+                
+                tree.append(MenuResponse(
+                    id=perm.id,
+                    code=perm.code,
+                    name=cls._translate_name(perm.name),
+                    icon=perm.icon,
+                    path=perm.path,
+                    component=perm.component,
+                    hidden=perm.hidden,
+                    sort_order=perm.sort_order,
+                    permissions=sorted(menu_permissions),
+                    children=children,
+                ))
+        return sorted(tree, key=lambda x: x.sort_order)
+    
+    async def get_admin_menus(self, admin: Admin) -> list[MenuResponse]:
+        """
+        获取平台管理员的菜单树
+        
+        Args:
+            admin: 平台管理员
+        
+        Returns:
+            菜单树列表，每个菜单包含该菜单下用户拥有的操作权限码
+        """
+        # 获取所有平台端权限（菜单 + 操作权限）
+        all_permissions = await self.get_enabled_permissions_by_scope("admin")
+        
+        # 超级管理员获取所有菜单和所有权限
+        if admin.is_super:
+            return self._build_menu_tree(all_permissions, user_permission_codes=None)
+        
+        # 获取用户的有效权限 ID 集合
+        effective_ids = await self.get_admin_effective_permission_ids(admin)
+        
+        if not effective_ids:
+            return []
+        
+        # 查询用户拥有的所有权限
+        result = await self.db.execute(
+            select(Permission)
+            .where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+        )
+        user_permissions = list(result.scalars().all())
+        
+        # 收集用户拥有的权限码集合
+        user_permission_codes = {p.code for p in user_permissions}
+        
+        # 收集用户拥有的菜单 ID 和操作权限的 parent_id
+        menu_ids = set()
+        for perm in user_permissions:
+            if perm.type == "menu":
+                menu_ids.add(perm.id)
+            elif perm.type == "operation" and perm.parent_id:
+                menu_ids.add(perm.parent_id)
+        
+        # 构建菜单 ID 到菜单的映射
+        menu_by_id = {p.id: p for p in all_permissions if p.type == "menu"}
+        
+        # 补充所有祖先菜单
+        ids_to_process = list(menu_ids)
+        while ids_to_process:
+            menu_id = ids_to_process.pop()
+            menu = menu_by_id.get(menu_id)
+            if menu and menu.parent_id and menu.parent_id not in menu_ids:
+                menu_ids.add(menu.parent_id)
+                ids_to_process.append(menu.parent_id)
+        
+        # 构建用于菜单树的权限列表
+        permissions_for_tree = []
+        for p in all_permissions:
+            if p.type == "menu" and p.id in menu_ids:
+                permissions_for_tree.append(p)
+            elif p.type == "operation":
+                permissions_for_tree.append(p)
+        
+        return self._build_menu_tree(permissions_for_tree, user_permission_codes)
+    
+    async def get_tenant_admin_menus(self, tenant_admin: TenantAdmin) -> list[MenuResponse]:
+        """
+        获取租户管理员的菜单树
+        
+        Args:
+            tenant_admin: 租户管理员
+        
+        Returns:
+            菜单树列表，每个菜单包含该菜单下用户拥有的操作权限码
+        """
+        # 获取所有租户端权限（菜单 + 操作权限）
+        all_permissions = await self.get_enabled_permissions_by_scope("tenant")
+        
+        # 租户所有者获取所有菜单和所有权限
+        if tenant_admin.is_owner:
+            return self._build_menu_tree(all_permissions, user_permission_codes=None)
+        
+        # 获取用户的有效权限 ID 集合
+        effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
+        
+        if not effective_ids:
+            return []
+        
+        # 查询用户拥有的所有权限
+        result = await self.db.execute(
+            select(Permission)
+            .where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+        )
+        user_permissions = list(result.scalars().all())
+        
+        # 收集用户拥有的权限码集合
+        user_permission_codes = {p.code for p in user_permissions}
+        
+        # 收集用户拥有的菜单 ID 和操作权限的 parent_id
+        menu_ids = set()
+        for perm in user_permissions:
+            if perm.type == "menu":
+                menu_ids.add(perm.id)
+            elif perm.type == "operation" and perm.parent_id:
+                menu_ids.add(perm.parent_id)
+        
+        # 构建菜单 ID 到菜单的映射
+        menu_by_id = {p.id: p for p in all_permissions if p.type == "menu"}
+        
+        # 补充所有祖先菜单
+        ids_to_process = list(menu_ids)
+        while ids_to_process:
+            menu_id = ids_to_process.pop()
+            menu = menu_by_id.get(menu_id)
+            if menu and menu.parent_id and menu.parent_id not in menu_ids:
+                menu_ids.add(menu.parent_id)
+                ids_to_process.append(menu.parent_id)
+        
+        # 构建用于菜单树的权限列表
+        permissions_for_tree = []
+        for p in all_permissions:
+            if p.type == "menu" and p.id in menu_ids:
+                permissions_for_tree.append(p)
+            elif p.type == "operation":
+                permissions_for_tree.append(p)
+        
+        return self._build_menu_tree(permissions_for_tree, user_permission_codes)
 
 
 __all__ = ["PermissionService"]
