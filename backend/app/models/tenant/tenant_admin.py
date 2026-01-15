@@ -97,6 +97,7 @@ class TenantAdmin(TenantModel):
         "TenantAdminRole",
         back_populates="admins",
         lazy="selectin",
+        foreign_keys=[role_id],
     )
     
     def __repr__(self) -> str:

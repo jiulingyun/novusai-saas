@@ -58,6 +58,15 @@ class TestTenantRoles(BaseAPITest):
                 self.client.delete(f"/tenant/roles/{role_id}")
             except Exception:
                 pass
+        
+        # 清理组织架构测试数据
+        for key in ["functional_role_id", "position_role_id", "department_role_id"]:
+            role_id = self._test_data.get(key)
+            if role_id:
+                try:
+                    self.client.delete(f"/tenant/roles/{role_id}")
+                except Exception:
+                    pass
     
     def _run_tests(self) -> None:
         """运行所有测试"""
@@ -118,6 +127,47 @@ class TestTenantRoles(BaseAPITest):
         
         # 17. 删除角色
         self.run_test("删除角色", self.test_delete_role, skip_reason)
+        
+        # ========== 组织架构管理测试 ==========
+        # 18. 创建部门类型角色
+        self.run_test("创建部门类型角色", self.test_create_department_role, skip_reason)
+        
+        # 19. 创建岗位类型角色
+        self.run_test("创建岗位类型角色", self.test_create_position_role, skip_reason)
+        
+        # 20. 创建职能角色类型
+        self.run_test("创建职能角色类型", self.test_create_functional_role, skip_reason)
+        
+        # 21. 获取组织架构树
+        self.run_test("获取组织架构树", self.test_get_organization_tree, skip_reason)
+        
+        # 22. 获取节点成员列表
+        self.run_test("获取节点成员列表", self.test_get_role_members, skip_reason)
+        
+        # 23. 添加成员到节点
+        self.run_test("添加成员到节点", self.test_add_member_to_role, skip_reason)
+        
+        # 24. 设置节点负责人
+        self.run_test("设置节点负责人", self.test_set_role_leader, skip_reason)
+        
+        # 25. 从节点移除成员
+        self.run_test("从节点移除成员", self.test_remove_member_from_role, skip_reason)
+        
+        # 26. 岗位类型不能设置负责人
+        self.run_test("岗位类型不能设置负责人", self.test_position_cannot_set_leader, skip_reason)
+        
+        # 27. 部门下不能创建职能角色子节点
+        self.run_test("部门下不能创建职能角色子节点", self.test_department_cannot_add_role_child, skip_reason)
+        
+        # ========== 组织架构清理 ==========
+        # 28. 删除职能角色
+        self.run_test("删除职能角色", self.test_delete_functional_role, skip_reason)
+        
+        # 29. 删除岗位角色
+        self.run_test("删除岗位角色", self.test_delete_position_role, skip_reason)
+        
+        # 30. 删除部门角色
+        self.run_test("删除部门角色", self.test_delete_department_role, skip_reason)
     
     def test_list_roles(self) -> None:
         """测试获取角色列表"""
@@ -371,6 +421,207 @@ class TestTenantRoles(BaseAPITest):
         assert_success(resp, "删除子角色失败")
         
         del self._test_data["child_role_id"]
+    
+    # ========== 组织架构管理测试方法 ==========
+    
+    def test_create_department_role(self) -> None:
+        """测试创建部门类型角色"""
+        resp = self.client.post("/tenant/roles", data={
+            "name": "测试部门",
+            "description": "部门类型节点",
+            "is_active": True,
+            "type": "department",
+            "allow_members": True,
+        })
+        data = assert_success(resp, "创建部门角色失败")
+        
+        assert_has_keys(data["data"], ["id", "code", "name", "type", "tenant_id"])
+        assert_equals(data["data"]["type"], "department")
+        assert_equals(data["data"]["allow_members"], True)
+        
+        self._test_data["department_role_id"] = data["data"]["id"]
+    
+    def test_create_position_role(self) -> None:
+        """测试创建岗位类型角色"""
+        dept_id = self._test_data.get("department_role_id")
+        if not dept_id:
+            raise AssertionError("没有可用的部门角色ID")
+        
+        resp = self.client.post("/tenant/roles", data={
+            "name": "测试岗位",
+            "description": "岗位类型节点",
+            "is_active": True,
+            "type": "position",
+            "parent_id": dept_id,
+            "allow_members": True,
+        })
+        data = assert_success(resp, "创建岗位角色失败")
+        
+        assert_equals(data["data"]["type"], "position")
+        assert_equals(data["data"]["parent_id"], dept_id)
+        
+        self._test_data["position_role_id"] = data["data"]["id"]
+    
+    def test_create_functional_role(self) -> None:
+        """测试创建职能角色类型"""
+        resp = self.client.post("/tenant/roles", data={
+            "name": "测试职能角色",
+            "description": "职能角色类型节点",
+            "is_active": True,
+            "type": "role",
+            "allow_members": True,
+        })
+        data = assert_success(resp, "创建职能角色失败")
+        
+        assert_equals(data["data"]["type"], "role")
+        
+        self._test_data["functional_role_id"] = data["data"]["id"]
+    
+    def test_get_organization_tree(self) -> None:
+        """测试获取组织架构树"""
+        resp = self.client.get("/tenant/roles/organization")
+        data = assert_success(resp, "获取组织架构树失败")
+        
+        # 验证返回的是列表
+        assert_true(isinstance(data["data"], list), "组织架构树应为列表")
+    
+    def test_get_role_members(self) -> None:
+        """测试获取节点成员列表"""
+        dept_id = self._test_data.get("department_role_id")
+        if not dept_id:
+            raise AssertionError("没有可用的部门角色ID")
+        
+        resp = self.client.get(f"/tenant/roles/{dept_id}/members")
+        data = assert_success(resp, "获取成员列表失败")
+        
+        # 验证返回的是列表（可能为空）
+        assert_true(isinstance(data["data"], list), "成员列表应为列表")
+    
+    def test_add_member_to_role(self) -> None:
+        """测试添加成员到节点"""
+        dept_id = self._test_data.get("department_role_id")
+        if not dept_id:
+            raise AssertionError("没有可用的部门角色ID")
+        
+        # 先获取一个管理员ID（获取当前登录管理员的信息）
+        me_resp = self.client.get("/tenant/auth/me")
+        me_data = me_resp.json()
+        admin_id = me_data["data"]["id"]
+        self._test_data["test_admin_id"] = admin_id
+        
+        resp = self.client.post(f"/tenant/roles/{dept_id}/members", data={
+            "admin_id": admin_id,
+        })
+        data = assert_success(resp, "添加成员失败")
+        
+        # 验证成员已添加
+        members_resp = self.client.get(f"/tenant/roles/{dept_id}/members")
+        members_data = members_resp.json()
+        member_ids = [m["id"] for m in members_data["data"]]
+        assert_true(admin_id in member_ids, "成员应已添加到节点")
+    
+    def test_set_role_leader(self) -> None:
+        """测试设置节点负责人"""
+        dept_id = self._test_data.get("department_role_id")
+        admin_id = self._test_data.get("test_admin_id")
+        if not dept_id or not admin_id:
+            raise AssertionError("没有可用的部门角色ID或管理员ID")
+        
+        resp = self.client.put(f"/tenant/roles/{dept_id}/leader", data={
+            "leader_id": admin_id,
+        })
+        data = assert_success(resp, "设置负责人失败")
+        
+        # 验证负责人已设置
+        members_resp = self.client.get(f"/tenant/roles/{dept_id}/members")
+        members_data = members_resp.json()
+        leader = [m for m in members_data["data"] if m.get("is_leader")]
+        assert_true(len(leader) == 1, "应该有且仅有一个负责人")
+        assert_equals(leader[0]["id"], admin_id)
+    
+    def test_remove_member_from_role(self) -> None:
+        """测试从节点移除成员"""
+        dept_id = self._test_data.get("department_role_id")
+        admin_id = self._test_data.get("test_admin_id")
+        if not dept_id or not admin_id:
+            raise AssertionError("没有可用的部门角色ID或管理员ID")
+        
+        resp = self.client.delete(f"/tenant/roles/{dept_id}/members/{admin_id}")
+        data = assert_success(resp, "移除成员失败")
+        
+        # 验证成员已移除
+        members_resp = self.client.get(f"/tenant/roles/{dept_id}/members")
+        members_data = members_resp.json()
+        member_ids = [m["id"] for m in members_data["data"]]
+        assert_true(admin_id not in member_ids, "成员应已从节点移除")
+    
+    def test_position_cannot_set_leader(self) -> None:
+        """测试岗位类型不能设置负责人"""
+        position_id = self._test_data.get("position_role_id")
+        admin_id = self._test_data.get("test_admin_id")
+        if not position_id or not admin_id:
+            raise AssertionError("没有可用的岗位角色ID或管理员ID")
+        
+        # 先添加成员到岗位
+        self.client.post(f"/tenant/roles/{position_id}/members", data={
+            "admin_id": admin_id,
+        })
+        
+        # 尝试设置负责人（应该失败）
+        resp = self.client.put(f"/tenant/roles/{position_id}/leader", data={
+            "leader_id": admin_id,
+        })
+        assert_error(resp, 400, "岗位类型设置负责人应返回 400 错误")
+        
+        # 清理：移除成员
+        self.client.delete(f"/tenant/roles/{position_id}/members/{admin_id}")
+    
+    def test_department_cannot_add_role_child(self) -> None:
+        """测试部门下不能创建职能角色子节点"""
+        dept_id = self._test_data.get("department_role_id")
+        if not dept_id:
+            raise AssertionError("没有可用的部门角色ID")
+        
+        # 尝试在部门下创建职能角色子节点（应该失败）
+        resp = self.client.post("/tenant/roles", data={
+            "name": "不应该创建的职能角色",
+            "type": "role",
+            "parent_id": dept_id,
+        })
+        assert_error(resp, 400, "部门下创建职能角色子节点应返回 400 错误")
+    
+    def test_delete_functional_role(self) -> None:
+        """测试删除职能角色"""
+        role_id = self._test_data.get("functional_role_id")
+        if not role_id:
+            raise AssertionError("没有可用的职能角色ID")
+        
+        resp = self.client.delete(f"/tenant/roles/{role_id}")
+        assert_success(resp, "删除职能角色失败")
+        
+        del self._test_data["functional_role_id"]
+    
+    def test_delete_position_role(self) -> None:
+        """测试删除岗位角色"""
+        role_id = self._test_data.get("position_role_id")
+        if not role_id:
+            raise AssertionError("没有可用的岗位角色ID")
+        
+        resp = self.client.delete(f"/tenant/roles/{role_id}")
+        assert_success(resp, "删除岗位角色失败")
+        
+        del self._test_data["position_role_id"]
+    
+    def test_delete_department_role(self) -> None:
+        """测试删除部门角色"""
+        role_id = self._test_data.get("department_role_id")
+        if not role_id:
+            raise AssertionError("没有可用的部门角色ID")
+        
+        resp = self.client.delete(f"/tenant/roles/{role_id}")
+        assert_success(resp, "删除部门角色失败")
+        
+        del self._test_data["department_role_id"]
     
     def _do_login(self) -> None:
         """执行登录"""

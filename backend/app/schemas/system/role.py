@@ -12,6 +12,7 @@ from typing import Optional
 from pydantic import Field
 
 from app.core.base_schema import BaseSchema
+from app.enums import RoleType
 
 
 class AdminRoleResponse(BaseSchema):
@@ -31,6 +32,12 @@ class AdminRoleResponse(BaseSchema):
     children_count: int = Field(0, description="子角色数量")
     has_children: bool = Field(False, description="是否有子角色")
     permissions_count: int = Field(0, description="权限数量")
+    # 组织架构字段
+    type: str = Field(RoleType.ROLE.value, description="节点类型: department/position/role")
+    allow_members: bool = Field(True, description="是否允许添加成员")
+    leader_id: int | None = Field(None, description="负责人 ID")
+    leader_name: str | None = Field(None, description="负责人名称")
+    member_count: int = Field(0, description="成员数量")
     created_at: datetime = Field(..., description="创建时间")
 
 
@@ -56,6 +63,9 @@ class AdminRoleCreateRequest(BaseSchema):
     sort_order: int = Field(0, description="排序")
     parent_id: int | None = Field(None, description="父角色 ID，None 表示顶级角色")
     permission_ids: list[int] = Field(default_factory=list, description="权限 ID 列表")
+    # 组织架构字段
+    type: str = Field(RoleType.ROLE.value, description="节点类型: department/position/role")
+    allow_members: bool = Field(True, description="是否允许添加成员")
 
 
 class AdminRoleUpdateRequest(BaseSchema):
@@ -67,6 +77,10 @@ class AdminRoleUpdateRequest(BaseSchema):
     sort_order: int | None = Field(None, description="排序")
     parent_id: int | None = Field(None, description="父角色 ID")
     permission_ids: list[int] | None = Field(None, description="权限 ID 列表")
+    # 组织架构字段
+    type: str | None = Field(None, description="节点类型: department/position/role")
+    allow_members: bool | None = Field(None, description="是否允许添加成员")
+    leader_id: int | None = Field(None, description="负责人 ID")
 
 
 class AdminRolePermissionsRequest(BaseSchema):
@@ -81,6 +95,31 @@ class AdminRoleMoveRequest(BaseSchema):
     new_parent_id: int | None = Field(None, description="新父角色 ID，None 表示移动到根级")
 
 
+# ========== 组织架构管理 Schema ==========
+
+class AdminRoleSetLeaderRequest(BaseSchema):
+    """设置节点负责人请求"""
+    
+    leader_id: int | None = Field(None, description="负责人 ID，None 表示取消负责人")
+
+
+class AdminRoleAddMemberRequest(BaseSchema):
+    """添加成员到节点请求"""
+    
+    admin_id: int = Field(..., description="管理员 ID")
+
+
+class AdminRoleMemberResponse(BaseSchema):
+    """节点成员响应"""
+    
+    id: int = Field(..., description="管理员 ID")
+    username: str = Field(..., description="用户名")
+    nickname: str | None = Field(None, description="昵称")
+    avatar: str | None = Field(None, description="头像")
+    email: str = Field(..., description="邮箱")
+    is_leader: bool = Field(False, description="是否是负责人")
+
+
 __all__ = [
     "AdminRoleResponse",
     "AdminRoleDetailResponse",
@@ -89,4 +128,8 @@ __all__ = [
     "AdminRoleUpdateRequest",
     "AdminRolePermissionsRequest",
     "AdminRoleMoveRequest",
+    # 组织架构管理
+    "AdminRoleSetLeaderRequest",
+    "AdminRoleAddMemberRequest",
+    "AdminRoleMemberResponse",
 ]

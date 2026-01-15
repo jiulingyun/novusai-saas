@@ -177,10 +177,20 @@ def create_application() -> FastAPI:
         logger = get_logger(__name__)
         logger.exception(f"Unhandled exception: {exc}")
         
+        # 调试：打印异常到控制台
+        print(f"\n❌ 全局异常: {type(exc).__name__}: {exc}")
+        import traceback
+        traceback.print_exc()
+
         # error() 返回 JSONResponse
-        return error(message=_("common.server_error"), code=5000, status_code=500)
+        return error(
+            message=_("common.server_error"),
+            code=5000,
+            status_code=500,
+            data=exc.to_dict() if hasattr(exc, "to_dict") else None,
+        )
     
-    # ========================================
+    # ========================================  
     # 注册路由
     # ========================================
     

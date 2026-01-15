@@ -18,6 +18,7 @@ from app.enums.rbac import (
     PermissionType,
     PermissionScope,
 )
+from app.enums.role import RoleType
 
 __all__ = [
     # 基类
@@ -35,4 +36,6 @@ __all__ = [
     # RBAC
     "PermissionType",
     "PermissionScope",
+    # 角色/组织架构
+    "RoleType",
 ]

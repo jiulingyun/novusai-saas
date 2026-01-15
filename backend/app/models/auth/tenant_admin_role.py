@@ -10,6 +10,7 @@ from sqlalchemy import Boolean, String, Integer, Text, Table, Column, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base_model import TenantModel, Base
+from app.enums import RoleType
 
 
 # 角色-权限关联表（多对多）
@@ -45,6 +46,8 @@ class TenantAdminRole(TenantModel):
         "is_active": "is_active",
         "parent_id": "parent_id",
         "level": "level",
+        "type": "type",
+        "leader_id": "leader_id",
         "created_at": "created_at",
         "updated_at": "updated_at",
     }
@@ -112,6 +115,31 @@ class TenantAdminRole(TenantModel):
         comment="层级深度"
     )
     
+    # ========== 组织架构字段 ==========
+    # 节点类型（部门/岗位/角色）
+    type: Mapped[str] = mapped_column(
+        String(20),
+        default=RoleType.ROLE.value,
+        index=True,
+        comment="节点类型: department/position/role"
+    )
+    
+    # 是否允许添加成员
+    allow_members: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        comment="是否允许添加成员"
+    )
+    
+    # 负责人 ID（仅部门类型可设置）
+    leader_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("tenant_admins.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="负责人 ID"
+    )
+    
     # ========== 关联关系 ==========
     # 父角色关系（自引用）
     parent: Mapped["TenantAdminRole | None"] = relationship(
@@ -135,10 +163,18 @@ class TenantAdminRole(TenantModel):
         lazy="selectin",
     )
     
-    # 关联租户管理员（一对多）
+    # 关联租户管理员（一对多）- 节点成员
     admins: Mapped[list["TenantAdmin"]] = relationship(
         "TenantAdmin",
         back_populates="role",
+        lazy="selectin",
+        foreign_keys="TenantAdmin.role_id",
+    )
+    
+    # 负责人关系
+    leader: Mapped["TenantAdmin | None"] = relationship(
+        "TenantAdmin",
+        foreign_keys=[leader_id],
         lazy="selectin",
     )
     
@@ -164,6 +200,23 @@ class TenantAdminRole(TenantModel):
     def has_admins(self) -> bool:
         """是否有关联的管理员"""
         return len([a for a in self.admins if not a.is_deleted]) > 0
+    
+    @property
+    def member_count(self) -> int:
+        """获取节点成员数量"""
+        return len([a for a in self.admins if not a.is_deleted])
+    
+    @property
+    def leader_name(self) -> str | None:
+        """获取负责人名称"""
+        if self.leader and not self.leader.is_deleted:
+            return self.leader.nickname or self.leader.username
+        return None
+    
+    @property
+    def type_enum(self) -> RoleType | None:
+        """获取节点类型枚举"""
+        return RoleType.from_value(self.type)
     
     def has_permission(self, permission_code: str) -> bool:
         """

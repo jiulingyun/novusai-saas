@@ -24,7 +24,8 @@ class AdminRoleRepository(BaseRepository[AdminRole]):
     _scope_fields = {
         "admin": {
             "id", "name", "code", "is_system", "is_active",
-            "parent_id", "level", "created_at", "updated_at",
+            "parent_id", "level", "type", "leader_id",
+            "created_at", "updated_at",
         },
     }
     
@@ -324,6 +325,169 @@ class AdminRoleRepository(BaseRepository[AdminRole]):
         result = await self.db.execute(query)
         count = result.scalar() or 0
         return count > 0
+    
+    # ========== 组织架构查询方法 ==========
+    
+    async def get_by_type(
+        self,
+        role_type: str,
+        include_deleted: bool = False,
+    ) -> list[AdminRole]:
+        """
+        根据节点类型获取角色列表
+        
+        Args:
+            role_type: 节点类型 (department/position/role)
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            角色列表
+        """
+        query = select(self.model).where(
+            self.model.type == role_type
+        )
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        query = query.order_by(self.model.sort_order.asc(), self.model.id.asc())
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+    
+    async def get_departments(
+        self,
+        include_deleted: bool = False,
+    ) -> list[AdminRole]:
+        """
+        获取所有部门节点
+        
+        Args:
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            部门列表
+        """
+        return await self.get_by_type("department", include_deleted)
+    
+    async def get_members(
+        self,
+        role_id: int,
+        include_deleted: bool = False,
+    ) -> list:
+        """
+        获取节点成员列表
+        
+        Args:
+            role_id: 角色/节点 ID
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            成员列表 (Admin)
+        """
+        from app.models.system.admin import Admin
+        
+        query = select(Admin).where(
+            Admin.role_id == role_id
+        )
+        
+        if not include_deleted:
+            query = query.where(Admin.is_deleted == False)
+        
+        query = query.order_by(Admin.id.asc())
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+    
+    async def count_members(
+        self,
+        role_id: int,
+        include_deleted: bool = False,
+    ) -> int:
+        """
+        统计节点成员数量
+        
+        Args:
+            role_id: 角色/节点 ID
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            成员数量
+        """
+        from app.models.system.admin import Admin
+        
+        query = select(func.count(Admin.id)).where(
+            Admin.role_id == role_id
+        )
+        
+        if not include_deleted:
+            query = query.where(Admin.is_deleted == False)
+        
+        result = await self.db.execute(query)
+        return result.scalar() or 0
+    
+    async def get_with_members(
+        self,
+        role_id: int,
+        include_deleted: bool = False,
+    ) -> AdminRole | None:
+        """
+        获取角色并加载成员关系
+        
+        Args:
+            role_id: 角色 ID
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            角色实例（含成员列表）
+        """
+        query = select(self.model).where(
+            self.model.id == role_id
+        )
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        query = query.options(
+            selectinload(self.model.admins),
+            selectinload(self.model.leader),
+        )
+        
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+    
+    async def get_organization_tree(
+        self,
+        include_deleted: bool = False,
+    ) -> list[AdminRole]:
+        """
+        获取组织架构树（含成员信息）
+        
+        Args:
+            include_deleted: 是否包含已删除记录
+        
+        Returns:
+            角色列表（平铺，按层级排序，含成员列表）
+        """
+        query = select(self.model)
+        
+        if not include_deleted:
+            query = query.where(self.model.is_deleted == False)
+        
+        # 加载关联数据
+        query = query.options(
+            selectinload(self.model.children),
+            selectinload(self.model.admins),
+            selectinload(self.model.leader),
+        )
+        query = query.order_by(
+            self.model.level.asc(),
+            self.model.sort_order.asc(),
+            self.model.id.asc(),
+        )
+        
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 
 
 __all__ = ["AdminRoleRepository"]

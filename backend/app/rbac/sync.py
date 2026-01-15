@@ -78,14 +78,23 @@ class PermissionSyncService:
         Returns:
             {"created": n, "updated": n, "disabled": n}
         """
+        print("🔄 开始同步权限...")
         registered_permissions = permission_registry.get_all()
+        print(f"📊 注册的权限数量: {len(registered_permissions)}")
         # 使用 code:scope 作为唯一标识
         registered_keys = {
             self._make_key(p.code, p.scope.value) for p in registered_permissions
         }
-        
+        print("🔍 正在查询数据库现有权限...")
+        import sys
+        sys.stdout.flush()
         # 获取数据库中现有权限
-        result = await self.db.execute(select(Permission))
+        try:
+            result = await self.db.execute(select(Permission))
+            print("✅ 数据库查询完成")
+        except Exception as e:
+            print(f"❌ 数据库查询失败: {e}")
+            raise
         existing_permissions = result.scalars().all()
         # 使用 code:scope 作为唯一标识
         existing_keys = {

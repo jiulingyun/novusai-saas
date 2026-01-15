@@ -15,8 +15,10 @@ from app.core.i18n import _
 from app.exceptions import BusinessException, NotFoundException
 from app.models.auth.admin_role import AdminRole
 from app.models.auth.permission import Permission
+from app.models.system.admin import Admin
 from app.repositories.system.admin_role_repository import AdminRoleRepository
 from app.services.common.role_tree_mixin import RoleTreeMixin, MAX_ROLE_DEPTH
+from app.enums import RoleType
 
 
 class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMixin[AdminRole]):
@@ -53,6 +55,8 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         is_active: bool = True,
         sort_order: int = 0,
         parent_id: int | None = None,
+        type: str = RoleType.ROLE.value,
+        allow_members: bool = True,
     ) -> AdminRole:
         """
         创建角色
@@ -69,13 +73,22 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             创建的角色
         
         Raises:
-            BusinessException: 父角色无效
+            BusinessException: 父角色无效或子节点类型不允许
         """
         # 自动生成唯一代码
         code = self._generate_role_code()
         
         # 验证父角色并获取 path 和 level
         parent_path, parent_level = await self.validate_parent(parent_id)
+        
+        # 验证子节点类型是否允许
+        if parent_id:
+            parent_role = await self.repo.get_by_id(parent_id)
+            if parent_role and not self.validate_child_type(parent_role.type, type):
+                raise BusinessException(
+                    message=_("role.invalid_child_type"),
+                    code=4108,
+                )
         
         # 检查深度限制
         new_level = self._calculate_level(parent_level)
@@ -95,6 +108,8 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             "sort_order": sort_order,
             "parent_id": parent_id,
             "level": new_level,
+            "type": type,
+            "allow_members": allow_members,
         }
         
         role = await self.repo.create(data)
@@ -267,6 +282,210 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             顶级角色列表
         """
         return await self.repo.get_root_roles()
+    
+    # ========== 组织架构管理方法 ==========
+    
+    def validate_child_type(self, parent_type: str, child_type: str) -> bool:
+        """
+        验证子节点类型是否允许
+        
+        规则:
+        - department: 可添加 department, position
+        - position: 不可添加子节点
+        - role: 可添加 role
+        
+        Args:
+            parent_type: 父节点类型
+            child_type: 子节点类型
+        
+        Returns:
+            是否允许
+        """
+        allowed = {
+            RoleType.DEPARTMENT.value: {RoleType.DEPARTMENT.value, RoleType.POSITION.value},
+            RoleType.POSITION.value: set(),  # 岗位不可添加子节点
+            RoleType.ROLE.value: {RoleType.ROLE.value},
+        }
+        return child_type in allowed.get(parent_type, set())
+    
+    async def set_leader(
+        self,
+        role_id: int,
+        leader_id: int | None,
+    ) -> AdminRole:
+        """
+        设置节点负责人
+        
+        Args:
+            role_id: 角色/节点 ID
+            leader_id: 负责人 ID，None 表示取消
+        
+        Returns:
+            更新后的角色
+        
+        Raises:
+            NotFoundException: 角色或负责人不存在
+            BusinessException: 节点类型不支持设置负责人
+        """
+        role = await self.repo.get_by_id(role_id)
+        if not role:
+            raise NotFoundException(message=_("role.not_found"))
+        
+        # 只有部门类型可以设置负责人
+        if role.type != RoleType.DEPARTMENT.value:
+            raise BusinessException(
+                message=_("role.only_department_can_set_leader"),
+                code=4109,
+            )
+        
+        # 验证负责人是否存在
+        if leader_id:
+            query = select(Admin).where(
+                Admin.id == leader_id,
+                Admin.is_deleted == False,
+            )
+            result = await self.db.execute(query)
+            leader = result.scalar_one_or_none()
+            if not leader:
+                raise NotFoundException(message=_("admin.not_found"))
+        
+        await self.repo.update(role_id, {"leader_id": leader_id})
+        return await self.repo.get_by_id(role_id)
+    
+    async def get_organization_tree(self) -> list[AdminRole]:
+        """
+        获取组织架构树（含成员信息）
+        
+        Returns:
+            角色列表（平铺，按层级排序）
+        """
+        return await self.repo.get_organization_tree()
+    
+    async def add_member(
+        self,
+        role_id: int,
+        admin_id: int,
+    ) -> AdminRole:
+        """
+        添加成员到节点
+        
+        Args:
+            role_id: 角色/节点 ID
+            admin_id: 管理员 ID
+        
+        Returns:
+            更新后的角色
+        
+        Raises:
+            NotFoundException: 角色或管理员不存在
+            BusinessException: 节点不允许添加成员或成员已存在
+        """
+        role = await self.repo.get_by_id(role_id)
+        if not role:
+            raise NotFoundException(message=_("role.not_found"))
+        
+        # 检查是否允许添加成员
+        if not role.allow_members:
+            raise BusinessException(
+                message=_("role.cannot_add_member"),
+                code=4110,
+            )
+        
+        # 获取管理员
+        query = select(Admin).where(
+            Admin.id == admin_id,
+            Admin.is_deleted == False,
+        )
+        result = await self.db.execute(query)
+        admin = result.scalar_one_or_none()
+        if not admin:
+            raise NotFoundException(message=_("admin.not_found"))
+        
+        # 检查是否已是该节点成员
+        if admin.role_id == role_id:
+            raise BusinessException(
+                message=_("role.member_exists"),
+                code=4111,
+            )
+        
+        # 更新管理员的角色
+        admin.role_id = role_id
+        await self.db.flush()
+        
+        # 重新加载角色信息
+        return await self.repo.get_by_id(role_id)
+    
+    async def remove_member(
+        self,
+        role_id: int,
+        admin_id: int,
+    ) -> AdminRole:
+        """
+        从节点移除成员
+        
+        Args:
+            role_id: 角色/节点 ID
+            admin_id: 管理员 ID
+        
+        Returns:
+            更新后的角色
+        
+        Raises:
+            NotFoundException: 角色或管理员不存在
+            BusinessException: 管理员不是该节点成员
+        """
+        role = await self.repo.get_by_id(role_id)
+        if not role:
+            raise NotFoundException(message=_("role.not_found"))
+        
+        # 获取管理员
+        query = select(Admin).where(
+            Admin.id == admin_id,
+            Admin.is_deleted == False,
+        )
+        result = await self.db.execute(query)
+        admin = result.scalar_one_or_none()
+        if not admin:
+            raise NotFoundException(message=_("admin.not_found"))
+        
+        # 检查是否是该节点成员
+        if admin.role_id != role_id:
+            raise BusinessException(
+                message=_("role.member_not_in_node"),
+                code=4112,
+            )
+        
+        # 如果是负责人，先取消负责人
+        if role.leader_id == admin_id:
+            await self.repo.update(role_id, {"leader_id": None})
+        
+        # 移除成员（将 role_id 设为 None）
+        admin.role_id = None
+        await self.db.flush()
+        
+        return await self.repo.get_by_id(role_id)
+    
+    async def get_members(
+        self,
+        role_id: int,
+    ) -> list[Admin]:
+        """
+        获取节点成员列表
+        
+        Args:
+            role_id: 角色/节点 ID
+        
+        Returns:
+            成员列表
+        
+        Raises:
+            NotFoundException: 角色不存在
+        """
+        role = await self.repo.get_by_id(role_id)
+        if not role:
+            raise NotFoundException(message=_("role.not_found"))
+        
+        return await self.repo.get_members(role_id)
 
 
 __all__ = ["AdminRoleService"]

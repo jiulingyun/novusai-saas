@@ -33,6 +33,9 @@ from app.schemas.system import (
     AdminRoleUpdateRequest,
     AdminRolePermissionsRequest,
     AdminRoleMoveRequest,
+    AdminRoleSetLeaderRequest,
+    AdminRoleAddMemberRequest,
+    AdminRoleMemberResponse,
 )
 from app.schemas.common import PermissionResponse
 from app.services.system.admin_role_service import AdminRoleService
@@ -173,6 +176,26 @@ class AdminRoleController(GlobalController):
             
             tree = await service.get_tree(parent_id=current_admin.role_id)
             return success(data=tree, message=_("common.success"))
+        
+        @router.get("/organization", summary="获取组织架构树")
+        @action_read("action.role.organization")
+        async def get_organization_tree(
+            request: Request,
+            db: DbSession,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            获取组织架构树（含成员信息）
+            
+            权限: role:organization
+            """
+            service = AdminRoleService(db)
+            roles = await service.get_organization_tree()
+            
+            return success(
+                data=[AdminRoleResponse.model_validate(r, from_attributes=True) for r in roles],
+                message=_("common.success"),
+            )
         
         @router.get("/{role_id}", summary="获取角色详情")
         @action_read("action.role.detail")
@@ -363,6 +386,8 @@ class AdminRoleController(GlobalController):
                     is_active=data.is_active,
                     sort_order=data.sort_order,
                     parent_id=data.parent_id,
+                    type=data.type,
+                    allow_members=data.allow_members,
                 )
                 
                 # 分配权限
@@ -667,6 +692,195 @@ class AdminRoleController(GlobalController):
             except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
+        
+        # ========== 组织架构管理 API ==========
+        
+        @router.get("/{role_id}/members", summary="获取节点成员列表")
+        @action_read("action.role.members")
+        async def get_role_members(
+            request: Request,
+            db: DbSession,
+            role_id: int,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            获取节点成员列表
+            
+            权限: role:members
+            """
+            # 校验角色可见性
+            validator = AdminRoleHierarchyValidator(db, current_admin)
+            if not await validator.can_view_role(role_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=_("role.no_permission_to_view"),
+                )
+            
+            service = AdminRoleService(db)
+            
+            try:
+                # 获取角色信息（用于判断负责人）
+                role = await service.repo.get_by_id(role_id)
+                if not role:
+                    raise NotFoundException(message=_("role.not_found"))
+                
+                members = await service.get_members(role_id)
+                
+                return success(
+                    data=[
+                        AdminRoleMemberResponse(
+                            id=m.id,
+                            username=m.username,
+                            nickname=m.nickname,
+                            avatar=m.avatar,
+                            email=m.email,
+                            is_leader=(role.leader_id == m.id),
+                        )
+                        for m in members
+                    ],
+                    message=_("common.success"),
+                )
+                
+            except NotFoundException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
+        
+        @router.post("/{role_id}/members", summary="添加成员到节点")
+        @action_update("action.role.add_member")
+        async def add_member_to_role(
+            request: Request,
+            db: DbSession,
+            role_id: int,
+            data: AdminRoleAddMemberRequest,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            添加成员到节点
+            
+            权限: role:add_member
+            """
+            # 校验角色可管理性
+            validator = AdminRoleHierarchyValidator(db, current_admin)
+            if not await validator.can_manage_role(role_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=_("role.no_permission_to_manage"),
+                )
+            
+            service = AdminRoleService(db)
+            
+            try:
+                role = await service.add_member(role_id, data.admin_id)
+                await db.commit()
+                
+                # 返回成功消息，不返回完整角色数据（避免 session 断开后的懒加载问题）
+                return success(
+                    data={"role_id": role_id},
+                    message=_("role.member_added"),
+                )
+                
+            except NotFoundException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
+            except BusinessException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(e.message),
+                )
+        
+        @router.delete("/{role_id}/members/{admin_id}", summary="从节点移除成员")
+        @action_update("action.role.remove_member")
+        async def remove_member_from_role(
+            request: Request,
+            db: DbSession,
+            role_id: int,
+            admin_id: int,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            从节点移除成员
+            
+            权限: role:remove_member
+            """
+            # 校验角色可管理性
+            validator = AdminRoleHierarchyValidator(db, current_admin)
+            if not await validator.can_manage_role(role_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=_("role.no_permission_to_manage"),
+                )
+            
+            service = AdminRoleService(db)
+            
+            try:
+                role = await service.remove_member(role_id, admin_id)
+                await db.commit()
+                
+                # 返回成功消息，不返回完整角色数据（避免 session 断开后的懒加载问题）
+                return success(
+                    data={"role_id": role_id},
+                    message=_("role.member_removed"),
+                )
+                
+            except NotFoundException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
+            except BusinessException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(e.message),
+                )
+        
+        @router.put("/{role_id}/leader", summary="设置节点负责人")
+        @action_update("action.role.set_leader")
+        async def set_role_leader(
+            request: Request,
+            db: DbSession,
+            role_id: int,
+            data: AdminRoleSetLeaderRequest,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            设置节点负责人（仅部门类型可设置）
+            
+            权限: role:set_leader
+            """
+            # 校验角色可管理性
+            validator = AdminRoleHierarchyValidator(db, current_admin)
+            if not await validator.can_manage_role(role_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=_("role.no_permission_to_manage"),
+                )
+            
+            service = AdminRoleService(db)
+            
+            try:
+                role = await service.set_leader(role_id, data.leader_id)
+                await db.commit()
+                
+                # 返回成功消息，不返回完整角色数据（避免 session 断开后的懒加载问题）
+                return success(
+                    data={"role_id": role_id, "leader_id": data.leader_id},
+                    message=_("role.leader_set"),
+                )
+                
+            except NotFoundException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
+            except BusinessException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
                     detail=str(e.message),
                 )
 

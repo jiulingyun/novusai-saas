@@ -19,6 +19,9 @@ from app.schemas.system.role import (
     AdminRoleUpdateRequest,
     AdminRolePermissionsRequest,
     AdminRoleMoveRequest,
+    AdminRoleSetLeaderRequest,
+    AdminRoleAddMemberRequest,
+    AdminRoleMemberResponse,
 )
 from app.schemas.system.tenant import (
     TenantResponse,
@@ -44,6 +47,9 @@ __all__ = [
     "AdminRoleUpdateRequest",
     "AdminRolePermissionsRequest",
     "AdminRoleMoveRequest",
+    "AdminRoleSetLeaderRequest",
+    "AdminRoleAddMemberRequest",
+    "AdminRoleMemberResponse",
     # Tenant
     "TenantResponse",
     "TenantCreateRequest",
