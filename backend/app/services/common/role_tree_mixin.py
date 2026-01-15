@@ -7,6 +7,7 @@
 from typing import Any, TypeVar, Generic, TYPE_CHECKING
 
 from app.core.i18n import _
+from app.enums import ErrorCode
 from app.exceptions import BusinessException, NotFoundException
 
 if TYPE_CHECKING:
@@ -195,7 +196,7 @@ class RoleTreeMixin(Generic[RoleType]):
         if new_parent_id == role_id:
             raise BusinessException(
                 message=_("role.cannot_set_self_as_parent"),
-                code=4101,
+                code=ErrorCode.ROLE_CANNOT_SET_SELF_AS_PARENT,
             )
         
         # 如果新父级与当前父级相同，无需操作
@@ -220,7 +221,7 @@ class RoleTreeMixin(Generic[RoleType]):
             if new_parent_id in descendant_ids:
                 raise BusinessException(
                     message=_("role.circular_reference"),
-                    code=4102,
+                    code=ErrorCode.ROLE_CIRCULAR_REFERENCE,
                 )
         
         # 计算新的层级深度
@@ -233,7 +234,7 @@ class RoleTreeMixin(Generic[RoleType]):
         if total_depth > MAX_ROLE_DEPTH:
             raise BusinessException(
                 message=_("role.max_depth_exceeded"),
-                code=4103,
+                code=ErrorCode.ROLE_MAX_DEPTH_EXCEEDED,
             )
         
         # 计算新 path
@@ -437,7 +438,7 @@ class RoleTreeMixin(Generic[RoleType]):
         if exclude_id and parent_id == exclude_id:
             raise BusinessException(
                 message=_("role.cannot_set_self_as_parent"),
-                code=4101,
+                code=ErrorCode.ROLE_CANNOT_SET_SELF_AS_PARENT,
             )
         
         parent = await self.repo.get_by_id(parent_id)
@@ -450,7 +451,7 @@ class RoleTreeMixin(Generic[RoleType]):
             if parent_id in descendant_ids:
                 raise BusinessException(
                     message=_("role.circular_reference"),
-                    code=4102,
+                    code=ErrorCode.ROLE_CIRCULAR_REFERENCE,
                 )
         
         return parent.path or f"/{parent_id}/", parent.level or 1

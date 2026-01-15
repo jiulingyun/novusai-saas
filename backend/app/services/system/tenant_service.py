@@ -11,6 +11,7 @@ from typing import Any
 
 from app.core.base_service import GlobalService
 from app.core.i18n import _
+from app.enums import ErrorCode
 from app.exceptions import BusinessException, NotFoundException
 from app.models.tenant.tenant import Tenant
 from app.repositories.system.tenant_repository import TenantRepository
@@ -140,7 +141,7 @@ class TenantService(GlobalService[Tenant, TenantRepository]):
                 if await self.repo.code_exists(data["code"], exclude_id=tenant_id):
                     raise BusinessException(
                         message=_("tenant.code_exists"),
-                        code=4001,
+                        code=ErrorCode.DUPLICATE_ENTRY,
                     )
         
         result = await self.update(tenant_id, data)

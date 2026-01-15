@@ -290,5 +290,52 @@
       "position": "岗位",
       "role": "职能角色"
     }
+  },
+  "error": {
+    "unknown": "未知错误",
+    "common": {
+      "validation_error": "数据验证失败",
+      "duplicate_entry": "数据已存在",
+      "invalid_parameter": "参数无效",
+      "old_password_incorrect": "原密码错误",
+      "not_found": "资源不存在",
+      "conflict": "资源冲突"
+    },
+    "auth": {
+      "unauthorized": "未授权访问",
+      "token_expired": "令牌已过期",
+      "token_invalid": "无效令牌",
+      "forbidden": "禁止访问",
+      "permission_denied": "权限不足"
+    },
+    "role": {
+      "cannot_set_self_as_parent": "不能将自己设为父角色",
+      "circular_reference": "检测到循环引用",
+      "max_depth_exceeded": "超出最大层级深度限制",
+      "system_cannot_change_parent": "系统内置角色不可修改父级关系",
+      "system_cannot_delete": "系统内置角色不可删除",
+      "has_children": "角色存在子角色，请先删除或移动子角色",
+      "has_users": "角色下存在关联用户，请先移除用户的角色关联",
+      "invalid_child_type": "当前节点类型不允许添加此类型的子节点",
+      "only_department_can_set_leader": "只有部门类型节点才能设置负责人",
+      "cannot_add_member": "当前节点类型不允许添加成员",
+      "member_exists": "成员已存在于该节点",
+      "member_not_in_node": "成员不在该节点中"
+    },
+    "domain": {
+      "custom_disabled": "当前套餐不支持自定义域名",
+      "quota_exceeded": "自定义域名数量已达上限",
+      "already_exists": "域名已被使用"
+    },
+    "admin": {
+      "username_exists": "用户名已被占用",
+      "email_exists": "邮箱已被使用",
+      "phone_exists": "手机号已被使用"
+    },
+    "server": {
+      "internal_error": "服务器内部错误",
+      "external_service_error": "外部服务调用失败",
+      "service_unavailable": "服务暂不可用"
+    }
   }
 }

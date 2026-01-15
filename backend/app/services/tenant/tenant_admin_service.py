@@ -9,6 +9,7 @@ from typing import Any
 from app.core.base_service import TenantService
 from app.core.i18n import _
 from app.core.security import get_password_hash, verify_password
+from app.enums import ErrorCode
 from app.exceptions import BusinessException, NotFoundException
 from app.models.tenant.tenant_admin import TenantAdmin
 from app.repositories.tenant.tenant_admin_repository import TenantAdminRepository
@@ -97,21 +98,21 @@ class TenantAdminService(TenantService[TenantAdmin, TenantAdminRepository]):
         if await self.repo.username_exists(username):
             raise BusinessException(
                 message=_("tenant_admin.username_exists"),
-                code=4001,
+                code=ErrorCode.ADMIN_USERNAME_EXISTS,
             )
         
         # 检查邮箱是否已存在（租户内唯一）
         if await self.repo.email_exists(email):
             raise BusinessException(
                 message=_("tenant_admin.email_exists"),
-                code=4002,
+                code=ErrorCode.ADMIN_EMAIL_EXISTS,
             )
         
         # 检查手机号是否已存在（租户内唯一）
         if phone and await self.repo.phone_exists(phone):
             raise BusinessException(
                 message=_("tenant_admin.phone_exists"),
-                code=4003,
+                code=ErrorCode.ADMIN_PHONE_EXISTS,
             )
         
         # 创建管理员（tenant_id 由 TenantService 自动注入）
@@ -158,7 +159,7 @@ class TenantAdminService(TenantService[TenantAdmin, TenantAdminRepository]):
             if await self.repo.email_exists(data["email"], exclude_id=admin_id):
                 raise BusinessException(
                     message=_("tenant_admin.email_exists"),
-                    code=4002,
+                    code=ErrorCode.ADMIN_EMAIL_EXISTS,
                 )
         
         # 检查手机号是否已被其他管理员使用
@@ -166,7 +167,7 @@ class TenantAdminService(TenantService[TenantAdmin, TenantAdminRepository]):
             if await self.repo.phone_exists(data["phone"], exclude_id=admin_id):
                 raise BusinessException(
                     message=_("tenant_admin.phone_exists"),
-                    code=4003,
+                    code=ErrorCode.ADMIN_PHONE_EXISTS,
                 )
         
         # 移除不允许直接更新的字段
@@ -211,7 +212,7 @@ class TenantAdminService(TenantService[TenantAdmin, TenantAdminRepository]):
         if not verify_password(old_password, admin.password_hash):
             raise BusinessException(
                 message=_("tenant_admin.password_incorrect"),
-                code=4004,
+                code=ErrorCode.OLD_PASSWORD_INCORRECT,
             )
         
         # 更新密码

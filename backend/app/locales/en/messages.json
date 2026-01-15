@@ -290,5 +290,52 @@
       "position": "Position",
       "role": "Functional Role"
     }
+  },
+  "error": {
+    "unknown": "Unknown error",
+    "common": {
+      "validation_error": "Validation failed",
+      "duplicate_entry": "Data already exists",
+      "invalid_parameter": "Invalid parameter",
+      "old_password_incorrect": "Old password is incorrect",
+      "not_found": "Resource not found",
+      "conflict": "Resource conflict"
+    },
+    "auth": {
+      "unauthorized": "Unauthorized access",
+      "token_expired": "Token has expired",
+      "token_invalid": "Invalid token",
+      "forbidden": "Access forbidden",
+      "permission_denied": "Permission denied"
+    },
+    "role": {
+      "cannot_set_self_as_parent": "Cannot set self as parent role",
+      "circular_reference": "Circular reference detected",
+      "max_depth_exceeded": "Maximum hierarchy depth exceeded",
+      "system_cannot_change_parent": "System role cannot change parent",
+      "system_cannot_delete": "System role cannot be deleted",
+      "has_children": "Role has child roles, please delete or move them first",
+      "has_users": "Role has associated users, please remove them first",
+      "invalid_child_type": "Cannot add child of this type to current node",
+      "only_department_can_set_leader": "Only department nodes can have a leader",
+      "cannot_add_member": "Cannot add members to this node type",
+      "member_exists": "Member already exists in this node",
+      "member_not_in_node": "Member is not in this node"
+    },
+    "domain": {
+      "custom_disabled": "Custom domains not supported by current plan",
+      "quota_exceeded": "Custom domain limit reached",
+      "already_exists": "Domain is already in use"
+    },
+    "admin": {
+      "username_exists": "Username already taken",
+      "email_exists": "Email already in use",
+      "phone_exists": "Phone number already in use"
+    },
+    "server": {
+      "internal_error": "Internal server error",
+      "external_service_error": "External service call failed",
+      "service_unavailable": "Service temporarily unavailable"
+    }
   }
 }

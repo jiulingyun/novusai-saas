@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.base_service import TenantService
 from app.core.config import settings
 from app.core.i18n import _
+from app.enums import ErrorCode
 from app.exceptions import BusinessException, NotFoundException
 from app.models import Tenant, TenantDomain
 from app.repositories.system.tenant_repository import TenantRepository
@@ -212,7 +213,7 @@ class TenantSettingsService(TenantService[Tenant, TenantRepository]):
         if not settings.ALLOW_CUSTOM_DOMAIN:
             raise BusinessException(
                 message=_("domain.custom_domain_disabled"),
-                code=4201,
+                code=ErrorCode.DOMAIN_CUSTOM_DISABLED,
             )
         
         # 检查配额
@@ -220,7 +221,7 @@ class TenantSettingsService(TenantService[Tenant, TenantRepository]):
         if current_count >= tenant.max_custom_domains:
             raise BusinessException(
                 message=_("domain.quota_exceeded"),
-                code=4202,
+                code=ErrorCode.DOMAIN_QUOTA_EXCEEDED,
             )
         
         # 检查域名是否已被使用
@@ -233,7 +234,7 @@ class TenantSettingsService(TenantService[Tenant, TenantRepository]):
         if existing_result.scalar_one_or_none():
             raise BusinessException(
                 message=_("domain.already_exists"),
-                code=4203,
+                code=ErrorCode.DOMAIN_ALREADY_EXISTS,
             )
         
         # 如果设为主域名，先取消其他主域名

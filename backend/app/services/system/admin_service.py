@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.base_service import GlobalService
 from app.core.i18n import _
 from app.core.security import get_password_hash, verify_password
+from app.enums import ErrorCode
 from app.exceptions import BusinessException, NotFoundException
 from app.models.system.admin import Admin
 from app.repositories.system.admin_repository import AdminRepository
@@ -99,21 +100,21 @@ class AdminService(GlobalService[Admin, AdminRepository]):
         if await self.repo.username_exists(username):
             raise BusinessException(
                 message=_("admin.username_exists"),
-                code=4001,
+                code=ErrorCode.ADMIN_USERNAME_EXISTS,
             )
         
         # 检查邮箱是否已存在
         if await self.repo.email_exists(email):
             raise BusinessException(
                 message=_("admin.email_exists"),
-                code=4002,
+                code=ErrorCode.ADMIN_EMAIL_EXISTS,
             )
         
         # 检查手机号是否已存在
         if phone and await self.repo.phone_exists(phone):
             raise BusinessException(
                 message=_("admin.phone_exists"),
-                code=4003,
+                code=ErrorCode.ADMIN_PHONE_EXISTS,
             )
         
         # 创建管理员
@@ -160,7 +161,7 @@ class AdminService(GlobalService[Admin, AdminRepository]):
             if await self.repo.email_exists(data["email"], exclude_id=admin_id):
                 raise BusinessException(
                     message=_("admin.email_exists"),
-                    code=4002,
+                    code=ErrorCode.ADMIN_EMAIL_EXISTS,
                 )
         
         # 检查手机号是否已被其他管理员使用
@@ -168,7 +169,7 @@ class AdminService(GlobalService[Admin, AdminRepository]):
             if await self.repo.phone_exists(data["phone"], exclude_id=admin_id):
                 raise BusinessException(
                     message=_("admin.phone_exists"),
-                    code=4003,
+                    code=ErrorCode.ADMIN_PHONE_EXISTS,
                 )
         
         # 移除不允许直接更新的字段
@@ -212,7 +213,7 @@ class AdminService(GlobalService[Admin, AdminRepository]):
         if not verify_password(old_password, admin.password_hash):
             raise BusinessException(
                 message=_("admin.password_incorrect"),
-                code=4004,
+                code=ErrorCode.OLD_PASSWORD_INCORRECT,
             )
         
         # 更新密码

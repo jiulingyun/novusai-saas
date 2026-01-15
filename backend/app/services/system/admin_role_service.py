@@ -12,13 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.base_service import GlobalService
 from app.core.i18n import _
+from app.enums import ErrorCode, RoleType
+from app.services.common import MAX_ROLE_DEPTH
 from app.exceptions import BusinessException, NotFoundException
 from app.models.auth.admin_role import AdminRole
 from app.models.auth.permission import Permission
 from app.models.system.admin import Admin
 from app.repositories.system.admin_role_repository import AdminRoleRepository
-from app.services.common.role_tree_mixin import RoleTreeMixin, MAX_ROLE_DEPTH
-from app.enums import RoleType
+from app.services.common.role_tree_mixin import RoleTreeMixin
 
 
 class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMixin[AdminRole]):
@@ -87,7 +88,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             if parent_role and not self.validate_child_type(parent_role.type, type):
                 raise BusinessException(
                     message=_("role.invalid_child_type"),
-                    code=4108,
+                    code=ErrorCode.ROLE_INVALID_CHILD_TYPE,
                 )
         
         # 检查深度限制
@@ -95,7 +96,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if new_level > MAX_ROLE_DEPTH:
             raise BusinessException(
                 message=_("role.max_depth_exceeded"),
-                code=4103,
+                code=ErrorCode.ROLE_MAX_DEPTH_EXCEEDED,
             )
         
         # 创建角色（先不设置 path，需要先获取 ID）
@@ -148,7 +149,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if role.is_system and "parent_id" in data:
             raise BusinessException(
                 message=_("role.system_role_cannot_change_parent"),
-                code=4104,
+                code=ErrorCode.ROLE_SYSTEM_CANNOT_CHANGE_PARENT,
             )
         
         # 检查代码是否已被其他角色使用
@@ -156,7 +157,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             if await self.repo.code_exists(data["code"], exclude_id=role_id):
                 raise BusinessException(
                     message=_("role.code_exists"),
-                    code=4001,
+                    code=ErrorCode.DUPLICATE_ENTRY,
                 )
         
         # 如果更新了父角色，需要验证并更新 path/level
@@ -171,7 +172,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
             if new_level + max_descendant_depth > MAX_ROLE_DEPTH:
                 raise BusinessException(
                     message=_("role.max_depth_exceeded"),
-                    code=4103,
+                    code=ErrorCode.ROLE_MAX_DEPTH_EXCEEDED,
                 )
             
             # 计算新 path
@@ -218,21 +219,21 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if role.is_system:
             raise BusinessException(
                 message=_("role.system_role_cannot_delete"),
-                code=4105,
+                code=ErrorCode.ROLE_SYSTEM_CANNOT_DELETE,
             )
         
         # 检查是否有子角色（使用 repository 方法避免 lazy-load 问题）
         if await self.repo.has_children(role_id):
             raise BusinessException(
                 message=_("role.has_children"),
-                code=4106,
+                code=ErrorCode.ROLE_HAS_CHILDREN,
             )
         
         # 检查是否有关联的管理员（使用 repository 方法避免 lazy-load 问题）
         if await self.repo.has_admins(role_id):
             raise BusinessException(
                 message=_("role.has_users"),
-                code=4107,
+                code=ErrorCode.ROLE_HAS_USERS,
             )
         
         return await self.repo.delete(role_id)
@@ -335,7 +336,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if role.type != RoleType.DEPARTMENT.value:
             raise BusinessException(
                 message=_("role.only_department_can_set_leader"),
-                code=4109,
+                code=ErrorCode.ROLE_ONLY_DEPARTMENT_CAN_SET_LEADER,
             )
         
         # 验证负责人是否存在
@@ -388,7 +389,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if not role.allow_members:
             raise BusinessException(
                 message=_("role.cannot_add_member"),
-                code=4110,
+                code=ErrorCode.ROLE_CANNOT_ADD_MEMBER,
             )
         
         # 获取管理员
@@ -405,7 +406,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if admin.role_id == role_id:
             raise BusinessException(
                 message=_("role.member_exists"),
-                code=4111,
+                code=ErrorCode.ROLE_MEMBER_EXISTS,
             )
         
         # 更新管理员的角色
@@ -452,7 +453,7 @@ class AdminRoleService(GlobalService[AdminRole, AdminRoleRepository], RoleTreeMi
         if admin.role_id != role_id:
             raise BusinessException(
                 message=_("role.member_not_in_node"),
-                code=4112,
+                code=ErrorCode.ROLE_MEMBER_NOT_IN_NODE,
             )
         
         # 如果是负责人，先取消负责人
