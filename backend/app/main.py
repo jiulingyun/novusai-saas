@@ -173,21 +173,26 @@ def create_application() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
         """全局异常处理器 - 捕获未处理的异常"""
+        import traceback
+        
         # 记录异常日志
         logger = get_logger(__name__)
         logger.exception(f"Unhandled exception: {exc}")
         
-        # 调试：打印异常到控制台
-        print(f"\n❌ 全局异常: {type(exc).__name__}: {exc}")
-        import traceback
-        traceback.print_exc()
-
-        # error() 返回 JSONResponse
+        # DEBUG 模式下返回堆栈跟踪信息
+        error_data = None
+        if settings.DEBUG:
+            error_data = {
+                "type": type(exc).__name__,
+                "message": str(exc),
+                "traceback": traceback.format_exc(),
+            }
+        
         return error(
             message=_("common.server_error"),
             code=5000,
             status_code=500,
-            data=exc.to_dict() if hasattr(exc, "to_dict") else None,
+            data=error_data,
         )
     
     # ========================================  
