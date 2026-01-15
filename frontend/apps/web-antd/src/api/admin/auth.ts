@@ -14,7 +14,9 @@ import type {
 
 import { useAccessStore } from '@vben/stores';
 
-import { baseRequestClient, requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { baseRequestClient, requestClient } from '#/utils/request';
 
 // Logout 使用 baseRequestClient 避免 401 时循环调用
 
@@ -24,10 +26,14 @@ const API_PREFIX = '/admin/auth';
  * 管理员登录
  * 后端返回 snake_case，转换为 camelCase
  */
-export async function adminLoginApi(data: LoginParams): Promise<LoginResult> {
+export async function adminLoginApi(
+  data: LoginParams,
+  options?: ApiRequestOptions,
+): Promise<LoginResult> {
   const response = await requestClient.post<LoginResultRaw>(
     `${API_PREFIX}/login`,
     data,
+    options,
   );
   return {
     accessToken: response.access_token,
@@ -95,8 +101,13 @@ interface AdminUserInfoRaw {
  * 获取当前管理员信息
  * 将后端 snake_case 转换为前端 camelCase
  */
-export async function getAdminInfoApi(): Promise<AdminUserInfo> {
-  const raw = await requestClient.get<AdminUserInfoRaw>(`${API_PREFIX}/me`);
+export async function getAdminInfoApi(
+  options?: ApiRequestOptions,
+): Promise<AdminUserInfo> {
+  const raw = await requestClient.get<AdminUserInfoRaw>(
+    `${API_PREFIX}/me`,
+    options,
+  );
   return {
     id: raw.id,
     username: raw.username,
@@ -113,10 +124,17 @@ export async function getAdminInfoApi(): Promise<AdminUserInfo> {
 /**
  * 修改密码
  */
-export async function adminChangePasswordApi(data: ChangePasswordParams) {
-  return requestClient.put(`${API_PREFIX}/password`, {
-    old_password: data.oldPassword,
-    new_password: data.newPassword,
-    confirm_password: data.confirmPassword,
-  });
+export async function adminChangePasswordApi(
+  data: ChangePasswordParams,
+  options?: ApiRequestOptions,
+) {
+  return requestClient.put(
+    `${API_PREFIX}/password`,
+    {
+      old_password: data.oldPassword,
+      new_password: data.newPassword,
+      confirm_password: data.confirmPassword,
+    },
+    options,
+  );
 }

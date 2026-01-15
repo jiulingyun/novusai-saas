@@ -48,10 +48,11 @@ const [Modal, modalApi] = useVbenModal({
 
     modalApi.lock();
     try {
-      await admin.resetAdminPasswordApi(adminData.value.id, {
-        new_password: values.new_password,
-      });
-      message.success($t('admin.system.admin.messages.resetPasswordSuccess'));
+      await admin.resetAdminPasswordApi(
+        adminData.value.id,
+        { new_password: values.new_password },
+        { showSuccessMessage: true, successMessage: $t('admin.system.admin.messages.resetPasswordSuccess') },
+      );
       emits('success');
       modalApi.close();
     } catch {

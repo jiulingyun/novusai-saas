@@ -3,8 +3,9 @@
  * 对接后端 /admin/roles/* 接口
  */
 import type { SelectOption, SelectResponse } from '#/types';
+import type { ApiRequestOptions } from '#/utils/request';
 
-import { requestClient } from '../request';
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -117,8 +118,10 @@ const API_PREFIX = '/admin/roles';
  * GET /admin/roles
  * 注意: 角色列表不分页，返回全部
  */
-export async function getRoleListApi(): Promise<RoleInfo[]> {
-  const response = await requestClient.get<RoleInfoRaw[]>(API_PREFIX);
+export async function getRoleListApi(
+  options?: ApiRequestOptions,
+): Promise<RoleInfo[]> {
+  const response = await requestClient.get<RoleInfoRaw[]>(API_PREFIX, options);
   return response.map(transformRoleInfo);
 }
 
@@ -126,8 +129,14 @@ export async function getRoleListApi(): Promise<RoleInfo[]> {
  * 获取角色详情（含权限列表）
  * GET /admin/roles/{role_id}
  */
-export async function getRoleDetailApi(roleId: number): Promise<RoleInfo> {
-  const raw = await requestClient.get<RoleInfoRaw>(`${API_PREFIX}/${roleId}`);
+export async function getRoleDetailApi(
+  roleId: number,
+  options?: ApiRequestOptions,
+): Promise<RoleInfo> {
+  const raw = await requestClient.get<RoleInfoRaw>(
+    `${API_PREFIX}/${roleId}`,
+    options,
+  );
   return transformRoleInfo(raw);
 }
 
@@ -137,8 +146,9 @@ export async function getRoleDetailApi(roleId: number): Promise<RoleInfo> {
  */
 export async function createRoleApi(
   data: RoleCreateRequest,
+  options?: ApiRequestOptions,
 ): Promise<RoleInfo> {
-  const raw = await requestClient.post<RoleInfoRaw>(API_PREFIX, data);
+  const raw = await requestClient.post<RoleInfoRaw>(API_PREFIX, data, options);
   return transformRoleInfo(raw);
 }
 
@@ -149,10 +159,12 @@ export async function createRoleApi(
 export async function updateRoleApi(
   roleId: number,
   data: RoleUpdateRequest,
+  options?: ApiRequestOptions,
 ): Promise<RoleInfo> {
   const raw = await requestClient.put<RoleInfoRaw>(
     `${API_PREFIX}/${roleId}`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -161,8 +173,11 @@ export async function updateRoleApi(
  * 删除角色
  * DELETE /admin/roles/{role_id}
  */
-export async function deleteRoleApi(roleId: number): Promise<void> {
-  await requestClient.delete(`${API_PREFIX}/${roleId}`);
+export async function deleteRoleApi(
+  roleId: number,
+  options?: ApiRequestOptions,
+): Promise<void> {
+  await requestClient.delete(`${API_PREFIX}/${roleId}`, options);
 }
 
 /**
@@ -172,10 +187,12 @@ export async function deleteRoleApi(roleId: number): Promise<void> {
 export async function assignRolePermissionsApi(
   roleId: number,
   data: RolePermissionsRequest,
+  options?: ApiRequestOptions,
 ): Promise<RoleInfo> {
   const raw = await requestClient.put<RoleInfoRaw>(
     `${API_PREFIX}/${roleId}/permissions`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -185,8 +202,13 @@ export async function assignRolePermissionsApi(
  * GET /admin/roles/tree
  * 返回树形结构，包含层级关系
  */
-export async function getRoleTreeApi(): Promise<RoleInfo[]> {
-  const response = await requestClient.get<RoleInfoRaw[]>(`${API_PREFIX}/tree`);
+export async function getRoleTreeApi(
+  options?: ApiRequestOptions,
+): Promise<RoleInfo[]> {
+  const response = await requestClient.get<RoleInfoRaw[]>(
+    `${API_PREFIX}/tree`,
+    options,
+  );
   return response.map(transformRoleInfo);
 }
 
@@ -194,9 +216,13 @@ export async function getRoleTreeApi(): Promise<RoleInfo[]> {
  * 获取子角色
  * GET /admin/roles/{role_id}/children
  */
-export async function getRoleChildrenApi(roleId: number): Promise<RoleInfo[]> {
+export async function getRoleChildrenApi(
+  roleId: number,
+  options?: ApiRequestOptions,
+): Promise<RoleInfo[]> {
   const response = await requestClient.get<RoleInfoRaw[]>(
     `${API_PREFIX}/${roleId}/children`,
+    options,
   );
   return response.map(transformRoleInfo);
 }
@@ -208,10 +234,12 @@ export async function getRoleChildrenApi(roleId: number): Promise<RoleInfo[]> {
 export async function moveRoleApi(
   roleId: number,
   data: RoleMoveRequest,
+  options?: ApiRequestOptions,
 ): Promise<RoleInfo> {
   const raw = await requestClient.put<RoleInfoRaw>(
     `${API_PREFIX}/${roleId}/move`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -223,10 +251,11 @@ export async function moveRoleApi(
  */
 export async function getRoleSelectApi(
   params?: Record<string, unknown>,
+  options?: ApiRequestOptions,
 ): Promise<SelectResponse> {
   const response = await requestClient.get<SelectOption[]>(
     `${API_PREFIX}/select`,
-    { params },
+    { params, ...options },
   );
   return { items: response };
 }

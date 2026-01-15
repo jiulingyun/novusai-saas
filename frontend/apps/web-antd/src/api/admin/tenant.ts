@@ -2,7 +2,9 @@
  * 租户管理 API
  * 对接后端 /admin/tenants/* 接口
  */
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -122,13 +124,14 @@ const API_PREFIX = '/admin/tenants';
  */
 export async function getTenantListApi(
   params?: TenantListParams,
+  options?: ApiRequestOptions,
 ): Promise<TenantListResponse> {
   const response = await requestClient.get<{
     items: TenantInfoRaw[];
     page: number;
     page_size: number;
     total: number;
-  }>(API_PREFIX, { params });
+  }>(API_PREFIX, { params, ...options });
 
   return {
     items: response.items.map(transformTenantInfo),
@@ -144,9 +147,11 @@ export async function getTenantListApi(
  */
 export async function getTenantDetailApi(
   tenantId: number,
+  options?: ApiRequestOptions,
 ): Promise<TenantInfo> {
   const raw = await requestClient.get<TenantInfoRaw>(
     `${API_PREFIX}/${tenantId}`,
+    options,
   );
   return transformTenantInfo(raw);
 }
@@ -157,8 +162,9 @@ export async function getTenantDetailApi(
  */
 export async function createTenantApi(
   data: TenantCreateRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantInfo> {
-  const raw = await requestClient.post<TenantInfoRaw>(API_PREFIX, data);
+  const raw = await requestClient.post<TenantInfoRaw>(API_PREFIX, data, options);
   return transformTenantInfo(raw);
 }
 
@@ -169,10 +175,12 @@ export async function createTenantApi(
 export async function updateTenantApi(
   tenantId: number,
   data: TenantUpdateRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantInfo> {
   const raw = await requestClient.put<TenantInfoRaw>(
     `${API_PREFIX}/${tenantId}`,
     data,
+    options,
   );
   return transformTenantInfo(raw);
 }
@@ -181,8 +189,11 @@ export async function updateTenantApi(
  * 删除租户
  * DELETE /admin/tenants/{tenant_id}
  */
-export async function deleteTenantApi(tenantId: number): Promise<void> {
-  await requestClient.delete(`${API_PREFIX}/${tenantId}`);
+export async function deleteTenantApi(
+  tenantId: number,
+  options?: ApiRequestOptions,
+): Promise<void> {
+  await requestClient.delete(`${API_PREFIX}/${tenantId}`, options);
 }
 
 /**
@@ -192,10 +203,12 @@ export async function deleteTenantApi(tenantId: number): Promise<void> {
 export async function toggleTenantStatusApi(
   tenantId: number,
   data: TenantStatusRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantInfo> {
   const raw = await requestClient.put<TenantInfoRaw>(
     `${API_PREFIX}/${tenantId}/status`,
     data,
+    options,
   );
   return transformTenantInfo(raw);
 }
@@ -233,10 +246,12 @@ interface TenantImpersonateResponseRaw {
 export async function tenantImpersonateApi(
   tenantId: number,
   data?: TenantImpersonateRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantImpersonateResponse> {
   const raw = await requestClient.post<TenantImpersonateResponseRaw>(
     `${API_PREFIX}/${tenantId}/impersonate`,
     data || {},
+    options,
   );
   return {
     impersonateToken: raw.impersonate_token,

@@ -2,7 +2,9 @@
  * 平台管理员管理 API
  * 对接后端 /admin/admins/* 接口
  */
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -128,13 +130,14 @@ const API_PREFIX = '/admin/admins';
  */
 export async function getAdminListApi(
   params?: AdminListParams,
+  options?: ApiRequestOptions,
 ): Promise<AdminListResponse> {
   const response = await requestClient.get<{
     items: AdminInfoRaw[];
     page: number;
     page_size: number;
     total: number;
-  }>(API_PREFIX, { params });
+  }>(API_PREFIX, { params, ...options });
 
   return {
     items: response.items.map(transformAdminInfo),
@@ -148,8 +151,14 @@ export async function getAdminListApi(
  * 获取管理员详情
  * GET /admin/admins/{admin_id}
  */
-export async function getAdminDetailApi(adminId: number): Promise<AdminInfo> {
-  const raw = await requestClient.get<AdminInfoRaw>(`${API_PREFIX}/${adminId}`);
+export async function getAdminDetailApi(
+  adminId: number,
+  options?: ApiRequestOptions,
+): Promise<AdminInfo> {
+  const raw = await requestClient.get<AdminInfoRaw>(
+    `${API_PREFIX}/${adminId}`,
+    options,
+  );
   return transformAdminInfo(raw);
 }
 
@@ -159,8 +168,9 @@ export async function getAdminDetailApi(adminId: number): Promise<AdminInfo> {
  */
 export async function createAdminApi(
   data: AdminCreateRequest,
+  options?: ApiRequestOptions,
 ): Promise<AdminInfo> {
-  const raw = await requestClient.post<AdminInfoRaw>(API_PREFIX, data);
+  const raw = await requestClient.post<AdminInfoRaw>(API_PREFIX, data, options);
   return transformAdminInfo(raw);
 }
 
@@ -171,10 +181,12 @@ export async function createAdminApi(
 export async function updateAdminApi(
   adminId: number,
   data: AdminUpdateRequest,
+  options?: ApiRequestOptions,
 ): Promise<AdminInfo> {
   const raw = await requestClient.put<AdminInfoRaw>(
     `${API_PREFIX}/${adminId}`,
     data,
+    options,
   );
   return transformAdminInfo(raw);
 }
@@ -183,8 +195,11 @@ export async function updateAdminApi(
  * 删除管理员
  * DELETE /admin/admins/{admin_id}
  */
-export async function deleteAdminApi(adminId: number): Promise<void> {
-  await requestClient.delete(`${API_PREFIX}/${adminId}`);
+export async function deleteAdminApi(
+  adminId: number,
+  options?: ApiRequestOptions,
+): Promise<void> {
+  await requestClient.delete(`${API_PREFIX}/${adminId}`, options);
 }
 
 /**
@@ -194,8 +209,13 @@ export async function deleteAdminApi(adminId: number): Promise<void> {
 export async function resetAdminPasswordApi(
   adminId: number,
   data: AdminResetPasswordRequest,
+  options?: ApiRequestOptions,
 ): Promise<void> {
-  await requestClient.put(`${API_PREFIX}/${adminId}/reset-password`, data);
+  await requestClient.put(
+    `${API_PREFIX}/${adminId}/reset-password`,
+    data,
+    options,
+  );
 }
 
 /**
@@ -205,11 +225,12 @@ export async function resetAdminPasswordApi(
 export async function toggleAdminStatusApi(
   adminId: number,
   data: AdminStatusRequest,
+  options?: ApiRequestOptions,
 ): Promise<AdminInfo> {
   const raw = await requestClient.put<AdminInfoRaw>(
     `${API_PREFIX}/${adminId}/status`,
     {},
-    { params: data },
+    { params: data, ...options },
   );
   return transformAdminInfo(raw);
 }

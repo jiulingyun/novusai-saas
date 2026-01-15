@@ -48,15 +48,47 @@ export type FormMode = 'add' | 'copy' | 'edit' | 'view';
 export type ColumnsFactory<_T = any> = (...args: any[]) => any[] | undefined;
 
 /**
+ * 切换状态 API 类型
+ * 接受 id 和状态数据，返回 Promise
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ToggleStatusApi = (id: any, data: any) => Promise<unknown>;
+
+/**
+ * 切换状态配置
+ * 支持多个快捷开关（如 is_active, is_visible, is_published 等）
+ */
+export type ToggleStatusConfig = Record<string, ToggleStatusApi>;
+
+/**
  * API 配置
+ *
+ * 约定：
+ * - `list`: 必填，列表查询 API
+ * - `resource`: 必填，资源路径（如 '/admin/admins', '/tenant/roles'）
+ *   用于自动构造 DELETE 请求：DELETE {resource}/{id}
+ * - `toggles`: 可选，多个快捷开关配置
  */
 export interface CrudApiConfig<T = any> {
   /** 列表查询 API（必填） */
   list: (params: Record<string, any>) => Promise<{ items: T[]; total: number }>;
-  /** 删除 API */
-  delete?: (id: any) => Promise<unknown>;
-  /** 切换状态 API */
-  toggleStatus?: (id: any, data: { is_active: boolean }) => Promise<unknown>;
+
+  /**
+   * 资源基础路径（必填）
+   * 用于自动构造 DELETE 请求：DELETE {resource}/{id}
+   * @example '/admin/admins', '/admin/tenants', '/tenant/roles'
+   */
+  resource: string;
+
+  /**
+   * 快捷开关配置（支持多个）
+   * @example
+   * toggles: {
+   *   is_active: admin.toggleAdminStatusApi,
+   *   is_visible: admin.toggleAdminVisibilityApi,
+   * }
+   */
+  toggles?: ToggleStatusConfig;
 }
 
 /**

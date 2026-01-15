@@ -40,7 +40,7 @@ import type { Ref } from 'vue';
 
 import { onMounted, ref, watch } from 'vue';
 
-import { requestClient } from '#/api/request';
+import { requestClient } from '#/utils/request';
 
 /**
  * useRemoteSelect 配置选项

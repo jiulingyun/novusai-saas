@@ -2,7 +2,9 @@
  * 平台权限管理 API
  * 对接后端 /admin/permissions/* 接口
  */
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -95,8 +97,13 @@ const API_PREFIX = '/admin/permissions';
  * GET /admin/permissions
  * 返回树形结构，用于角色权限配置页面
  */
-export async function getPermissionTreeApi(): Promise<PermissionNode[]> {
-  const response = await requestClient.get<PermissionNodeRaw[]>(API_PREFIX);
+export async function getPermissionTreeApi(
+  options?: ApiRequestOptions,
+): Promise<PermissionNode[]> {
+  const response = await requestClient.get<PermissionNodeRaw[]>(
+    API_PREFIX,
+    options,
+  );
   return response.map(transformPermissionNode);
 }
 
@@ -104,9 +111,12 @@ export async function getPermissionTreeApi(): Promise<PermissionNode[]> {
  * 获取权限列表（平铺）
  * GET /admin/permissions/list
  */
-export async function getPermissionListApi(): Promise<PermissionItem[]> {
+export async function getPermissionListApi(
+  options?: ApiRequestOptions,
+): Promise<PermissionItem[]> {
   const response = await requestClient.get<PermissionItemRaw[]>(
     `${API_PREFIX}/list`,
+    options,
   );
   return response.map(transformPermissionItem);
 }

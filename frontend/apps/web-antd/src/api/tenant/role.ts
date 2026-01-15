@@ -2,7 +2,9 @@
  * 租户角色管理 API
  * 对接后端 /tenant/roles/* 接口
  */
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -118,8 +120,13 @@ const API_PREFIX = '/tenant/roles';
  * GET /tenant/roles
  * 注意: 角色列表不分页，返回全部
  */
-export async function getTenantRoleListApi(): Promise<TenantRoleInfo[]> {
-  const response = await requestClient.get<TenantRoleInfoRaw[]>(API_PREFIX);
+export async function getTenantRoleListApi(
+  options?: ApiRequestOptions,
+): Promise<TenantRoleInfo[]> {
+  const response = await requestClient.get<TenantRoleInfoRaw[]>(
+    API_PREFIX,
+    options,
+  );
   return response.map(transformRoleInfo);
 }
 
@@ -129,9 +136,11 @@ export async function getTenantRoleListApi(): Promise<TenantRoleInfo[]> {
  */
 export async function getTenantRoleDetailApi(
   roleId: number,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo> {
   const raw = await requestClient.get<TenantRoleInfoRaw>(
     `${API_PREFIX}/${roleId}`,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -142,8 +151,13 @@ export async function getTenantRoleDetailApi(
  */
 export async function createTenantRoleApi(
   data: TenantRoleCreateRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo> {
-  const raw = await requestClient.post<TenantRoleInfoRaw>(API_PREFIX, data);
+  const raw = await requestClient.post<TenantRoleInfoRaw>(
+    API_PREFIX,
+    data,
+    options,
+  );
   return transformRoleInfo(raw);
 }
 
@@ -154,10 +168,12 @@ export async function createTenantRoleApi(
 export async function updateTenantRoleApi(
   roleId: number,
   data: TenantRoleUpdateRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo> {
   const raw = await requestClient.put<TenantRoleInfoRaw>(
     `${API_PREFIX}/${roleId}`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -166,8 +182,11 @@ export async function updateTenantRoleApi(
  * 删除角色
  * DELETE /tenant/roles/{role_id}
  */
-export async function deleteTenantRoleApi(roleId: number): Promise<void> {
-  await requestClient.delete(`${API_PREFIX}/${roleId}`);
+export async function deleteTenantRoleApi(
+  roleId: number,
+  options?: ApiRequestOptions,
+): Promise<void> {
+  await requestClient.delete(`${API_PREFIX}/${roleId}`, options);
 }
 
 /**
@@ -177,10 +196,12 @@ export async function deleteTenantRoleApi(roleId: number): Promise<void> {
 export async function assignTenantRolePermissionsApi(
   roleId: number,
   data: TenantRolePermissionsRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo> {
   const raw = await requestClient.put<TenantRoleInfoRaw>(
     `${API_PREFIX}/${roleId}/permissions`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }
@@ -190,9 +211,12 @@ export async function assignTenantRolePermissionsApi(
  * GET /tenant/roles/tree
  * 返回树形结构，包含层级关系
  */
-export async function getTenantRoleTreeApi(): Promise<TenantRoleInfo[]> {
+export async function getTenantRoleTreeApi(
+  options?: ApiRequestOptions,
+): Promise<TenantRoleInfo[]> {
   const response = await requestClient.get<TenantRoleInfoRaw[]>(
     `${API_PREFIX}/tree`,
+    options,
   );
   return response.map(transformRoleInfo);
 }
@@ -203,9 +227,11 @@ export async function getTenantRoleTreeApi(): Promise<TenantRoleInfo[]> {
  */
 export async function getTenantRoleChildrenApi(
   roleId: number,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo[]> {
   const response = await requestClient.get<TenantRoleInfoRaw[]>(
     `${API_PREFIX}/${roleId}/children`,
+    options,
   );
   return response.map(transformRoleInfo);
 }
@@ -217,10 +243,12 @@ export async function getTenantRoleChildrenApi(
 export async function moveTenantRoleApi(
   roleId: number,
   data: TenantRoleMoveRequest,
+  options?: ApiRequestOptions,
 ): Promise<TenantRoleInfo> {
   const raw = await requestClient.put<TenantRoleInfoRaw>(
     `${API_PREFIX}/${roleId}/move`,
     data,
+    options,
   );
   return transformRoleInfo(raw);
 }

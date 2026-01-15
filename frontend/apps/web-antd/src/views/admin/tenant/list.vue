@@ -51,8 +51,8 @@ async function onImpersonate(row: TenantInfo) {
 const { Grid, FormDrawer, onCreate, onRefresh } = useCrudPage<TenantInfo>({
   api: {
     list: admin.getTenantListApi,
-    delete: admin.deleteTenantApi,
-    toggleStatus: admin.toggleTenantStatusApi,
+    resource: '/admin/tenants',
+    toggles: { is_active: admin.toggleTenantStatusApi },
   },
   columns: useColumns,
   searchSchema: useGridFormSchema(),

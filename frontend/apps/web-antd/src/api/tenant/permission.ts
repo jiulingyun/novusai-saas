@@ -2,7 +2,9 @@
  * 租户权限管理 API
  * 对接后端 /tenant/permissions/* 接口
  */
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 // ============================================================
 // 类型定义
@@ -99,11 +101,13 @@ const API_PREFIX = '/tenant/permissions';
  * GET /tenant/permissions
  * 返回树形结构，用于角色权限配置页面
  */
-export async function getTenantPermissionTreeApi(): Promise<
-  TenantPermissionNode[]
-> {
-  const response =
-    await requestClient.get<TenantPermissionNodeRaw[]>(API_PREFIX);
+export async function getTenantPermissionTreeApi(
+  options?: ApiRequestOptions,
+): Promise<TenantPermissionNode[]> {
+  const response = await requestClient.get<TenantPermissionNodeRaw[]>(
+    API_PREFIX,
+    options,
+  );
   return response.map(transformPermissionNode);
 }
 
@@ -111,11 +115,12 @@ export async function getTenantPermissionTreeApi(): Promise<
  * 获取权限列表（平铺）
  * GET /tenant/permissions/list
  */
-export async function getTenantPermissionListApi(): Promise<
-  TenantPermissionItem[]
-> {
+export async function getTenantPermissionListApi(
+  options?: ApiRequestOptions,
+): Promise<TenantPermissionItem[]> {
   const response = await requestClient.get<TenantPermissionItemRaw[]>(
     `${API_PREFIX}/list`,
+    options,
   );
   return response.map(transformPermissionItem);
 }

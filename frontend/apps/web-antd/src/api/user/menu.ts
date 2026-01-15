@@ -4,7 +4,9 @@
  */
 import type { RouteRecordStringComponent } from '@vben/types';
 
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 
 const API_PREFIX = '/api/v1';
 
@@ -12,6 +14,9 @@ const API_PREFIX = '/api/v1';
  * 获取用户菜单列表
  * 返回当前用户有权限的菜单
  */
-export async function getUserMenusApi() {
-  return requestClient.get<RouteRecordStringComponent[]>(`${API_PREFIX}/menus`);
+export async function getUserMenusApi(options?: ApiRequestOptions) {
+  return requestClient.get<RouteRecordStringComponent[]>(
+    `${API_PREFIX}/menus`,
+    options,
+  );
 }

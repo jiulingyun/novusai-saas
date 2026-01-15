@@ -6,11 +6,13 @@
  *
  * @example
  * ```ts
+ * import { adminApi as admin } from '#/api';
+ *
  * const { Grid, FormDrawer, onCreate, onRefresh } = useCrudPage<AdminInfo>({
  *   api: {
  *     list: admin.getAdminListApi,
- *     delete: admin.deleteAdminApi,
- *     toggleStatus: admin.toggleAdminStatusApi,
+ *     resource: '/admin/admins',
+ *     toggles: { is_active: admin.toggleAdminStatusApi },
  *   },
  *   columns: useColumns,
  *   searchSchema: useGridFormSchema(),
@@ -21,13 +23,16 @@
  * ```
  */
 
-import type { BaseRow, FormMode, OnActionClickParams, UseCrudPageOptions } from './types';
+import type { BaseRow, FormMode, OnActionClickParams, ToggleStatusApi, UseCrudPageOptions } from './types';
+
+import { ref } from 'vue';
 
 import { useVbenDrawer, useVbenModal } from '@vben/common-ui';
 
 import { message, Modal } from 'ant-design-vue';
 
 import { $t } from '#/locales';
+import { requestClient } from '#/utils/request';
 
 import { useGridSearchFormOptions, useVbenVxeGrid } from './use-vxe-grid';
 
@@ -51,9 +56,6 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
     toolbar = { custom: true, export: true, refresh: true, search: true, zoom: true },
     customActions = {},
   } = options;
-
-  // 从 i18nPrefix 提取实体名称（用于 message key）
-  const entityName = i18nPrefix.split('.').pop() || 'item';
 
   // ==================== 表单弹窗 ====================
   let FormPopup: ReturnType<typeof useVbenDrawer>[0] | null = null;
@@ -94,23 +96,40 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
 
   /** 新建 */
   function onCreate() {
-    formPopupApi?.setData({ mode: 'add' as FormMode }).open();
+    formPopupApi?.setData({ mode: 'add' as FormMode, _resource: api.resource }).open();
   }
 
   /** 编辑 */
   function onEdit(row: T) {
-    formPopupApi?.setData({ ...row, mode: 'edit' as FormMode }).open();
+    formPopupApi?.setData({ ...row, mode: 'edit' as FormMode, _resource: api.resource }).open();
   }
 
-  /** 删除 */
-  function onDelete(row: T) {
-    if (!api.delete) {
-      console.warn(`[useCrudPage] api.delete not provided for ${entityName}`);
-      return;
+  // 从 i18nPrefix 提取实体名称（用于 message key）
+  const entityNameForMessage = i18nPrefix.split('.').pop() || 'item';
+
+  // 防抖状态：记录正在处理的操作
+  const processingIds = ref<Set<number | string>>(new Set());
+
+  /** 检查是否正在处理中（防抖） */
+  function isProcessing(id: number | string): boolean {
+    return processingIds.value.has(id);
+  }
+
+  /** 设置处理状态 */
+  function setProcessing(id: number | string, processing: boolean) {
+    if (processing) {
+      processingIds.value.add(id);
+    } else {
+      processingIds.value.delete(id);
     }
+  }
+
+  /** 删除（自动构造 DELETE {resource}/{id} 请求） */
+  function onDelete(row: T) {
+    // 防抖：如果正在处理中，直接返回
+    if (isProcessing(row.id)) return;
 
     const displayName = String(row[nameField] || row.id);
-    const messageKey = `delete_${entityName}`;
 
     Modal.confirm({
       title: $t(`${i18nPrefix}.messages.deleteTitle`),
@@ -119,29 +138,36 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
       okButtonProps: { danger: true },
       type: 'warning',
       onOk: async () => {
-        const hideLoading = message.loading({
-          content: $t(`${i18nPrefix}.messages.deleting`, { name: displayName }),
-          duration: 0,
-          key: messageKey,
-        });
+        setProcessing(row.id, true);
         try {
-          await api.delete!(row.id);
-          message.success({
-            content: $t(`${i18nPrefix}.messages.deleteSuccess`),
-            key: messageKey,
+          // 自动构造 DELETE 请求：DELETE {resource}/{id}
+          await requestClient.delete(`${api.resource}/${row.id}`, {
+            loading: true,
+            showCodeMessage: true,
+            showSuccessMessage: true,
+            successMessage: $t(`${i18nPrefix}.messages.deleteSuccess`),
           });
           onRefresh();
-        } catch {
-          hideLoading();
+        } finally {
+          setProcessing(row.id, false);
         }
       },
     });
   }
 
-  /** 切换状态 */
-  async function onToggleStatus(newStatus: boolean, row: T): Promise<boolean> {
-    if (!api.toggleStatus) {
-      console.warn(`[useCrudPage] api.toggleStatus not provided for ${entityName}`);
+  /**
+   * 切换状态（支持多个字段）
+   * @param fieldName 字段名，如 'is_active', 'is_visible'
+   * @param newStatus 新状态值
+   * @param row 行数据
+   */
+  async function onToggleField(fieldName: string, newStatus: boolean, row: T): Promise<boolean> {
+    // 防抖：如果正在处理中，直接返回
+    if (isProcessing(row.id)) return false;
+
+    const toggleApi = api.toggles?.[fieldName] as ToggleStatusApi | undefined;
+    if (!toggleApi) {
+      console.warn(`[useCrudPage] toggle API not found for field: ${fieldName}`);
       return false;
     }
 
@@ -161,12 +187,24 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
         });
       });
 
-      await api.toggleStatus(row.id, { is_active: newStatus });
-      message.success(`${action}${$t('ui.actionMessage.operationSuccess')}`);
-      return true;
+      setProcessing(row.id, true);
+      try {
+        await toggleApi(row.id, { [fieldName]: newStatus });
+        message.success(`${action}${$t('ui.actionMessage.operationSuccess')}`);
+        return true;
+      } finally {
+        setProcessing(row.id, false);
+      }
     } catch {
       return false;
     }
+  }
+
+  /**
+   * 切换 is_active 状态（快捷方法，向后兼容）
+   */
+  async function onToggleStatus(newStatus: boolean, row: T): Promise<boolean> {
+    return onToggleField('is_active', newStatus, row);
   }
 
   // ==================== 操作处理器 ====================
@@ -196,6 +234,14 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
   /** 状态切换处理（供列定义使用） */
   function handleToggleStatus(newStatus: boolean, row: T) {
     return onToggleStatus(newStatus, row);
+  }
+
+  /**
+   * 创建指定字段的 toggle 处理函数（供列定义使用）
+   * @param fieldName 字段名，如 'is_active', 'is_visible'
+   */
+  function createToggleHandler(fieldName: string) {
+    return (newStatus: boolean, row: T) => onToggleField(fieldName, newStatus, row);
   }
 
   // ==================== 表格配置 ====================
@@ -242,11 +288,13 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
     onEdit,
     onDelete,
     onToggleStatus,
+    onToggleField,
     onRefresh,
     onReload,
 
     // 处理器
     handleActionClick,
     handleToggleStatus,
+    createToggleHandler,
   };
 }

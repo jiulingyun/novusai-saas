@@ -29,8 +29,8 @@ const [ResetPasswordModalComp, resetPasswordModalApi] = useVbenModal({
 const { Grid, FormDrawer, onCreate, onRefresh } = useCrudPage<AdminInfo>({
   api: {
     list: admin.getAdminListApi,
-    delete: admin.deleteAdminApi,
-    toggleStatus: admin.toggleAdminStatusApi,
+    resource: '/admin/admins',
+    toggles: { is_active: admin.toggleAdminStatusApi },
   },
   columns: useColumns,
   searchSchema: useGridFormSchema(),

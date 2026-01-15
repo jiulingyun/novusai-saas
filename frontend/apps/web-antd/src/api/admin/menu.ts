@@ -6,7 +6,9 @@ import type { RouteRecordStringComponent } from '@vben/types';
 
 import type { BackendMenuItemRaw } from '../shared/menu-transformer';
 
-import { requestClient } from '../request';
+import type { ApiRequestOptions } from '#/utils/request';
+
+import { requestClient } from '#/utils/request';
 import {
   extractPermissionsFromMenus,
   needsTransform,
@@ -25,9 +27,12 @@ export interface MenusWithPermissions {
  * 自动处理后端 snake_case 到前端 camelCase 的转换
  * @returns 菜单列表和权限码
  */
-export async function getAdminMenusWithPermissionsApi(): Promise<MenusWithPermissions> {
+export async function getAdminMenusWithPermissionsApi(
+  options?: ApiRequestOptions,
+): Promise<MenusWithPermissions> {
   const rawMenus = await requestClient.get<BackendMenuItemRaw[]>(
     '/admin/permissions/menus',
+    options,
   );
 
   // 提取权限码
@@ -45,7 +50,9 @@ export async function getAdminMenusWithPermissionsApi(): Promise<MenusWithPermis
  * 获取当前管理员菜单列表
  * @deprecated 请使用 getAdminMenusWithPermissionsApi 以同时获取权限码
  */
-export async function getAdminMenusApi(): Promise<RouteRecordStringComponent[]> {
-  const { menus } = await getAdminMenusWithPermissionsApi();
+export async function getAdminMenusApi(
+  options?: ApiRequestOptions,
+): Promise<RouteRecordStringComponent[]> {
+  const { menus } = await getAdminMenusWithPermissionsApi(options);
   return menus;
 }

@@ -128,16 +128,23 @@ const [Drawer, drawerApi] = useVbenDrawer({
 
       if (isEdit.value && roleId.value) {
         // 编辑模式（不传 code）
-        await tenant.updateTenantRoleApi(roleId.value, {
-          name: payload.name,
-          description: payload.description,
-          is_active: payload.is_active,
-          sort_order: payload.sort_order,
-          permission_ids: payload.permission_ids,
-        });
+        await tenant.updateTenantRoleApi(
+          roleId.value,
+          {
+            name: payload.name,
+            description: payload.description,
+            is_active: payload.is_active,
+            sort_order: payload.sort_order,
+            permission_ids: payload.permission_ids,
+          },
+          { showSuccessMessage: true, successMessage: $t('ui.actionMessage.updateSuccess') },
+        );
       } else {
         // 新建模式
-        await tenant.createTenantRoleApi(payload);
+        await tenant.createTenantRoleApi(payload, {
+          showSuccessMessage: true,
+          successMessage: $t('ui.actionMessage.createSuccess'),
+        });
       }
       emits('success');
       drawerApi.close();
