@@ -4,31 +4,19 @@
 提供租户业务用户（C端用户）的登录、登出、Token 刷新等接口
 """
 
-from datetime import datetime, timezone
-
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select, or_
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import DbSession, ActiveTenantUser
 from app.core.i18n import _
-from app.core.response import success, error
-from app.core.security import (
-    verify_password,
-    get_password_hash,
-    create_token_pair,
-    verify_token_with_scope,
-    TOKEN_TYPE_REFRESH,
-    TOKEN_SCOPE_TENANT_USER,
-)
-from app.models import TenantUser
+from app.core.response import success
 from app.schemas.common import TokenResponse, RefreshTokenRequest
 from app.schemas.tenant import (
     TenantUserLoginRequest as LoginRequest,
     TenantUserResponse as UserResponse,
     TenantUserChangePasswordRequest as ChangePasswordRequest,
 )
+from app.services.common import AuthService
 
 
 router = APIRouter(prefix="/auth", tags=["租户用户认证"])
@@ -46,44 +34,14 @@ async def login_oauth2(
     - **username**: 用户名或邮箱
     - **password**: 密码
     """
-    # 查询用户（支持用户名、邮箱或手机号登录）
-    result = await db.execute(
-        select(TenantUser).where(
-            or_(
-                TenantUser.username == form_data.username,
-                TenantUser.email == form_data.username,
-                TenantUser.phone == form_data.username,
-            )
-        )
+    auth_service = AuthService(db)
+    
+    tokens = await auth_service.authenticate_tenant_user(
+        username=form_data.username,
+        password=form_data.password,
+        client_ip=request.client.host if request.client else None,
     )
-    user = result.scalar_one_or_none()
-    
-    # 验证用户和密码
-    if user is None or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_("auth.credentials_invalid"),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # 检查用户状态
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_("auth.account_disabled"),
-        )
-    
-    # 更新登录信息
-    user.last_login_at = datetime.now(timezone.utc)
-    user.last_login_ip = request.client.host if request.client else None
     await db.commit()
-    
-    # 生成 Token
-    tokens = create_token_pair(
-        user.id,
-        scope=TOKEN_SCOPE_TENANT_USER,
-        extra_claims={"tenant_id": user.tenant_id},
-    )
     
     return success(
         data=TokenResponse(**tokens),
@@ -103,43 +61,14 @@ async def login_json(
     - **username**: 用户名或邮箱
     - **password**: 密码
     """
-    # 查询用户（支持用户名、邮箱或手机号登录）
-    result = await db.execute(
-        select(TenantUser).where(
-            or_(
-                TenantUser.username == login_data.username,
-                TenantUser.email == login_data.username,
-                TenantUser.phone == login_data.username,
-            )
-        )
+    auth_service = AuthService(db)
+    
+    tokens = await auth_service.authenticate_tenant_user(
+        username=login_data.username,
+        password=login_data.password,
+        client_ip=request.client.host if request.client else None,
     )
-    user = result.scalar_one_or_none()
-    
-    # 验证用户和密码
-    if user is None or not verify_password(login_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_("auth.credentials_invalid"),
-        )
-    
-    # 检查用户状态
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_("auth.account_disabled"),
-        )
-    
-    # 更新登录信息
-    user.last_login_at = datetime.now(timezone.utc)
-    user.last_login_ip = request.client.host if request.client else None
     await db.commit()
-    
-    # 生成 Token
-    tokens = create_token_pair(
-        user.id,
-        scope=TOKEN_SCOPE_TENANT_USER,
-        extra_claims={"tenant_id": user.tenant_id},
-    )
     
     return success(
         data=TokenResponse(**tokens),
@@ -155,41 +84,8 @@ async def refresh_token(
     """
     使用 Refresh Token 获取新的 Token 对
     """
-    # 验证 Refresh Token 并检查 scope
-    user_id, scope = verify_token_with_scope(
-        refresh_data.refresh_token, TOKEN_SCOPE_TENANT_USER, TOKEN_TYPE_REFRESH
-    )
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_("auth.refresh_token_invalid"),
-        )
-    
-    # 查询用户
-    result = await db.execute(
-        select(TenantUser).where(TenantUser.id == int(user_id))
-    )
-    user = result.scalar_one_or_none()
-    
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=_("auth.refresh_token_invalid"),
-        )
-    
-    # 检查用户状态
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=_("auth.account_disabled"),
-        )
-    
-    # 生成新的 Token 对
-    tokens = create_token_pair(
-        user.id,
-        scope=TOKEN_SCOPE_TENANT_USER,
-        extra_claims={"tenant_id": user.tenant_id},
-    )
+    auth_service = AuthService(db)
+    tokens = await auth_service.refresh_tenant_user_token(refresh_data.refresh_token)
     
     return success(
         data=TokenResponse(**tokens),
@@ -234,15 +130,13 @@ async def change_password(
     """
     修改当前用户密码
     """
-    # 验证旧密码
-    if not verify_password(password_data.old_password, current_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=_("auth.password_mismatch"),
-        )
+    auth_service = AuthService(db)
     
-    # 更新密码
-    current_user.password_hash = get_password_hash(password_data.new_password)
+    await auth_service.change_tenant_user_password(
+        user=current_user,
+        old_password=password_data.old_password,
+        new_password=password_data.new_password,
+    )
     await db.commit()
     
     return success(

@@ -4,19 +4,14 @@
 提供租户设置和自定义域名管理接口
 """
 
-import secrets
-from datetime import datetime, timezone
-
 from fastapi import HTTPException, Request, status
-from sqlalchemy import select, func
 
 from app.core.base_controller import TenantController
-from app.core.config import settings
 from app.core.deps import DbSession, ActiveTenantAdmin
 from app.core.i18n import _
 from app.core.response import success
 from app.enums.rbac import PermissionScope
-from app.models import Tenant, TenantDomain, TenantAdmin
+from app.exceptions import BusinessException, NotFoundException
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -32,6 +27,7 @@ from app.schemas.tenant import (
     TenantDomainCreateRequest,
     TenantDomainUpdateRequest,
 )
+from app.services.tenant import TenantSettingsService
 
 
 @permission_resource(
@@ -74,45 +70,18 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:read
             """
-            # 获取租户
-            result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not tenant:
+            try:
+                settings_data = await service.get_settings()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("tenant.not_found"),
+                    detail=str(e.message),
                 )
-            
-            # 统计已绑定域名数量
-            domain_count_result = await db.execute(
-                select(func.count(TenantDomain.id)).where(
-                    TenantDomain.tenant_id == tenant.id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            custom_domain_count = domain_count_result.scalar() or 0
-            
-            # 构建子域名 URL
-            subdomain_url = f"https://{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}"
             
             return success(
-                data=TenantSettingsResponse(
-                    tenant_id=tenant.id,
-                    tenant_code=tenant.code,
-                    tenant_name=tenant.name,
-                    logo_url=tenant.logo_url,
-                    favicon_url=tenant.favicon_url,
-                    theme_color=tenant.theme_color,
-                    captcha_enabled=tenant.captcha_enabled,
-                    login_methods=tenant.login_methods,
-                    subdomain=tenant.code,
-                    subdomain_url=subdomain_url,
-                    max_custom_domains=tenant.max_custom_domains,
-                    custom_domain_count=custom_domain_count,
-                ),
+                data=TenantSettingsResponse(**settings_data),
                 message=_("common.success"),
             )
         
@@ -131,69 +100,25 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:update + 租户所有者
             """
-            # 验证是否为租户所有者
             if not current_admin.is_owner:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=_("tenant_admin.owner_required"),
                 )
             
-            # 获取租户
-            result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not tenant:
+            try:
+                settings_data = await service.update_settings(data.model_dump(exclude_none=True))
+                await db.commit()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("tenant.not_found"),
+                    detail=str(e.message),
                 )
-            
-            # 更新设置
-            current_settings = tenant.settings or {}
-            
-            if data.logo_url is not None:
-                current_settings["logo_url"] = data.logo_url
-            if data.favicon_url is not None:
-                current_settings["favicon_url"] = data.favicon_url
-            if data.theme_color is not None:
-                current_settings["theme_color"] = data.theme_color
-            if data.captcha_enabled is not None:
-                current_settings["captcha_enabled"] = data.captcha_enabled
-            if data.login_methods is not None:
-                current_settings["login_methods"] = data.login_methods
-            
-            tenant.settings = current_settings
-            await db.commit()
-            await db.refresh(tenant)
-            
-            # 统计域名数量
-            domain_count_result = await db.execute(
-                select(func.count(TenantDomain.id)).where(
-                    TenantDomain.tenant_id == tenant.id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            custom_domain_count = domain_count_result.scalar() or 0
-            
-            subdomain_url = f"https://{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}"
             
             return success(
-                data=TenantSettingsResponse(
-                    tenant_id=tenant.id,
-                    tenant_code=tenant.code,
-                    tenant_name=tenant.name,
-                    logo_url=tenant.logo_url,
-                    favicon_url=tenant.favicon_url,
-                    theme_color=tenant.theme_color,
-                    captcha_enabled=tenant.captcha_enabled,
-                    login_methods=tenant.login_methods,
-                    subdomain=tenant.code,
-                    subdomain_url=subdomain_url,
-                    max_custom_domains=tenant.max_custom_domains,
-                    custom_domain_count=custom_domain_count,
-                ),
+                data=TenantSettingsResponse(**settings_data),
                 message=_("tenant.settings_updated"),
             )
         
@@ -211,21 +136,18 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:read
             """
-            result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.tenant_id == current_admin.tenant_id,
-                    TenantDomain.is_deleted == False,
-                ).order_by(TenantDomain.is_primary.desc(), TenantDomain.created_at)
-            )
-            domains = result.scalars().all()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            # 获取租户信息以构建 cname_target
-            tenant_result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = tenant_result.scalar_one_or_none()
+            try:
+                tenant = await service.get_tenant()
+                domains = await service.list_domains()
+            except NotFoundException as e:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=str(e.message),
+                )
             
-            cname_target = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}" if tenant else None
+            cname_target = service.get_cname_target(tenant)
             
             return success(
                 data=[
@@ -262,86 +184,34 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:create + 租户所有者
             """
-            # 验证是否为租户所有者
             if not current_admin.is_owner:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=_("tenant_admin.owner_required"),
                 )
             
-            # 获取租户
-            tenant_result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = tenant_result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not tenant:
+            try:
+                tenant = await service.get_tenant()
+                domain = await service.add_domain(
+                    domain=data.domain,
+                    is_primary=data.is_primary,
+                    remark=data.remark,
+                )
+                await db.commit()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("tenant.not_found"),
+                    detail=str(e.message),
                 )
-            
-            # 检查配额
-            if not settings.ALLOW_CUSTOM_DOMAIN:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=_("domain.custom_domain_disabled"),
-                )
-            
-            domain_count_result = await db.execute(
-                select(func.count(TenantDomain.id)).where(
-                    TenantDomain.tenant_id == tenant.id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            current_count = domain_count_result.scalar() or 0
-            
-            if current_count >= tenant.max_custom_domains:
+            except BusinessException as e:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_("domain.quota_exceeded"),
+                    detail=str(e.message),
                 )
             
-            # 检查域名是否已被使用
-            existing_result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.domain == data.domain.lower(),
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            if existing_result.scalar_one_or_none():
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_("domain.already_exists"),
-                )
-            
-            # 如果设为主域名，先取消其他主域名
-            if data.is_primary:
-                await db.execute(
-                    TenantDomain.__table__.update()
-                    .where(
-                        TenantDomain.tenant_id == tenant.id,
-                        TenantDomain.is_primary == True,
-                    )
-                    .values(is_primary=False)
-                )
-            
-            # 创建域名
-            domain = TenantDomain(
-                tenant_id=tenant.id,
-                domain=data.domain.lower(),
-                is_primary=data.is_primary,
-                is_verified=False,
-                ssl_status="pending",
-                verification_token=secrets.token_urlsafe(32),
-                remark=data.remark,
-            )
-            
-            db.add(domain)
-            await db.commit()
-            await db.refresh(domain)
-            
-            cname_target = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}"
+            cname_target = service.get_cname_target(tenant)
             
             return success(
                 data=TenantDomainResponse(
@@ -372,28 +242,18 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:read
             """
-            result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.id == domain_id,
-                    TenantDomain.tenant_id == current_admin.tenant_id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            domain = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not domain:
+            try:
+                tenant = await service.get_tenant()
+                domain = await service.get_domain(domain_id)
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("domain.not_found"),
+                    detail=str(e.message),
                 )
             
-            # 获取租户
-            tenant_result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = tenant_result.scalar_one_or_none()
-            
-            cname_target = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}" if tenant else None
+            cname_target = service.get_cname_target(tenant)
             
             return success(
                 data=TenantDomainResponse(
@@ -431,47 +291,23 @@ class TenantSettingsController(TenantController):
                     detail=_("tenant_admin.owner_required"),
                 )
             
-            result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.id == domain_id,
-                    TenantDomain.tenant_id == current_admin.tenant_id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            domain = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not domain:
+            try:
+                tenant = await service.get_tenant()
+                domain = await service.update_domain(
+                    domain_id=domain_id,
+                    is_primary=data.is_primary,
+                    remark=data.remark,
+                )
+                await db.commit()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("domain.not_found"),
+                    detail=str(e.message),
                 )
             
-            # 如果设为主域名，先取消其他主域名
-            if data.is_primary:
-                await db.execute(
-                    TenantDomain.__table__.update()
-                    .where(
-                        TenantDomain.tenant_id == current_admin.tenant_id,
-                        TenantDomain.is_primary == True,
-                        TenantDomain.id != domain_id,
-                    )
-                    .values(is_primary=False)
-                )
-                domain.is_primary = True
-            elif data.is_primary is False:
-                domain.is_primary = False
-            
-            if data.remark is not None:
-                domain.remark = data.remark
-            
-            await db.commit()
-            await db.refresh(domain)
-            
-            tenant_result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = tenant_result.scalar_one_or_none()
-            cname_target = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}" if tenant else None
+            cname_target = service.get_cname_target(tenant)
             
             return success(
                 data=TenantDomainResponse(
@@ -508,23 +344,16 @@ class TenantSettingsController(TenantController):
                     detail=_("tenant_admin.owner_required"),
                 )
             
-            result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.id == domain_id,
-                    TenantDomain.tenant_id == current_admin.tenant_id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            domain = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not domain:
+            try:
+                await service.delete_domain(domain_id)
+                await db.commit()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("domain.not_found"),
+                    detail=str(e.message),
                 )
-            
-            domain.soft_delete()
-            await db.commit()
             
             return success(message=_("domain.deleted"))
         
@@ -543,56 +372,19 @@ class TenantSettingsController(TenantController):
             
             权限: tenant_settings:update
             """
-            result = await db.execute(
-                select(TenantDomain).where(
-                    TenantDomain.id == domain_id,
-                    TenantDomain.tenant_id == current_admin.tenant_id,
-                    TenantDomain.is_deleted == False,
-                )
-            )
-            domain = result.scalar_one_or_none()
+            service = TenantSettingsService(db, current_admin.tenant_id)
             
-            if not domain:
+            try:
+                tenant = await service.get_tenant()
+                domain = await service.verify_domain(domain_id)
+                await db.commit()
+            except NotFoundException as e:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("domain.not_found"),
+                    detail=str(e.message),
                 )
             
-            # 获取租户
-            tenant_result = await db.execute(
-                select(Tenant).where(Tenant.id == current_admin.tenant_id)
-            )
-            tenant = tenant_result.scalar_one_or_none()
-            
-            if not tenant:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("tenant.not_found"),
-                )
-            
-            # TODO: 实际的 DNS 验证逻辑
-            # 这里简化处理，实际应该查询 DNS 记录验证 CNAME 指向
-            # import dns.resolver
-            # try:
-            #     answers = dns.resolver.resolve(domain.domain, 'CNAME')
-            #     expected = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}"
-            #     for rdata in answers:
-            #         if str(rdata.target).rstrip('.') == expected:
-            #             domain.is_verified = True
-            #             domain.verified_at = datetime.now(timezone.utc)
-            #             break
-            # except Exception:
-            #     pass
-            
-            # 简化实现：假设验证通过
-            domain.is_verified = True
-            domain.verified_at = datetime.now(timezone.utc)
-            domain.ssl_status = "active"  # 实际应该触发 SSL 证书申请
-            
-            await db.commit()
-            await db.refresh(domain)
-            
-            cname_target = f"{tenant.code}{settings.TENANT_DOMAIN_SUFFIX}"
+            cname_target = service.get_cname_target(tenant)
             
             return success(
                 data=TenantDomainResponse(

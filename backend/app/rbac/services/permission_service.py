@@ -16,7 +16,7 @@ from app.models.auth.admin_role import AdminRole
 from app.models.auth.tenant_admin_role import TenantAdminRole
 from app.repositories.system.admin_role_repository import AdminRoleRepository
 from app.repositories.tenant.tenant_role_repository import TenantRoleRepository
-from app.schemas.common import MenuResponse
+from app.schemas.common import MenuResponse, PermissionTreeResponse, PermissionResponse
 
 
 class PermissionService:
@@ -488,7 +488,7 @@ class PermissionService:
         )
         return list(result.scalars().all())
     
-    # ==================== 菜单构建方法 ====================
+    # ==================== 权限树/列表方法 ====================
     
     @staticmethod
     def _translate_name(name: str) -> str:
@@ -507,6 +507,290 @@ class PermissionService:
                 return name.split(".")[-1]
             return translated
         return name or ""
+    
+    @classmethod
+    def _build_permission_tree(
+        cls,
+        permissions: list[Permission],
+        parent_id: int | None = None,
+    ) -> list[PermissionTreeResponse]:
+        """
+        构建权限树（内部递归方法）
+        
+        Args:
+            permissions: 权限列表
+            parent_id: 父级 ID
+        
+        Returns:
+            权限树
+        """
+        tree = []
+        for perm in permissions:
+            if perm.parent_id == parent_id:
+                children = cls._build_permission_tree(permissions, perm.id)
+                tree.append(PermissionTreeResponse(
+                    id=perm.id,
+                    code=perm.code,
+                    name=cls._translate_name(perm.name),
+                    description=perm.description,
+                    type=perm.type,
+                    scope=perm.scope,
+                    resource=perm.resource,
+                    action=perm.action,
+                    parent_id=perm.parent_id,
+                    sort_order=perm.sort_order,
+                    icon=perm.icon,
+                    path=perm.path,
+                    component=perm.component,
+                    hidden=perm.hidden,
+                    children=children,
+                ))
+        return sorted(tree, key=lambda x: x.sort_order)
+    
+    async def get_admin_permission_tree(self, admin: Admin) -> list[PermissionTreeResponse]:
+        """
+        获取平台管理员的权限树
+        
+        Args:
+            admin: 平台管理员
+        
+        Returns:
+            权限树列表
+        """
+        # 超级管理员返回所有权限
+        if admin.is_super:
+            all_permissions = await self.get_enabled_permissions_by_scope("admin")
+            return self._build_permission_tree(all_permissions)
+        
+        # 获取用户的有效权限 ID 集合
+        effective_ids = await self.get_admin_effective_permission_ids(admin)
+        
+        if not effective_ids:
+            return []
+        
+        # 查询用户拥有的权限
+        result = await self.db.execute(
+            select(Permission)
+            .where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+            .order_by(Permission.sort_order)
+        )
+        permissions = list(result.scalars().all())
+        
+        # 补充父级权限（确保树形结构完整）
+        permissions = await self._fill_parent_permissions(permissions)
+        
+        return self._build_permission_tree(permissions)
+    
+    async def get_tenant_permission_tree(self, tenant_admin: TenantAdmin) -> list[PermissionTreeResponse]:
+        """
+        获取租户管理员的权限树
+        
+        Args:
+            tenant_admin: 租户管理员
+        
+        Returns:
+            权限树列表
+        """
+        # 租户所有者返回所有权限
+        if tenant_admin.is_owner:
+            all_permissions = await self.get_enabled_permissions_by_scope("tenant")
+            return self._build_permission_tree(all_permissions)
+        
+        # 获取用户的有效权限 ID 集合
+        effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
+        
+        if not effective_ids:
+            return []
+        
+        # 查询用户拥有的权限
+        result = await self.db.execute(
+            select(Permission)
+            .where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+            .order_by(Permission.sort_order)
+        )
+        permissions = list(result.scalars().all())
+        
+        # 补充父级权限
+        permissions = await self._fill_parent_permissions(permissions)
+        
+        return self._build_permission_tree(permissions)
+    
+    async def get_admin_permission_list(
+        self,
+        admin: Admin,
+        perm_type: str | None = None,
+    ) -> list[PermissionResponse]:
+        """
+        获取平台管理员的权限列表（平铺）
+        
+        Args:
+            admin: 平台管理员
+            perm_type: 权限类型过滤 (menu/operation)
+        
+        Returns:
+            权限列表
+        """
+        # 超级管理员返回所有权限
+        if admin.is_super:
+            query = select(Permission).where(
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+                Permission.scope.in_(["admin", "both"]),
+            )
+            if perm_type:
+                query = query.where(Permission.type == perm_type)
+            query = query.order_by(Permission.sort_order)
+            result = await self.db.execute(query)
+            permissions = list(result.scalars().all())
+        else:
+            # 普通管理员只返回自己拥有的权限
+            effective_ids = await self.get_admin_effective_permission_ids(admin)
+            
+            if not effective_ids:
+                return []
+            
+            query = select(Permission).where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+            if perm_type:
+                query = query.where(Permission.type == perm_type)
+            query = query.order_by(Permission.sort_order)
+            result = await self.db.execute(query)
+            permissions = list(result.scalars().all())
+        
+        return [
+            PermissionResponse(
+                id=p.id,
+                code=p.code,
+                name=self._translate_name(p.name),
+                description=p.description,
+                type=p.type,
+                scope=p.scope,
+                resource=p.resource,
+                action=p.action,
+                parent_id=p.parent_id,
+                sort_order=p.sort_order,
+                icon=p.icon,
+                path=p.path,
+                component=p.component,
+                hidden=p.hidden,
+            )
+            for p in permissions
+        ]
+    
+    async def get_tenant_permission_list(
+        self,
+        tenant_admin: TenantAdmin,
+        perm_type: str | None = None,
+    ) -> list[PermissionResponse]:
+        """
+        获取租户管理员的权限列表（平铺）
+        
+        Args:
+            tenant_admin: 租户管理员
+            perm_type: 权限类型过滤 (menu/operation)
+        
+        Returns:
+            权限列表
+        """
+        # 租户所有者返回所有权限
+        if tenant_admin.is_owner:
+            query = select(Permission).where(
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+                Permission.scope.in_(["tenant", "both"]),
+            )
+            if perm_type:
+                query = query.where(Permission.type == perm_type)
+            query = query.order_by(Permission.sort_order)
+            result = await self.db.execute(query)
+            permissions = list(result.scalars().all())
+        else:
+            # 普通管理员只返回自己拥有的权限
+            effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
+            
+            if not effective_ids:
+                return []
+            
+            query = select(Permission).where(
+                Permission.id.in_(effective_ids),
+                Permission.is_enabled == True,
+                Permission.is_deleted == False,
+            )
+            if perm_type:
+                query = query.where(Permission.type == perm_type)
+            query = query.order_by(Permission.sort_order)
+            result = await self.db.execute(query)
+            permissions = list(result.scalars().all())
+        
+        return [
+            PermissionResponse(
+                id=p.id,
+                code=p.code,
+                name=self._translate_name(p.name),
+                description=p.description,
+                type=p.type,
+                scope=p.scope,
+                resource=p.resource,
+                action=p.action,
+                parent_id=p.parent_id,
+                sort_order=p.sort_order,
+                icon=p.icon,
+                path=p.path,
+                component=p.component,
+                hidden=p.hidden,
+            )
+            for p in permissions
+        ]
+    
+    async def _fill_parent_permissions(self, permissions: list[Permission]) -> list[Permission]:
+        """
+        补充父级权限（确保树形结构完整）
+        
+        Args:
+            permissions: 当前权限列表
+        
+        Returns:
+            补充后的权限列表
+        """
+        perm_ids = {p.id for p in permissions}
+        parent_ids_to_fetch = set()
+        
+        for p in permissions:
+            if p.parent_id and p.parent_id not in perm_ids:
+                parent_ids_to_fetch.add(p.parent_id)
+        
+        while parent_ids_to_fetch:
+            result = await self.db.execute(
+                select(Permission)
+                .where(
+                    Permission.id.in_(parent_ids_to_fetch),
+                    Permission.is_enabled == True,
+                    Permission.is_deleted == False,
+                )
+            )
+            parents = list(result.scalars().all())
+            permissions.extend(parents)
+            perm_ids.update(p.id for p in parents)
+            
+            parent_ids_to_fetch = set()
+            for p in parents:
+                if p.parent_id and p.parent_id not in perm_ids:
+                    parent_ids_to_fetch.add(p.parent_id)
+        
+        return permissions
+    
+    # ==================== 菜单构建方法 ====================
     
     @classmethod
     def _build_menu_tree(
