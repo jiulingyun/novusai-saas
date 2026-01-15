@@ -35,6 +35,7 @@ const {
   scrollIsAtRight,
   showScrollButton,
 } = useTabsViewScroll(props);
+void scrollbarRef; // Used in template ref
 
 function onWheel(e: WheelEvent) {
   if (props.wheelable) {

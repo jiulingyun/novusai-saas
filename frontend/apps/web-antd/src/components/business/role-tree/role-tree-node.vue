@@ -116,7 +116,7 @@ const colors = computed(() => props.getLevelColor(props.level));
       <!-- 权限数量 -->
       <div class="flex-shrink-0">
         <div
-          v-if="node.permissionsCount > 0"
+          v-if="(node.permissionsCount ?? 0) > 0"
           class="flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
         >
           <IconifyIcon icon="lucide:key-round" class="size-3.5" />
@@ -138,7 +138,7 @@ const colors = computed(() => props.getLevelColor(props.level));
             size="small"
             :checked-children="$t('shared.common.enabled')"
             :un-checked-children="$t('shared.common.disabled')"
-            @change="(checked: boolean) => emit('toggleStatus', node, checked)"
+            @change="(checked) => emit('toggleStatus', node, Boolean(checked))"
           />
         </Tooltip>
       </div>

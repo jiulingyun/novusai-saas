@@ -27,6 +27,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {});
 
 const { contentElement, overlayStyle } = useLayoutContentStyle();
+void contentElement; // Used in template ref
 
 const style = computed((): CSSProperties => {
   const {

@@ -68,5 +68,15 @@
     "naive-ui": "Naive UI 版本",
     "element-plus": "Element Plus 版本",
     "tdesign": "TDesign Vue 版本"
+  },
+  "profile": {
+    "oldPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认密码",
+    "inputOldPassword": "请输入当前密码",
+    "inputNewPassword": "请输入新密码",
+    "confirmNewPassword": "请再次输入新密码",
+    "passwordMismatch": "两次输入的密码不一致",
+    "changePasswordSuccess": "密码修改成功"
   }
 }

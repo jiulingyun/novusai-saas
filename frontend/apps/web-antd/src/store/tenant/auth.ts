@@ -137,15 +137,11 @@ export const useTenantAuthStore = defineStore('tenant-auth', () => {
 
   /**
    * 获取租户管理员信息
+   * 注意：权限码从菜单接口获取，不在此处设置
    */
   async function fetchUserInfo() {
     const info = await tenantApi.getTenantAdminInfoApi();
     tenantAdminInfo.value = info;
-
-    // 设置权限码
-    const permissions = info?.permissions || [];
-    accessStore.setAccessCodes(permissions);
-
     return info;
   }
 

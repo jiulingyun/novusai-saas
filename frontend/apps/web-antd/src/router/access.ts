@@ -7,6 +7,7 @@ import type { ApiEndpoint } from '#/api';
 
 import { generateAccessible } from '@vben/access';
 import { preferences } from '@vben/preferences';
+import { useAccessStore } from '@vben/stores';
 
 import { message } from 'ant-design-vue';
 
@@ -23,18 +24,22 @@ import { $t } from '#/locales';
 const forbiddenComponent = () => import('#/views/_core/fallback/forbidden.vue');
 
 /**
- * 根据端类型获取对应的菜单 API
+ * 根据端类型获取对应的菜单 API（含权限码）
  */
-function getMenuApi(endpoint: ApiEndpoint) {
+function getMenuWithPermissionsApi(endpoint: ApiEndpoint) {
   switch (endpoint) {
     case 'admin': {
-      return adminApi.getAdminMenusApi;
+      return adminApi.getAdminMenusWithPermissionsApi;
     }
     case 'tenant': {
-      return tenantApi.getTenantMenusApi;
+      return tenantApi.getTenantMenusWithPermissionsApi;
     }
     default: {
-      return userApi.getUserMenusApi;
+      // user 端暂时使用旧 API，返回空权限码
+      return async () => {
+        const menus = await userApi.getUserMenusApi();
+        return { menus, permissions: [] as string[] };
+      };
     }
   }
 }
@@ -49,6 +54,7 @@ async function generateAccess(
   endpoint?: ApiEndpoint,
 ) {
   const pageMap: ComponentRecordType = import.meta.glob('../views/**/*.vue');
+  const accessStore = useAccessStore();
 
   // 设置已存在的组件映射，用于检测缺失的菜单组件
   setExistingComponents(pageMap);
@@ -60,7 +66,7 @@ async function generateAccess(
 
   // 如果未指定端类型，尝试从当前路由获取
   const currentEndpoint = endpoint || getCurrentEndpoint();
-  const menuApi = getMenuApi(currentEndpoint);
+  const menuApi = getMenuWithPermissionsApi(currentEndpoint);
 
   return await generateAccessible(preferences.app.accessMode, {
     ...options,
@@ -69,7 +75,11 @@ async function generateAccess(
         content: `${$t('common.loadingMenu')}...`,
         duration: 1.5,
       });
-      return await menuApi();
+      // 获取菜单和权限码
+      const { menus, permissions } = await menuApi();
+      // 设置权限码到 accessStore
+      accessStore.setAccessCodes(permissions);
+      return menus;
     },
     // 可以指定没有权限跳转403页面
     forbiddenComponent,
@@ -88,4 +98,4 @@ function getCurrentEndpoint(): ApiEndpoint {
   return getApiEndpoint(path);
 }
 
-export { generateAccess, getCurrentEndpoint, getMenuApi };
+export { generateAccess, getCurrentEndpoint, getMenuWithPermissionsApi };

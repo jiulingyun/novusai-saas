@@ -402,24 +402,27 @@ export interface BuildTreeOptions<T> {
 export function buildTree<T extends TreeNodeBase>(
   items: T[],
   options: BuildTreeOptions<T> = {},
-): (T & { children: T[] })[] {
+): (T & { children: (T & { children: any[] })[] })[] {
   const { sortField = 'sortOrder' as keyof T, childrenField = 'children' } =
     options;
 
-  type TreeNode = T & { children: T[] };
+  // 使用 Record 类型以支持动态字段名
+  type TreeNode = T & Record<string, any>;
   const map = new Map<number, TreeNode>();
   const roots: TreeNode[] = [];
 
   // 创建所有节点的映射
   for (const item of items) {
-    map.set(item.id, { ...item, [childrenField]: [] } as TreeNode);
+    const node: TreeNode = { ...item, [childrenField]: [] };
+    map.set(item.id, node);
   }
 
   // 构建树形结构
   for (const item of items) {
     const node = map.get(item.id)!;
     if (item.parentId && map.has(item.parentId)) {
-      (map.get(item.parentId)![childrenField] as TreeNode[]).push(node);
+      const parent = map.get(item.parentId)!;
+      (parent[childrenField] as TreeNode[]).push(node);
     } else {
       roots.push(node);
     }
@@ -438,7 +441,7 @@ export function buildTree<T extends TreeNodeBase>(
   };
   sortNodes(roots);
 
-  return roots;
+  return roots as (T & { children: (T & { children: any[] })[] })[];
 }
 
 // ============================================================

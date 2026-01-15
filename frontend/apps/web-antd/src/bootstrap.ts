@@ -12,6 +12,7 @@ import { $t, setupI18n } from '#/locales';
 
 import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
+import { setupVxeTable } from './adapter/vxe-table';
 import App from './app.vue';
 import { registerCustomAccessDirective } from './directives/access';
 import { router } from './router';
@@ -30,6 +31,9 @@ async function bootstrap(namespace: string) {
 
   // 初始化表单组件
   await initSetupVbenForm();
+
+  // 初始化声明式表格
+  setupVxeTable();
 
   // // 设置弹窗的默认配置
   // setDefaultModalProps({

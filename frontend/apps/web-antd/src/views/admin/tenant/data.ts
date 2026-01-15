@@ -24,13 +24,10 @@ export function getPlanOptions(): { label: string; value: TenantPlan }[] {
   ];
 }
 
-// For backward compatibility
-export const PLAN_OPTIONS = [
-  { label: '免费版', value: 'free' },
-  { label: '基础版', value: 'basic' },
-  { label: '专业版', value: 'pro' },
-  { label: '企业版', value: 'enterprise' },
-] as { label: string; value: TenantPlan }[];
+// For backward compatibility - 使用函数获取以支持 i18n
+export function PLAN_OPTIONS(): { label: string; value: TenantPlan }[] {
+  return getPlanOptions();
+}
 
 /**
  * 获取套餐显示文本

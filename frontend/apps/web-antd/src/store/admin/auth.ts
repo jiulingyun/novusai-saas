@@ -137,15 +137,11 @@ export const useAdminAuthStore = defineStore('admin-auth', () => {
 
   /**
    * 获取平台管理员信息
+   * 注意：权限码从菜单接口获取，不在此处设置
    */
   async function fetchUserInfo() {
     const info = await adminApi.getAdminInfoApi();
     adminInfo.value = info;
-
-    // 设置权限码
-    const permissions = info?.permissions || [];
-    accessStore.setAccessCodes(permissions);
-
     return info;
   }
 

@@ -2,87 +2,23 @@
 /**
  * 租户列表页面
  */
-import type { OnActionClickParams, VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { adminApi } from '#/api';
 
 import { computed, onMounted, ref } from 'vue';
 
-import { Page, useVbenDrawer } from '@vben/common-ui';
+import { Page } from '@vben/common-ui';
 import { IconifyIcon, Plus } from '@vben/icons';
 
 import { Card, Col, message, Row, Statistic } from 'ant-design-vue';
 
-import {
-  useGridSearchFormOptions,
-  useVbenVxeGrid,
-} from '#/adapter/vxe-table';
+import { useCrudPage } from '#/adapter/vxe-table';
 import { adminApi as admin } from '#/api';
-import { useCrudActions } from '#/composables';
 import { $t } from '#/locales';
 
 import { PLAN_OPTIONS, useColumns, useGridFormSchema } from './data';
 import Form from './modules/form.vue';
 
 type TenantInfo = adminApi.TenantInfo;
-
-// 新建/编辑抽屉
-const [FormDrawer, formDrawerApi] = useVbenDrawer({
-  connectedComponent: Form,
-  destroyOnClose: true,
-});
-
-// CRUD 操作引用（用于函数提前引用）
-let crud: ReturnType<typeof useCrudActions<TenantInfo>>;
-
-/** 操作按钮点击 */
-function onActionClick(e: OnActionClickParams<TenantInfo>) {
-  switch (e.code) {
-    case 'delete': { crud.onDelete(e.row); break; }
-    case 'edit': { crud.onEdit(e.row); break; }
-    case 'impersonate': { onImpersonate(e.row); break; }
-  }
-}
-
-/** 状态切换 */
-function handleToggleStatus(newStatus: boolean, row: TenantInfo) {
-  return crud.onToggleStatus(newStatus, row);
-}
-
-// 表格
-const [Grid, gridApi] = useVbenVxeGrid({
-  formOptions: useGridSearchFormOptions(useGridFormSchema()),
-  gridOptions: {
-    columns: useColumns<TenantInfo>(onActionClick, handleToggleStatus),
-    keepSource: true,
-    pagerConfig: { enabled: true },
-    proxyConfig: {
-      ajax: {
-        query: async ({ page }, formValues) => {
-          return await admin.getTenantListApi({
-            ...formValues,
-            'page[number]': page.currentPage,
-            'page[size]': page.pageSize,
-            'sort': '-created_at',
-          });
-        },
-      },
-    },
-    cellConfig: { height: 64 },
-    rowConfig: { keyField: 'id' },
-    toolbarConfig: { custom: true, refresh: true, search: true, zoom: true },
-  } as VxeTableGridOptions<TenantInfo>,
-});
-
-// CRUD 操作
-crud = useCrudActions<TenantInfo>({
-  gridApi,
-  formDrawerApi,
-  deleteApi: admin.deleteTenantApi,
-  toggleStatusApi: admin.toggleTenantStatusApi,
-  i18nPrefix: 'admin.tenant',
-});
-
-const { onCreate, onRefresh } = crud;
 
 /**
  * 一键登录租户后台
@@ -111,6 +47,23 @@ async function onImpersonate(row: TenantInfo) {
   }
 }
 
+// 声明式 CRUD 页面
+const { Grid, FormDrawer, onCreate, onRefresh } = useCrudPage<TenantInfo>({
+  api: {
+    list: admin.getTenantListApi,
+    delete: admin.deleteTenantApi,
+    toggleStatus: admin.toggleTenantStatusApi,
+  },
+  columns: useColumns,
+  searchSchema: useGridFormSchema(),
+  formComponent: Form,
+  i18nPrefix: 'admin.tenant',
+  nameField: 'name',
+  customActions: {
+    impersonate: onImpersonate,
+  },
+});
+
 // ============ 统计数据 ============
 interface TenantStats {
   total: number;
@@ -131,7 +84,7 @@ const loadingStats = ref(false);
 
 // 计算各套餐统计
 const planStats = computed(() => {
-  return PLAN_OPTIONS.map((option) => ({
+  return PLAN_OPTIONS().map((option) => ({
     ...option,
     count: stats.value.byPlan[option.value] || 0,
   }));

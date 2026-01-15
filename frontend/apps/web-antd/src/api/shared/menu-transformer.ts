@@ -22,6 +22,8 @@ export interface BackendMenuItemRaw {
   icon?: string;
   title?: string;
   hidden?: boolean;
+  /** 该菜单关联的权限码列表 */
+  permissions?: string[];
   // meta 字段可能是嵌套对象或扁平字段
   meta?: {
     affix_tab?: boolean;
@@ -40,6 +42,33 @@ export interface BackendMenuItemRaw {
     title?: string;
   };
   children?: BackendMenuItemRaw[];
+}
+
+/**
+ * 从菜单数据中递归提取所有权限码
+ * @param menus 菜单列表
+ * @returns 去重后的权限码数组
+ */
+export function extractPermissionsFromMenus(menus: BackendMenuItemRaw[]): string[] {
+  const permissions = new Set<string>();
+
+  function traverse(items: BackendMenuItemRaw[]) {
+    for (const item of items) {
+      // 提取当前菜单的权限码
+      if (item.permissions && Array.isArray(item.permissions)) {
+        for (const code of item.permissions) {
+          permissions.add(code);
+        }
+      }
+      // 递归处理子菜单
+      if (item.children && item.children.length > 0) {
+        traverse(item.children);
+      }
+    }
+  }
+
+  traverse(menus);
+  return [...permissions];
 }
 
 /**
