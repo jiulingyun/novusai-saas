@@ -497,6 +497,11 @@
       "email_exists": "邮箱已被使用",
       "phone_exists": "手机号已被使用"
     },
+    "config": {
+      "group_not_found": "配置分组不存在",
+      "invalid_keys": "无效的配置键",
+      "validation_failed": "配置值验证失败"
+    },
     "server": {
       "internal_error": "服务器内部错误",
       "external_service_error": "外部服务调用失败",

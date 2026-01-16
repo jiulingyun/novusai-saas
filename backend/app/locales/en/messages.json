@@ -497,6 +497,11 @@
       "email_exists": "Email already in use",
       "phone_exists": "Phone number already in use"
     },
+    "config": {
+      "group_not_found": "Configuration group not found",
+      "invalid_keys": "Invalid configuration keys",
+      "validation_failed": "Configuration value validation failed"
+    },
     "server": {
       "internal_error": "Internal server error",
       "external_service_error": "External service call failed",

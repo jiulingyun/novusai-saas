@@ -4,7 +4,7 @@
 提供平台级配置管理接口（平台管理员专用）
 """
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request
 
 from app.configs.service import ConfigService
 from app.configs.registry import config_registry
@@ -13,7 +13,9 @@ from app.core.deps import DbSession, ActiveAdmin
 from app.core.i18n import _
 from app.core.response import success
 from app.enums.config import ConfigScope
+from app.enums.error_code import ErrorCode
 from app.enums.rbac import PermissionScope
+from app.exceptions import NotFoundException, BusinessException
 from app.rbac.decorators import (
     permission_resource,
     MenuConfig,
@@ -110,9 +112,9 @@ class AdminConfigController(GlobalController):
             # 验证分组存在
             group = config_registry.get_group(group_code)
             if not group or group.scope != ConfigScope.PLATFORM:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("config.group_not_found"),
+                raise NotFoundException(
+                    message=_("config.group_not_found"),
+                    code=ErrorCode.CONFIG_GROUP_NOT_FOUND,
                 )
             
             # 获取配置值
@@ -129,9 +131,9 @@ class AdminConfigController(GlobalController):
                     break
             
             if not target_group:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("config.group_not_found"),
+                raise NotFoundException(
+                    message=_("config.group_not_found"),
+                    code=ErrorCode.CONFIG_GROUP_NOT_FOUND,
                 )
             
             # 转换响应
@@ -181,9 +183,9 @@ class AdminConfigController(GlobalController):
             # 验证分组存在
             group = config_registry.get_group(group_code)
             if not group or group.scope != ConfigScope.PLATFORM:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=_("config.group_not_found"),
+                raise NotFoundException(
+                    message=_("config.group_not_found"),
+                    code=ErrorCode.CONFIG_GROUP_NOT_FOUND,
                 )
             
             # 获取分组下的配置键列表
@@ -192,9 +194,9 @@ class AdminConfigController(GlobalController):
             # 验证传入的配置键
             invalid_keys = set(data.configs.keys()) - valid_keys
             if invalid_keys:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=_("config.invalid_keys", keys=", ".join(invalid_keys)),
+                raise BusinessException(
+                    message=_("config.invalid_keys", keys=", ".join(invalid_keys)),
+                    code=ErrorCode.CONFIG_INVALID_KEYS,
                 )
             
             # 更新配置
