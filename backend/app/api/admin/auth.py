@@ -1,0 +1,122 @@
+"""
+平台管理员认证 API
+
+提供平台管理员的登录、登出、Token 刷新等接口
+"""
+
+from fastapi import APIRouter, Request
+
+from app.core.deps import DbSession, ActiveAdmin
+from app.core.i18n import _
+from app.core.response import success
+from app.rbac.decorators import public, auth_only
+from app.schemas.common import TokenResponse, RefreshTokenRequest
+from app.schemas.system import (
+    AdminLoginRequest,
+    AdminResponse,
+    AdminChangePasswordRequest,
+)
+from app.services.common import AuthService
+
+
+router = APIRouter(prefix="/auth", tags=["平台管理员认证"])
+
+
+@router.post("/login", summary="管理员登录")
+@public
+async def admin_login(
+    db: DbSession,
+    request: Request,
+    login_data: AdminLoginRequest,
+):
+    """
+    平台管理员登录
+    
+    - **username**: 用户名或邮箱
+    - **password**: 密码
+    """
+    auth_service = AuthService(db)
+    
+    tokens = await auth_service.authenticate_admin(
+        username=login_data.username,
+        password=login_data.password,
+        client_ip=request.client.host if request.client else None,
+    )
+    await db.commit()
+    
+    return success(
+        data=TokenResponse(**tokens),
+        message=_("auth.login_success"),
+    )
+
+
+@router.post("/refresh", summary="刷新 Token")
+@public
+async def refresh_token(
+    db: DbSession,
+    refresh_data: RefreshTokenRequest,
+):
+    """
+    使用 Refresh Token 获取新的 Token 对
+    """
+    auth_service = AuthService(db)
+    tokens = await auth_service.refresh_admin_token(refresh_data.refresh_token)
+    
+    return success(
+        data=TokenResponse(**tokens),
+        message=_("common.success"),
+    )
+
+
+@router.post("/logout", summary="管理员登出")
+@auth_only
+async def admin_logout(
+    current_admin: ActiveAdmin,
+):
+    """
+    管理员登出
+    """
+    return success(
+        message=_("auth.logout_success"),
+    )
+
+
+@router.get("/me", summary="获取当前管理员信息")
+@auth_only
+async def get_current_admin_info(
+    current_admin: ActiveAdmin,
+):
+    """
+    获取当前登录管理员的详细信息
+    """
+    return success(
+        data=AdminResponse.model_validate(current_admin, from_attributes=True),
+        message=_("common.success"),
+    )
+
+
+@router.put("/password", summary="修改密码")
+@auth_only
+async def change_password(
+    db: DbSession,
+    current_admin: ActiveAdmin,
+    password_data: AdminChangePasswordRequest,
+):
+    """
+    修改当前管理员密码
+    """
+    auth_service = AuthService(db)
+    
+    await auth_service.change_admin_password(
+        admin=current_admin,
+        old_password=password_data.old_password,
+        new_password=password_data.new_password,
+    )
+    await db.commit()
+    
+    return success(
+        message=_("auth.password_changed"),
+    )
+
+
+__all__ = ["router"]

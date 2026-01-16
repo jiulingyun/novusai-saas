@@ -1,0 +1,176 @@
+[project]
+name = "novusai-saas-backend"
+version = "0.1.0"
+description = "NovusAI SaaS Backend - 现代化 AI 集成 SaaS 开发框架"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "NovusAI Team" }
+]
+keywords = ["fastapi", "saas", "ai", "backend"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    # Web Framework
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "python-multipart>=0.0.6",
+    
+    # Database
+    "sqlalchemy>=2.0.25",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.1",
+    
+    # Redis
+    "redis>=5.0.1",
+    
+    # Async Task Queue
+    "celery>=5.3.6",
+    
+    # Data Validation
+    "pydantic>=2.5.3",
+    "pydantic-settings>=2.1.0",
+    "email-validator>=2.1.0",
+    
+    # Authentication
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    
+    # HTTP Client
+    "httpx>=0.26.0",
+    
+    # Utils
+    "python-dotenv>=1.0.0",
+    "orjson>=3.9.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.4",
+    "pytest-asyncio>=0.23.3",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.26.0",
+    
+    # Linting & Formatting
+    "ruff>=0.1.14",
+    "mypy>=1.8.0",
+    
+    # Type stubs
+    "types-redis>=4.6.0",
+    "types-passlib>=1.7.7",
+    "types-python-jose>=3.3.4",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+# ============================================
+# Ruff Configuration
+# ============================================
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "migrations/versions",
+    ".ruff_cache",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise without from inside except
+    "ARG001", # unused function argument
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# ============================================
+# MyPy Configuration
+# ============================================
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+# ============================================
+# Pytest Configuration
+# ============================================
+[tool.pytest.ini_options]
+minversion = "7.0"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "-ra",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = [
+    "app/migrations/*",
+    "app/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

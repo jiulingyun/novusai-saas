@@ -1,0 +1,123 @@
+"""
+平台管理员权限 API
+
+提供平台端权限树、菜单等接口
+"""
+
+from fastapi import Request
+
+from app.core.base_controller import GlobalController
+from app.core.deps import DbSession, ActiveAdmin
+from app.core.i18n import _
+from app.core.response import success
+from app.enums.rbac import PermissionScope
+from app.rbac.decorators import (
+    permission_resource,
+    MenuConfig,
+    action_read,
+    auth_only,
+)
+from app.rbac.services import PermissionService
+
+
+
+
+@permission_resource(
+    resource="permission",
+    name="menu.admin.permission",  # i18n key
+    scope=PermissionScope.ADMIN,
+    menu=MenuConfig(
+        icon="lucide:key-round",
+        path="/system/permissions",
+        component="system/permission/List",
+        parent="system",  # 父菜单: 权限管理
+        sort_order=10,
+        hidden=True,  # 一般隐藏，仅超管可见
+    ),
+)
+class AdminPermissionController(GlobalController):
+    """
+    平台权限控制器
+    
+    提供权限树、菜单树等查询接口
+    """
+    
+    prefix = "/permissions"
+    tags = ["平台权限管理"]
+    
+    def _register_routes(self) -> None:
+        """注册路由"""
+        router = self.router
+        
+        @router.get("", summary="获取权限树")
+        @action_read("action.permission.tree")
+        async def get_permission_tree(
+            request: Request,
+            db: DbSession,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            获取平台端权限（树形结构）
+            
+            用于角色权限配置页面。
+            
+            层级权限控制：
+            - 超级管理员：返回所有权限
+            - 普通管理员：返回自己拥有的权限（含继承）
+            
+            权限: permission:read
+            """
+            perm_service = PermissionService(db)
+            tree = await perm_service.get_admin_permission_tree(current_admin)
+            return success(data=tree, message=_("common.success"))
+        
+        @router.get("/menus", summary="获取当前用户菜单")
+        @auth_only
+        async def get_current_user_menus(
+            request: Request,
+            db: DbSession,
+            current_admin: ActiveAdmin,
+        ):
+            """
+            获取当前管理员的菜单列表
+            
+            根据角色权限过滤，用于前端动态渲染菜单
+            
+            菜单可见性规则：
+            - 用户明确拥有的菜单权限（menu:xxx）
+            - 用户拥有任意操作权限时，自动显示操作权限的父级菜单及其所有祖先菜单
+            
+            响应中每个菜单节点包含 permissions 字段，列出该菜单下用户拥有的操作权限码
+            """
+            perm_service = PermissionService(db)
+            menus = await perm_service.get_admin_menus(current_admin)
+            return success(data=menus, message=_("common.success"))
+        
+        @router.get("/list", summary="获取权限列表（平铺）")
+        @action_read("action.permission.list")
+        async def get_permission_list(
+            request: Request,
+            db: DbSession,
+            current_admin: ActiveAdmin,
+            type: str | None = None,
+        ):
+            """
+            获取权限列表（非树形）
+            
+            层级权限控制：
+            - 超级管理员：返回所有权限
+            - 普通管理员：返回自己拥有的权限（含继承）
+            
+            - type: 可选过滤，menu/operation
+            
+            权限: permission:read
+            """
+            perm_service = PermissionService(db)
+            data = await perm_service.get_admin_permission_list(current_admin, perm_type=type)
+            return success(data=data, message=_("common.success"))
+
+
+# 导出路由器
+router = AdminPermissionController.get_router()
+
+__all__ = ["router", "AdminPermissionController"]

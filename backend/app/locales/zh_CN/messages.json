@@ -1,0 +1,341 @@
+{
+  "common": {
+    "success": "操作成功",
+    "failed": "操作失败",
+    "created": "创建成功",
+    "updated": "更新成功",
+    "deleted": "删除成功",
+    "not_found": "资源不存在",
+    "invalid_request": "无效请求",
+    "server_error": "服务器内部错误",
+    "unauthorized": "未授权访问",
+    "forbidden": "禁止访问",
+    "validation_error": "数据验证失败",
+    "unknown_error": "未知错误"
+  },
+  "auth": {
+    "login_success": "登录成功",
+    "logout_success": "退出登录成功",
+    "token_expired": "令牌已过期",
+    "token_invalid": "无效令牌",
+    "credentials_invalid": "用户名或密码错误",
+    "account_disabled": "账户已禁用",
+    "account_locked": "账户已锁定",
+    "permission_denied": "权限不足",
+    "refresh_token_invalid": "刷新令牌无效",
+    "password_changed": "密码修改成功",
+    "password_mismatch": "密码不匹配",
+    "impersonate_token_invalid": "一键登录令牌无效或已过期",
+    "impersonate_success": "一键登录成功"
+  },
+  "user": {
+    "not_found": "用户不存在",
+    "already_exists": "用户已存在",
+    "email_exists": "邮箱已被注册",
+    "username_exists": "用户名已被占用",
+    "created": "用户创建成功",
+    "updated": "用户信息更新成功",
+    "deleted": "用户删除成功",
+    "profile_updated": "个人资料更新成功"
+  },
+  "admin": {
+    "not_found": "管理员不存在",
+    "username_exists": "用户名已被占用",
+    "email_exists": "邮箱已被使用",
+    "phone_exists": "手机号已被使用",
+    "password_incorrect": "密码错误",
+    "created": "管理员创建成功",
+    "updated": "管理员更新成功",
+    "deleted": "管理员删除成功",
+    "password_reset": "密码重置成功",
+    "status_updated": "管理员状态更新成功",
+    "cannot_delete_self": "不能删除自己",
+    "cannot_delete_super": "不能删除超级管理员",
+    "cannot_disable_self": "不能禁用自己",
+    "cannot_modify_super": "不能修改超级管理员",
+    "super_admin_required": "需要超级管理员权限"
+  },
+  "tenant": {
+    "not_found": "租户不存在",
+    "code_exists": "租户编码已存在",
+    "disabled": "租户已禁用",
+    "quota_exceeded": "配额已超限",
+    "created": "租户创建成功",
+    "updated": "租户更新成功",
+    "deleted": "租户删除成功",
+    "status_updated": "租户状态更新成功",
+    "settings_updated": "租户设置更新成功",
+    "identification_failed": "无法识别租户",
+    "owner_not_found": "租户所有者不存在"
+  },
+  "domain": {
+    "not_found": "域名不存在",
+    "already_exists": "域名已被使用",
+    "invalid_format": "域名格式不正确",
+    "quota_exceeded": "自定义域名数量已达上限",
+    "custom_domain_disabled": "当前套餐不支持自定义域名",
+    "created": "域名添加成功",
+    "updated": "域名更新成功",
+    "deleted": "域名删除成功",
+    "verified": "域名验证成功",
+    "verification_failed": "域名验证失败",
+    "set_primary_success": "已设置为主域名",
+    "cannot_delete_primary": "不能删除主域名",
+    "not_owned_by_tenant": "域名不属于当前租户"
+  },
+  "validation": {
+    "required": "{field}不能为空",
+    "invalid_email": "邮箱格式不正确",
+    "invalid_phone": "手机号格式不正确",
+    "min_length": "{field}长度不能少于{min}个字符",
+    "max_length": "{field}长度不能超过{max}个字符",
+    "invalid_format": "{field}格式不正确",
+    "out_of_range": "{field}超出有效范围"
+  },
+  "pagination": {
+    "invalid_page": "页码无效",
+    "invalid_page_size": "每页数量无效",
+    "size_exceeded": "每页数量超出限制"
+  },
+  "errors": {
+    "filters": {
+      "unknown_field": "未知的筛选字段",
+      "op_not_allowed": "不允许的操作符",
+      "between_requires_two_values": "between 操作符需要两个值",
+      "in_too_many_values": "in 操作符值数量超出限制",
+      "too_many": "筛选条件数量超出限制"
+    },
+    "sorts": {
+      "unknown_field": "未知的排序字段"
+    }
+  },
+  "file": {
+    "upload_success": "文件上传成功",
+    "upload_failed": "文件上传失败",
+    "file_too_large": "文件大小超出限制",
+    "invalid_file_type": "不支持的文件类型",
+    "not_found": "文件不存在"
+  },
+  "task": {
+    "created": "任务创建成功",
+    "started": "任务已启动",
+    "completed": "任务已完成",
+    "failed": "任务执行失败",
+    "cancelled": "任务已取消"
+  },
+  "ai": {
+    "request_failed": "AI 请求失败",
+    "rate_limited": "请求频率超限",
+    "quota_exceeded": "AI 配额已用完",
+    "model_not_available": "模型暂不可用",
+    "context_too_long": "上下文长度超出限制"
+  },
+  "rbac": {
+    "permission_denied": "权限不足，拒绝访问",
+    "endpoint_not_declared": "接口未声明访问权限，拒绝访问",
+    "role_required": "需要角色权限",
+    "super_admin_required": "需要超级管理员权限",
+    "owner_required": "需要租户所有者权限",
+    "invalid_permission": "无效的权限代码",
+    "permission_not_found": "权限不存在",
+    "cannot_access_resource": "无权访问该资源",
+    "insufficient_privileges": "权限级别不足"
+  },
+  "permission": {
+    "read": "查看",
+    "create": "创建",
+    "update": "编辑",
+    "delete": "删除",
+    "export": "导出",
+    "import": "导入"
+  },
+  "action": {
+    "role": {
+      "list": "查看角色列表",
+      "tree": "查看角色树",
+      "detail": "查看角色详情",
+      "children": "查看子角色",
+      "effective_permissions": "查看有效权限",
+      "create": "创建角色",
+      "update": "更新角色",
+      "move": "移动角色",
+      "delete": "删除角色",
+      "assign_permissions": "分配角色权限",
+      "select": "角色远程下拉"
+    },
+    "admin": {
+      "list": "查看管理员列表",
+      "detail": "查看管理员详情",
+      "create": "创建管理员",
+      "update": "更新管理员",
+      "delete": "删除管理员",
+      "reset_password": "重置管理员密码",
+      "toggle_status": "切换管理员状态",
+      "select": "管理员远程下拉"
+    },
+    "permission": {
+      "tree": "查看权限树",
+      "list": "查看权限列表"
+    },
+    "tenant": {
+      "list": "查看租户列表",
+      "detail": "查看租户详情",
+      "create": "创建租户",
+      "update": "更新租户",
+      "delete": "删除租户",
+      "toggle_status": "切换租户状态",
+      "impersonate": "一键登录租户后台",
+      "select": "租户远程下拉"
+    },
+    "tenant_settings": {
+      "view": "查看租户设置",
+      "update": "更新租户设置",
+      "domain_list": "查看域名列表",
+      "domain_add": "添加自定义域名",
+      "domain_detail": "查看域名详情",
+      "domain_update": "更新域名设置",
+      "domain_delete": "删除自定义域名",
+      "domain_verify": "验证域名"
+    }
+  },
+  "role": {
+    "not_found": "角色不存在",
+    "code_exists": "角色代码已存在",
+    "created": "角色创建成功",
+    "updated": "角色更新成功",
+    "deleted": "角色删除成功",
+    "system_role_cannot_modify": "系统内置角色不可修改",
+    "system_role_cannot_delete": "系统内置角色不可删除",
+    "permissions_updated": "角色权限更新成功",
+    "parent_not_found": "父角色不存在",
+    "cannot_set_self_as_parent": "不能将自己设为父角色",
+    "circular_reference": "检测到循环引用，父角色不能是当前角色的子孙角色",
+    "has_children": "角色存在子角色，请先删除或移动子角色",
+    "has_users": "角色下存在关联用户，请先移除用户的角色关联",
+    "max_depth_exceeded": "超出最大层级深度限制",
+    "system_role_cannot_change_parent": "系统内置角色不可修改父级关系",
+    "moved": "角色移动成功",
+    "no_permission_to_view": "无权查看该角色",
+    "no_permission_to_manage": "无权管理该角色",
+    "cannot_assign_permission": "无权分配该权限，只能分配您已拥有的权限",
+    "parent_must_be_visible": "父角色必须是您的角色或其下级角色",
+    "invalid_child_type": "当前节点类型不允许添加此类型的子节点",
+    "only_department_can_set_leader": "只有部门类型节点才能设置负责人",
+    "cannot_add_member": "当前节点类型不允许添加成员",
+    "member_exists": "成员已存在于该节点",
+    "member_not_in_node": "成员不在该节点中",
+    "member_added": "成员添加成功",
+    "member_removed": "成员移除成功",
+    "leader_set": "负责人设置成功"
+  },
+  "tenant_admin": {
+    "not_found": "管理员不存在",
+    "username_exists": "用户名已被占用",
+    "email_exists": "邮箱已被使用",
+    "phone_exists": "手机号已被使用",
+    "password_incorrect": "密码错误",
+    "created": "管理员创建成功",
+    "updated": "管理员更新成功",
+    "deleted": "管理员删除成功",
+    "password_reset": "密码重置成功",
+    "status_updated": "管理员状态更新成功",
+    "cannot_delete_self": "不能删除自己",
+    "cannot_delete_owner": "不能删除租户所有者",
+    "cannot_disable_self": "不能禁用自己",
+    "cannot_modify_owner": "不能修改租户所有者",
+    "owner_required": "需要租户所有者权限",
+    "role_not_found": "角色不存在"
+  },
+  "enum": {
+    "status": {
+      "active": "启用",
+      "inactive": "禁用"
+    },
+    "bool": {
+      "yes": "是",
+      "no": "否"
+    },
+    "gender": {
+      "unknown": "未知",
+      "male": "男",
+      "female": "女"
+    },
+    "audit": {
+      "pending": "待审核",
+      "approved": "已通过",
+      "rejected": "已拒绝"
+    },
+    "sort": {
+      "asc": "升序",
+      "desc": "降序"
+    },
+    "operation": {
+      "create": "创建",
+      "update": "更新",
+      "delete": "删除",
+      "query": "查询",
+      "login": "登录",
+      "logout": "登出",
+      "export": "导出",
+      "import": "导入"
+    },
+    "priority": {
+      "low": "低",
+      "medium": "中",
+      "high": "高",
+      "urgent": "紧急"
+    },
+    "role_type": {
+      "department": "部门",
+      "position": "岗位",
+      "role": "职能角色"
+    }
+  },
+  "error": {
+    "unknown": "未知错误",
+    "common": {
+      "validation_error": "数据验证失败",
+      "duplicate_entry": "数据已存在",
+      "invalid_parameter": "参数无效",
+      "old_password_incorrect": "原密码错误",
+      "not_found": "资源不存在",
+      "conflict": "资源冲突"
+    },
+    "auth": {
+      "unauthorized": "未授权访问",
+      "token_expired": "令牌已过期",
+      "token_invalid": "无效令牌",
+      "forbidden": "禁止访问",
+      "permission_denied": "权限不足"
+    },
+    "role": {
+      "cannot_set_self_as_parent": "不能将自己设为父角色",
+      "circular_reference": "检测到循环引用",
+      "max_depth_exceeded": "超出最大层级深度限制",
+      "system_cannot_change_parent": "系统内置角色不可修改父级关系",
+      "system_cannot_delete": "系统内置角色不可删除",
+      "has_children": "角色存在子角色，请先删除或移动子角色",
+      "has_users": "角色下存在关联用户，请先移除用户的角色关联",
+      "invalid_child_type": "当前节点类型不允许添加此类型的子节点",
+      "only_department_can_set_leader": "只有部门类型节点才能设置负责人",
+      "cannot_add_member": "当前节点类型不允许添加成员",
+      "member_exists": "成员已存在于该节点",
+      "member_not_in_node": "成员不在该节点中"
+    },
+    "domain": {
+      "custom_disabled": "当前套餐不支持自定义域名",
+      "quota_exceeded": "自定义域名数量已达上限",
+      "already_exists": "域名已被使用"
+    },
+    "admin": {
+      "username_exists": "用户名已被占用",
+      "email_exists": "邮箱已被使用",
+      "phone_exists": "手机号已被使用"
+    },
+    "server": {
+      "internal_error": "服务器内部错误",
+      "external_service_error": "外部服务调用失败",
+      "service_unavailable": "服务暂不可用"
+    }
+  }
+}
