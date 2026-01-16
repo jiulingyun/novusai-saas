@@ -47,6 +47,7 @@ class AdminResetPasswordRequest(BaseSchema):
         component="system/admin/List",
         parent="system",  # 父菜单: 权限管理
         sort_order=5,
+        hidden=True
     ),
 )
 class AdminAdminController(GlobalController):
