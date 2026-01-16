@@ -207,6 +207,8 @@
     "not_found": "Role not found",
     "code_exists": "Role code already exists",
     "created": "Role created successfully",
+    "tenant_root_description": "Tenant organization root node, cannot be deleted",
+    "platform_root_description": "Platform organization root node, cannot be deleted",
     "updated": "Role updated successfully",
     "deleted": "Role deleted successfully",
     "system_role_cannot_modify": "System role cannot be modified",

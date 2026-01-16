@@ -11,9 +11,10 @@ from typing import Any
 
 from app.core.base_service import GlobalService
 from app.core.i18n import _
-from app.enums import ErrorCode
+from app.enums import ErrorCode, RoleType
 from app.exceptions import BusinessException, NotFoundException
 from app.models.tenant.tenant import Tenant
+from app.models.auth.tenant_admin_role import TenantAdminRole
 from app.repositories.system.tenant_repository import TenantRepository
 
 
@@ -108,7 +109,46 @@ class TenantService(GlobalService[Tenant, TenantRepository]):
             "is_active": True,
         }
         
-        return await self.create(data)
+        tenant = await self.create(data)
+        
+        # 创建租户组织架构根节点
+        await self._create_tenant_root_node(tenant.id, tenant.name)
+        
+        return tenant
+    
+    async def _create_tenant_root_node(self, tenant_id: int, tenant_name: str) -> TenantAdminRole:
+        """
+        为租户创建组织架构根节点
+        
+        Args:
+            tenant_id: 租户 ID
+            tenant_name: 租户名称（用作根节点名称）
+        
+        Returns:
+            创建的根节点
+        """
+        root_node = TenantAdminRole(
+            tenant_id=tenant_id,
+            name=tenant_name,
+            code="tenant_root",
+            description=_("role.tenant_root_description"),
+            is_system=True,
+            is_active=True,
+            sort_order=0,
+            parent_id=None,
+            level=1,
+            type=RoleType.DEPARTMENT.value,
+            allow_members=True,
+        )
+        
+        self.db.add(root_node)
+        await self.db.flush()
+        
+        # 更新 path
+        root_node.path = f"/{root_node.id}/"
+        await self.db.flush()
+        
+        return root_node
     
     async def update_tenant(
         self,

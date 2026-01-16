@@ -207,6 +207,8 @@
     "not_found": "角色不存在",
     "code_exists": "角色代码已存在",
     "created": "角色创建成功",
+    "tenant_root_description": "租户组织架构根节点，不可删除",
+    "platform_root_description": "平台组织架构根节点，不可删除",
     "updated": "角色更新成功",
     "deleted": "角色删除成功",
     "system_role_cannot_modify": "系统内置角色不可修改",
