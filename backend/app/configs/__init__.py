@@ -26,6 +26,11 @@ from app.configs.sync import (
     ConfigSyncService,
     sync_configs_on_startup,
 )
+from app.configs.service import (
+    ConfigService,
+    get_config_service,
+    PLATFORM_TENANT_ID,
+)
 
 __all__ = [
     # 元数据类
@@ -47,4 +52,8 @@ __all__ = [
     # 同步服务
     "ConfigSyncService",
     "sync_configs_on_startup",
+    # 配置服务
+    "ConfigService",
+    "get_config_service",
+    "PLATFORM_TENANT_ID",
 ]
