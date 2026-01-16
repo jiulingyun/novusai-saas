@@ -118,6 +118,7 @@ class TenantAdminRoleMemberResponse(BaseSchema):
     nickname: str | None = Field(None, description="昵称")
     avatar: str | None = Field(None, description="头像")
     email: str = Field(..., description="邮箱")
+    is_active: bool = Field(True, description="是否启用")
     is_leader: bool = Field(False, description="是否是负责人")
 
 

@@ -726,6 +726,7 @@ class AdminRoleController(GlobalController):
                             nickname=m.nickname,
                             avatar=m.avatar,
                             email=m.email,
+                            is_active=m.is_active,
                             is_leader=(role.leader_id == m.id),
                         )
                         for m in members
