@@ -34,10 +34,10 @@ from app.schemas.system.config import (
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
         icon="lucide:sliders-horizontal",
-        path="/system/configs",
+        path="/system-mgmt/configs",
         component="system/configs/List",
-        parent="system",  # 父菜单: 系统管理
-        sort_order=40,
+        parent="system_mgmt",  # 父菜单: 系统管理
+        sort_order=10,
     ),
 )
 class TenantConfigController(TenantController):

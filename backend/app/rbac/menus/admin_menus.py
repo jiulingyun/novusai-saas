@@ -78,6 +78,23 @@ ADMIN_DIRECTORY_MENUS: list[PermissionMeta] = [
     ),
     # 子菜单由控制器声明:
     # - menu:admin.tenant (租户列表)
+    
+    # ========================================
+    # 系统管理（目录）
+    # ========================================
+    PermissionMeta(
+        code="menu:admin.system_mgmt",
+        name="menu.admin.system_mgmt",  # i18n key
+        type=PermissionType.MENU,
+        scope=PermissionScope.ADMIN,
+        resource="menu",
+        action="admin.system_mgmt",
+        icon="lucide:wrench",
+        path="/system-mgmt",
+        sort_order=30,
+    ),
+    # 子菜单由控制器声明:
+    # - menu:admin.platform_config (平台配置)
 ]
 
 

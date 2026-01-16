@@ -36,10 +36,10 @@ from app.services.tenant import TenantSettingsService
     scope=PermissionScope.TENANT,
     menu=MenuConfig(
         icon="lucide:settings",
-        path="/system/settings",
+        path="/system-mgmt/settings",
         component="system/settings/Index",
-        parent="system",  # 父菜单: 权限管理
-        sort_order=30,
+        parent="system_mgmt",  # 父菜单: 系统管理
+        sort_order=20,
     ),
 )
 class TenantSettingsController(TenantController):

@@ -62,6 +62,24 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     # - menu:tenant.organization (组织架构) - 由 roles.py 控制器声明
     
     # ========================================
+    # 系统管理（目录）
+    # ========================================
+    PermissionMeta(
+        code="menu:tenant.system_mgmt",
+        name="menu.tenant.system_mgmt",  # i18n key
+        type=PermissionType.MENU,
+        scope=PermissionScope.TENANT,
+        resource="menu",
+        action="tenant.system_mgmt",
+        icon="lucide:wrench",
+        path="/system-mgmt",
+        sort_order=20,
+    ),
+    # 子菜单由控制器声明:
+    # - menu:tenant.tenant_config (租户配置)
+    # - menu:tenant.tenant_settings (租户设置)
+    
+    # ========================================
     # 业务管理（目录，预留）
     # ========================================
     # PermissionMeta(
@@ -73,7 +91,7 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     #     action="tenant.business",
     #     icon="appstore",
     #     path="/business",
-    #     sort_order=20,
+    #     sort_order=30,
     # ),
 ]
 
