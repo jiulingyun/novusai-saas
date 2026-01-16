@@ -2,6 +2,12 @@
 配置分组定义
 
 定义平台级和租户级的配置分组
+
+图标规范:
+使用 Lucide 图标库: https://lucide.dev/icons
+格式: "lucide:{icon-name}"
+示例: "lucide:settings", "lucide:shield", "lucide:mail"
+图标名称使用 kebab-case（小写字母，单词间用连字符分隔）
 """
 
 from app.configs.meta import ConfigGroupMeta
@@ -18,7 +24,7 @@ PLATFORM_GENERAL_GROUP = ConfigGroupMeta(
     name_key="config.group.platform_general.name",
     description_key="config.group.platform_general.desc",
     scope=ConfigScope.PLATFORM,
-    icon="settings",
+    icon="lucide:settings",
     sort_order=10,
 )
 
@@ -28,7 +34,7 @@ PLATFORM_SECURITY_GROUP = ConfigGroupMeta(
     name_key="config.group.platform_security.name",
     description_key="config.group.platform_security.desc",
     scope=ConfigScope.PLATFORM,
-    icon="shield",
+    icon="lucide:shield",
     sort_order=20,
 )
 
@@ -38,7 +44,7 @@ PLATFORM_EMAIL_GROUP = ConfigGroupMeta(
     name_key="config.group.platform_email.name",
     description_key="config.group.platform_email.desc",
     scope=ConfigScope.PLATFORM,
-    icon="mail",
+    icon="lucide:mail",
     sort_order=30,
 )
 
@@ -48,13 +54,13 @@ PLATFORM_STORAGE_GROUP = ConfigGroupMeta(
     name_key="config.group.platform_storage.name",
     description_key="config.group.platform_storage.desc",
     scope=ConfigScope.PLATFORM,
-    icon="database",
+    icon="lucide:database",
     sort_order=40,
 )
 
 
 # ==========================================
-# 租户配置分组（后续 T6 任务使用）
+# 租户配置分组
 # ==========================================
 
 # 租户基础设置分组
@@ -63,7 +69,7 @@ TENANT_GENERAL_GROUP = ConfigGroupMeta(
     name_key="config.group.tenant_general.name",
     description_key="config.group.tenant_general.desc",
     scope=ConfigScope.TENANT,
-    icon="building",
+    icon="lucide:sliders-horizontal",
     sort_order=10,
 )
 
@@ -73,7 +79,7 @@ TENANT_APPEARANCE_GROUP = ConfigGroupMeta(
     name_key="config.group.tenant_appearance.name",
     description_key="config.group.tenant_appearance.desc",
     scope=ConfigScope.TENANT,
-    icon="palette",
+    icon="lucide:palette",
     sort_order=20,
 )
 
@@ -83,7 +89,7 @@ TENANT_FEATURES_GROUP = ConfigGroupMeta(
     name_key="config.group.tenant_features.name",
     description_key="config.group.tenant_features.desc",
     scope=ConfigScope.TENANT,
-    icon="puzzle",
+    icon="lucide:puzzle",
     sort_order=30,
 )
 
