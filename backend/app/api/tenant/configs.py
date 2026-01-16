@@ -30,6 +30,40 @@ from app.schemas.system.config import (
 )
 
 
+def _translate_config_item(config: dict) -> ConfigItemResponse:
+    """将配置项字典转换为响应对象并翻译 i18n 键"""
+    # 翻译选项标签
+    translated_options = []
+    for opt in config.get("options", []):
+        translated_options.append({
+            "value": opt["value"],
+            "label": _(opt["label_key"]) if opt.get("label_key") else str(opt.get("value", "")),
+        })
+    
+    # 翻译验证规则消息
+    translated_rules = []
+    for rule in config.get("validation_rules", []):
+        translated_rules.append({
+            "type": rule["type"],
+            "value": rule["value"],
+            "message": _(rule["message_key"]) if rule.get("message_key") else "",
+        })
+    
+    return ConfigItemResponse(
+        key=config["key"],
+        name=_(config["name_key"]),
+        description=_(config["description_key"]) if config.get("description_key") else None,
+        value_type=config["value_type"],
+        value=config["value"],
+        default_value=config["default_value"],
+        options=translated_options,
+        validation_rules=translated_rules,
+        is_required=config["is_required"],
+        is_encrypted=config["is_encrypted"],
+        sort_order=config["sort_order"],
+    )
+
+
 @permission_resource(
     resource="tenant_config",
     name="menu.tenant.tenant_config",  # i18n key
@@ -84,8 +118,8 @@ class TenantConfigController(TenantController):
                 
                 result.append(ConfigGroupListResponse(
                     code=group.code,
-                    name_key=group.name_key,
-                    description_key=group.description_key,
+                    name=_(group.name_key),
+                    description=_(group.description_key) if group.description_key else None,
                     icon=group.icon,
                     sort_order=group.sort_order,
                     config_count=visible_count,
@@ -139,27 +173,15 @@ class TenantConfigController(TenantController):
             
             # 转换响应
             configs = [
-                ConfigItemResponse(
-                    key=c["key"],
-                    name_key=c["name_key"],
-                    description_key=c.get("description_key"),
-                    value_type=c["value_type"],
-                    value=c["value"],
-                    default_value=c["default_value"],
-                    options=c.get("options", []),
-                    validation_rules=c.get("validation_rules", []),
-                    is_required=c["is_required"],
-                    is_encrypted=c["is_encrypted"],
-                    sort_order=c["sort_order"],
-                )
+                _translate_config_item(c)
                 for c in target_group["configs"]
             ]
             
             return success(
                 data=ConfigGroupResponse(
                     code=target_group["code"],
-                    name_key=target_group["name_key"],
-                    description_key=target_group.get("description_key"),
+                    name=_(target_group["name_key"]),
+                    description=_(target_group["description_key"]) if target_group.get("description_key") else None,
                     icon=target_group.get("icon"),
                     sort_order=target_group["sort_order"],
                     configs=configs,
@@ -224,27 +246,15 @@ class TenantConfigController(TenantController):
                     break
             
             configs = [
-                ConfigItemResponse(
-                    key=c["key"],
-                    name_key=c["name_key"],
-                    description_key=c.get("description_key"),
-                    value_type=c["value_type"],
-                    value=c["value"],
-                    default_value=c["default_value"],
-                    options=c.get("options", []),
-                    validation_rules=c.get("validation_rules", []),
-                    is_required=c["is_required"],
-                    is_encrypted=c["is_encrypted"],
-                    sort_order=c["sort_order"],
-                )
+                _translate_config_item(c)
                 for c in target_group["configs"]
             ] if target_group else []
             
             return success(
                 data=ConfigGroupResponse(
                     code=group_code,
-                    name_key=group.name_key,
-                    description_key=group.description_key,
+                    name=_(group.name_key),
+                    description=_(group.description_key) if group.description_key else None,
                     icon=group.icon,
                     sort_order=group.sort_order,
                     configs=configs,

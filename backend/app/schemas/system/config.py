@@ -19,7 +19,7 @@ class ConfigOptionSchema(BaseSchema):
     """配置选项"""
     
     value: Any = Field(..., description="选项值")
-    label_key: str = Field(..., description="选项标签的 i18n 键")
+    label: str = Field(..., description="选项标签")
 
 
 class ValidationRuleSchema(BaseSchema):
@@ -27,7 +27,7 @@ class ValidationRuleSchema(BaseSchema):
     
     type: str = Field(..., description="规则类型")
     value: Any = Field(..., description="规则值")
-    message_key: str = Field("", description="错误消息的 i18n 键")
+    message: str = Field("", description="错误消息")
 
 
 # ==========================================
@@ -38,8 +38,8 @@ class ConfigItemResponse(BaseSchema):
     """配置项响应"""
     
     key: str = Field(..., description="配置键名")
-    name_key: str = Field(..., description="名称的 i18n 键")
-    description_key: str | None = Field(None, description="描述的 i18n 键")
+    name: str = Field(..., description="配置名称")
+    description: str | None = Field(None, description="配置描述")
     value_type: str = Field(..., description="值类型")
     value: Any = Field(None, description="当前值")
     default_value: Any = Field(None, description="默认值")
@@ -58,8 +58,8 @@ class ConfigGroupResponse(BaseSchema):
     """配置分组响应"""
     
     code: str = Field(..., description="分组代码")
-    name_key: str = Field(..., description="名称的 i18n 键")
-    description_key: str | None = Field(None, description="描述的 i18n 键")
+    name: str = Field(..., description="分组名称")
+    description: str | None = Field(None, description="分组描述")
     icon: str | None = Field(None, description="分组图标")
     sort_order: int = Field(0, description="排序顺序")
     configs: list[ConfigItemResponse] = Field(default_factory=list, description="配置项列表")
@@ -69,8 +69,8 @@ class ConfigGroupListResponse(BaseSchema):
     """配置分组列表响应（不含配置项）"""
     
     code: str = Field(..., description="分组代码")
-    name_key: str = Field(..., description="名称的 i18n 键")
-    description_key: str | None = Field(None, description="描述的 i18n 键")
+    name: str = Field(..., description="分组名称")
+    description: str | None = Field(None, description="分组描述")
     icon: str | None = Field(None, description="分组图标")
     sort_order: int = Field(0, description="排序顺序")
     config_count: int = Field(0, description="配置项数量")
