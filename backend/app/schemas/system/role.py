@@ -119,6 +119,10 @@ class AdminRoleMemberResponse(BaseSchema):
     email: str = Field(..., description="邮箱")
     is_active: bool = Field(True, description="是否启用")
     is_leader: bool = Field(False, description="是否是负责人")
+    role_id: int | None = Field(None, description="角色/节点 ID")
+    role_name: str | None = Field(None, description="角色/节点名称")
+    created_at: datetime | None = Field(None, description="创建时间")
+    updated_at: datetime | None = Field(None, description="更新时间")
 
 
 __all__ = [

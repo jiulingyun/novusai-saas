@@ -735,12 +735,14 @@ class TenantRoleController(TenantController):
             search: str = Query("", description="搜索关键词（用户名/昵称/邮箱）"),
             page: int = Query(1, ge=1, alias="page[number]", description="页码"),
             page_size: int = Query(20, ge=1, le=100, alias="page[size]", description="每页数量"),
+            include_descendants: bool = Query(True, description="是否包含子节点成员"),
         ):
             """
-            获取节点成员列表（分页 + 搜索）
+            获取节点成员列表（分页 + 搜索 + 递归子节点）
             
             - 支持通用搜索: search=xxx 模糊匹配用户名/昵称/邮箱
             - 支持分页: page[number]=1&page[size]=20
+            - 支持递归查询: include_descendants=true 查询所有子节点成员
             
             权限: role:members
             """
@@ -765,6 +767,7 @@ class TenantRoleController(TenantController):
                     search=search if search else None,
                     page=page,
                     page_size=page_size,
+                    include_descendants=include_descendants,
                 )
                 
                 return success(
@@ -777,7 +780,11 @@ class TenantRoleController(TenantController):
                                 avatar=m.avatar,
                                 email=m.email,
                                 is_active=m.is_active,
-                                is_leader=(role.leader_id == m.id),
+                                is_leader=(role.leader_id == m.id) if not include_descendants else (m.role and m.role.leader_id == m.id),
+                                role_id=m.role_id,
+                                role_name=m.role.name if m.role else None,
+                                created_at=m.created_at,
+                                updated_at=m.updated_at,
                             )
                             for m in members
                         ],
