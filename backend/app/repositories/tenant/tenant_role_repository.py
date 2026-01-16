@@ -390,32 +390,61 @@ class TenantRoleRepository(TenantRepository[TenantAdminRole]):
     async def get_members(
         self,
         role_id: int,
+        search: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
         include_deleted: bool = False,
-    ) -> list:
+    ) -> tuple[list, int]:
         """
-        获取节点成员列表（租户内）
+        获取节点成员列表（租户内，分页 + 搜索）
         
         Args:
             role_id: 角色/节点 ID
+            search: 搜索关键词（匹配用户名/昵称/邮箱）
+            page: 页码
+            page_size: 每页数量
             include_deleted: 是否包含已删除记录
         
         Returns:
-            成员列表 (TenantAdmin)
+            (成员列表, 总数)
         """
         from app.models.tenant.tenant_admin import TenantAdmin
+        from sqlalchemy import or_
         
-        query = select(TenantAdmin).where(
+        # 基础查询条件
+        base_conditions = [
             TenantAdmin.tenant_id == self.tenant_id,
             TenantAdmin.role_id == role_id,
-        )
-        
+        ]
         if not include_deleted:
-            query = query.where(TenantAdmin.is_deleted == False)
+            base_conditions.append(TenantAdmin.is_deleted == False)
         
+        # 搜索条件
+        if search:
+            search_pattern = f"%{search}%"
+            base_conditions.append(
+                or_(
+                    TenantAdmin.username.ilike(search_pattern),
+                    TenantAdmin.nickname.ilike(search_pattern),
+                    TenantAdmin.email.ilike(search_pattern),
+                )
+            )
+        
+        # 统计总数
+        count_query = select(func.count(TenantAdmin.id)).where(*base_conditions)
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar() or 0
+        
+        # 分页查询
+        offset = (page - 1) * page_size
+        query = select(TenantAdmin).where(*base_conditions)
         query = query.order_by(TenantAdmin.id.asc())
+        query = query.offset(offset).limit(page_size)
         
         result = await self.db.execute(query)
-        return list(result.scalars().all())
+        members = list(result.scalars().all())
+        
+        return members, total
     
     async def count_members(
         self,

@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.core.base_controller import TenantController
+from app.core.base_schema import PageResponse
 from app.core.deps import DbSession, ActiveTenantAdmin
 from app.core.i18n import _
 from app.core.response import success
@@ -731,9 +732,15 @@ class TenantRoleController(TenantController):
             db: DbSession,
             role_id: int,
             current_admin: ActiveTenantAdmin,
+            search: str = Query("", description="搜索关键词（用户名/昵称/邮箱）"),
+            page: int = Query(1, ge=1, alias="page[number]", description="页码"),
+            page_size: int = Query(20, ge=1, le=100, alias="page[size]", description="每页数量"),
         ):
             """
-            获取节点成员列表
+            获取节点成员列表（分页 + 搜索）
+            
+            - 支持通用搜索: search=xxx 模糊匹配用户名/昵称/邮箱
+            - 支持分页: page[number]=1&page[size]=20
             
             权限: role:members
             """
@@ -753,21 +760,31 @@ class TenantRoleController(TenantController):
                 if not role:
                     raise NotFoundException(message=_("role.not_found"))
                 
-                members = await service.get_members(role_id)
+                members, total = await service.get_members(
+                    role_id,
+                    search=search if search else None,
+                    page=page,
+                    page_size=page_size,
+                )
                 
                 return success(
-                    data=[
-                        TenantAdminRoleMemberResponse(
-                            id=m.id,
-                            username=m.username,
-                            nickname=m.nickname,
-                            avatar=m.avatar,
-                            email=m.email,
-                            is_active=m.is_active,
-                            is_leader=(role.leader_id == m.id),
-                        )
-                        for m in members
-                    ],
+                    data=PageResponse.create(
+                        items=[
+                            TenantAdminRoleMemberResponse(
+                                id=m.id,
+                                username=m.username,
+                                nickname=m.nickname,
+                                avatar=m.avatar,
+                                email=m.email,
+                                is_active=m.is_active,
+                                is_leader=(role.leader_id == m.id),
+                            )
+                            for m in members
+                        ],
+                        total=total,
+                        page=page,
+                        page_size=page_size,
+                    ),
                     message=_("common.success"),
                 )
                 
