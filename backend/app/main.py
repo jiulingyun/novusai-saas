@@ -60,6 +60,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
     
     # 同步配置到数据库（将代码定义的配置项同步到 DB）
+    # 导入配置定义模块（触发配置注册到 registry）
+    import app.configs.definitions  # noqa: F401
     from app.configs.sync import sync_configs_on_startup
     
     async with async_session_factory() as db:
