@@ -17,6 +17,8 @@ import {
   Tooltip,
 } from 'ant-design-vue';
 
+import type { RoleTreeApi } from './data';
+
 import AdminFormDrawer from './modules/admin-form-drawer.vue';
 import MemberItem from './modules/member-item.vue';
 import ResetPasswordModal from './modules/reset-password-modal.vue';
@@ -35,6 +37,8 @@ const props = withDefaults(
     nodeId?: null | number;
     /** 节点名称（用于显示标题） */
     nodeName?: string;
+    /** 角色树 API（编辑模式下可选择角色） */
+    roleTreeApi?: RoleTreeApi;
   }>(),
   {
     nodeId: null,
@@ -42,6 +46,7 @@ const props = withDefaults(
     allowMembers: true,
     leaderId: null,
     apiPrefix: 'admin',
+    roleTreeApi: undefined,
   },
 );
 
@@ -354,6 +359,7 @@ async function handleRefresh() {
       :node-id="nodeId"
       :node-name="nodeName"
       :api-prefix="apiPrefix"
+      :role-tree-api="roleTreeApi"
       @success="handleMemberSuccess"
     />
 

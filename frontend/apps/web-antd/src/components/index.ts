@@ -18,8 +18,5 @@ export { OrgTreeNode, useOrgTree } from './business/org-tree';
 // 权限选择器
 export { PermissionSelector } from './business/permission-selector';
 
-// 远程选择器
-export { RemoteSelect } from './business/remote-select';
-
 // 角色树
 export { RoleTreeNode } from './business/role-tree';

@@ -58,7 +58,12 @@
       "usernameEdit": "Username cannot be modified after creation",
       "usernameCreate": "Username will be used for login",
       "roleHelp": "Role determines user permissions",
-      "superAdminHelp": "Super admin has all permissions"
+      "superAdminHelp": "Super admin has all permissions",
+      "roleAutoBinding": "Role is automatically bound to the current organization node"
+    },
+    "validation": {
+      "passwordMin": "Password must be at least 6 characters",
+      "confirmRequired": "Please confirm password"
     }
   },
   "role": {

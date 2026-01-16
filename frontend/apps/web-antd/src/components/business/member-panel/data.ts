@@ -4,18 +4,28 @@
  */
 import type { VbenFormSchema } from '#/adapter/form';
 
+import type { AnyPromiseFunction } from '@vben/types';
+
 import { z } from '#/adapter/form';
 import { $t } from '#/locales';
 
+/** 角色树 API 类型 */
+export type RoleTreeApi = AnyPromiseFunction<any, any>;
+
 /**
  * 管理员新建/编辑表单 Schema
- * @param isEdit 是否编辑模式
- * @param nodeName 组织节点名称（用于角色显示）
+ * @param options 配置选项
  */
-export function useAdminFormSchema(
-  isEdit: boolean = false,
-  nodeName?: string,
-): VbenFormSchema[] {
+export function useAdminFormSchema(options: {
+  /** 是否编辑模式 */
+  isEdit?: boolean;
+  /** 组织节点名称（新建模式下显示只读角色） */
+  nodeName?: string;
+  /** 角色树 API（编辑模式下可选择角色） */
+  roleTreeApi?: RoleTreeApi;
+}): VbenFormSchema[] {
+  const { isEdit = false, nodeName, roleTreeApi } = options;
+
   return [
     // === 基本信息 ===
     {
@@ -106,21 +116,42 @@ export function useAdminFormSchema(
         default: () => $t('admin.common.permissionSettings'),
       }),
     },
-    // 角色显示（只读）
-    ...(nodeName
+    // 角色选择：编辑模式且有 roleTreeApi 时使用树形选择器，否则显示只读文本
+    ...(isEdit && roleTreeApi
       ? [
           {
-            component: 'Input',
+            component: 'ApiTreeSelect',
             componentProps: {
-              disabled: true,
+              api: roleTreeApi,
+              childrenField: 'children',
+              labelField: 'name',
+              valueField: 'id',
+              placeholder: $t('admin.system.admin.placeholder.selectRole'),
+              showSearch: true,
+              treeNodeFilterProp: 'name',
+              treeDefaultExpandAll: true,
+              allowClear: true,
+              style: { width: '100%' },
             },
-            fieldName: 'role_display',
+            fieldName: 'role_id',
             label: $t('admin.system.admin.role'),
-            defaultValue: nodeName,
-            help: '角色自动绑定当前组织节点',
+            rules: 'required',
           },
         ]
-      : []),
+      : nodeName
+        ? [
+            {
+              component: 'Input',
+              componentProps: {
+                disabled: true,
+              },
+              fieldName: 'role_display',
+              label: $t('admin.system.admin.role'),
+              defaultValue: nodeName,
+              help: $t('admin.system.admin.help.roleAutoBinding'),
+            },
+          ]
+        : []),
     {
       component: 'RadioGroup',
       componentProps: {

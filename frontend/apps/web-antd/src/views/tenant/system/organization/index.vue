@@ -24,7 +24,7 @@ import {
   Tooltip,
 } from 'ant-design-vue';
 
-import { deleteTenantRoleApi } from '#/api/tenant/role';
+import { deleteTenantRoleApi, getTenantRoleTreeApi } from '#/api/tenant/role';
 import { MemberPanel } from '#/components/business/member-panel';
 import { OrgNodeDialog } from '#/components/business/org-node-dialog';
 import { PermissionPreview } from '#/components/business/permission-preview';
@@ -493,6 +493,7 @@ onMounted(async () => {
                 :node-name="selectedNode.name"
                 :allow-members="selectedNode.allowMembers"
                 :leader-id="selectedNode.leaderId"
+                :role-tree-api="getTenantRoleTreeApi"
                 api-prefix="tenant"
                 @refresh="handleMemberPanelRefresh"
               />

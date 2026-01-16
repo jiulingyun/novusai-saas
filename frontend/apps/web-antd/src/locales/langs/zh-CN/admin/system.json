@@ -58,7 +58,12 @@
       "usernameEdit": "用户名创建后不可修改",
       "usernameCreate": "用户名将用于登录",
       "roleHelp": "角色决定用户的操作权限",
-      "superAdminHelp": "超级管理员拥有所有权限"
+      "superAdminHelp": "超级管理员拥有所有权限",
+      "roleAutoBinding": "角色自动绑定当前组织节点"
+    },
+    "validation": {
+      "passwordMin": "密码长度不能少于6位",
+      "confirmRequired": "请确认密码"
     }
   },
   "role": {

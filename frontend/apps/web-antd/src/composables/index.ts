@@ -20,9 +20,3 @@ export {
   type UseCrudFormOptions,
   type UseCrudFormReturn,
 } from './use-crud-form';
-
-export {
-  useRemoteSelect,
-  type UseRemoteSelectOptions,
-  type UseRemoteSelectReturn,
-} from './use-remote-select';

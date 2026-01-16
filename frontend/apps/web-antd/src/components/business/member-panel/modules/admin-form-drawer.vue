@@ -5,6 +5,8 @@
  */
 import type { adminApi } from '#/api';
 
+import type { RoleTreeApi } from '../data';
+
 import { computed } from 'vue';
 
 import { useVbenForm } from '#/adapter/form';
@@ -23,11 +25,14 @@ const props = withDefaults(
     nodeId?: null | number;
     /** 节点名称（用于显示） */
     nodeName?: string;
+    /** 角色树 API（编辑模式下可选择角色） */
+    roleTreeApi?: RoleTreeApi;
   }>(),
   {
     nodeId: null,
     nodeName: '',
     apiPrefix: 'admin',
+    roleTreeApi: undefined,
   },
 );
 
@@ -46,7 +51,12 @@ const [Form, formApi] = useVbenForm({
 // CRUD 抽屉
 const { Drawer, drawerApi, isEdit } = useCrudDrawer<AdminInfo>({
   formApi,
-  schema: (edit) => useAdminFormSchema(edit, props.nodeName),
+  schema: (edit) =>
+    useAdminFormSchema({
+      isEdit: edit,
+      nodeName: props.nodeName,
+      roleTreeApi: props.roleTreeApi,
+    }),
   // 新建模式默认值（声明式配置）
   defaults: () => getAdminFormDefaults(props.nodeName),
   // 表单值 -> API 请求体
@@ -56,8 +66,12 @@ const { Drawer, drawerApi, isEdit } = useCrudDrawer<AdminInfo>({
     phone: values.phone || null,
     nickname: values.nickname || null,
     is_active: values.is_active ?? true,
-    // 新建时使用 nodeId，编辑时不修改角色
-    ...(edit ? {} : { role_id: props.nodeId }),
+    // 新建时使用 nodeId，编辑时可修改角色
+    ...(edit
+      ? props.roleTreeApi
+        ? { role_id: values.role_id }
+        : {}
+      : { role_id: props.nodeId }),
   }),
   // 编辑模式：后端数据 -> 表单值
   toFormValues: (data) => ({
@@ -66,8 +80,13 @@ const { Drawer, drawerApi, isEdit } = useCrudDrawer<AdminInfo>({
     phone: data.phone,
     nickname: data.nickname,
     is_active: data.isActive,
-    role_display:
-      data.roleName || props.nodeName || $t('admin.common.unassigned'),
+    // 如果有 roleTreeApi，使用 role_id；否则使用 role_display
+    ...(props.roleTreeApi
+      ? { role_id: data.roleId }
+      : {
+          role_display:
+            data.roleName || props.nodeName || $t('admin.common.unassigned'),
+        }),
   }),
   onSuccess: () => emits('success'),
 });

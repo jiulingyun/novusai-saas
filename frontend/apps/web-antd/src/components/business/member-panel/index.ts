@@ -6,7 +6,8 @@
 // 组件导出
 export { default as MemberPanel } from './member-panel.vue';
 
-// 仅导出外部需要的类型
+// 类型导出
+export type { RoleTreeApi } from './data';
 export type {
   MemberPanelProps,
   UseMemberPanelOptions,
