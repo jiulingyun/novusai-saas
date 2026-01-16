@@ -57,7 +57,13 @@ class TenantAdminRole(TenantModel):
         "label": "name",
         "value": "id",
         "search": ["name", "code"],
-        "extra": ["code"],
+        "extra": ["code", "type", "level"],
+        # 树型配置
+        "tree": {
+            "parent_field": "parent_id",
+            "children_field": "children",
+            "order_by": "sort_order",
+        },
     }
     
     # 角色名称

@@ -570,19 +570,37 @@ class BaseRepository(Generic[ModelType]):
         search: str = "",
         limit: int = 50,
         filters: dict[str, Any] | None = None,
+        tree: bool = False,
+        parent_id: int | None = None,
     ) -> list[SelectOption]:
         """
         获取下拉选项列表
         
-        根据模型的 __selectable__ 配置自动构建查询
+        根据模型的 __selectable__ 配置自动构建查询，支持列表和树型两种模式
         
         Args:
             search: 搜索关键词
             limit: 最大返回数量
             filters: 额外过滤条件（如 is_active=True）
+            tree: 是否返回树型结构
+            parent_id: 父节点 ID（树型模式下用于懒加载）
         
         Returns:
-            SelectOption 列表
+            SelectOption 列表（列表模式或树型模式）
+        
+        __selectable__ 配置示例:
+            __selectable__ = {
+                "label": "name",
+                "value": "id",
+                "search": ["name", "code"],
+                "extra": ["code", "type"],
+                # 树型配置（可选）
+                "tree": {
+                    "parent_field": "parent_id",      # 父节点 ID 字段
+                    "children_field": "children",     # 子节点关联名称
+                    "order_by": "sort_order",         # 排序字段
+                }
+            }
         """
         # 获取 __selectable__ 配置
         selectable = getattr(self.model, "__selectable__", None)
@@ -596,7 +614,23 @@ class BaseRepository(Generic[ModelType]):
         search_fields = selectable.get("search", [label_field])
         extra_fields = selectable.get("extra", [])
         
-        # 构建查询
+        # 树型模式处理
+        if tree:
+            tree_config = selectable.get("tree")
+            if not tree_config:
+                raise ValueError(
+                    f"Model {self.model.__name__} does not have tree configuration in __selectable__"
+                )
+            return await self._get_tree_select_options(
+                selectable=selectable,
+                tree_config=tree_config,
+                search=search,
+                limit=limit,
+                filters=filters,
+                parent_id=parent_id,
+            )
+        
+        # 列表模式（原有逻辑）
         query = select(self.model).where(self.model.is_deleted == False)
         
         # 应用额外过滤条件
@@ -625,6 +659,111 @@ class BaseRepository(Generic[ModelType]):
         items = list(result.scalars().all())
         
         # 构建 SelectOption 列表
+        return self._build_select_options(items, selectable)
+    
+    async def _get_tree_select_options(
+        self,
+        selectable: dict[str, Any],
+        tree_config: dict[str, Any],
+        search: str = "",
+        limit: int = 500,
+        filters: dict[str, Any] | None = None,
+        parent_id: int | None = None,
+    ) -> list[SelectOption]:
+        """
+        获取树型下拉选项
+        
+        Args:
+            selectable: __selectable__ 配置
+            tree_config: 树型配置
+            search: 搜索关键词
+            limit: 最大返回数量
+            filters: 额外过滤条件
+            parent_id: 父节点 ID（懒加载时指定）
+        """
+        parent_field = tree_config.get("parent_field", "parent_id")
+        children_field = tree_config.get("children_field", "children")
+        order_field = tree_config.get("order_by", "sort_order")
+        search_fields = selectable.get("search", [selectable.get("label", "name")])
+        
+        # 懒加载模式：仅返回指定父节点的直接子节点
+        if parent_id is not None:
+            query = select(self.model).where(
+                self.model.is_deleted == False,
+                getattr(self.model, parent_field) == parent_id,
+            )
+            
+            # 应用额外过滤条件
+            if filters:
+                for key, value in filters.items():
+                    if hasattr(self.model, key) and value is not None:
+                        query = query.where(getattr(self.model, key) == value)
+            
+            # 排序
+            if hasattr(self.model, order_field):
+                query = query.order_by(asc(getattr(self.model, order_field)))
+            
+            query = query.limit(limit)
+            result = await self.db.execute(query)
+            items = list(result.scalars().all())
+            
+            # 构建选项（带 is_leaf 标记）
+            return self._build_select_options(
+                items, selectable, tree_mode=True, children_field=children_field
+            )
+        
+        # 全量树模式：返回完整树结构
+        query = select(self.model).where(self.model.is_deleted == False)
+        
+        # 应用额外过滤条件
+        if filters:
+            for key, value in filters.items():
+                if hasattr(self.model, key) and value is not None:
+                    query = query.where(getattr(self.model, key) == value)
+        
+        # 应用搜索条件
+        if search:
+            search_predicates = []
+            for field_name in search_fields:
+                if hasattr(self.model, field_name):
+                    col = getattr(self.model, field_name)
+                    search_predicates.append(col.ilike(f"%{search}%"))
+            if search_predicates:
+                query = query.where(or_(*search_predicates))
+        
+        # 排序
+        if hasattr(self.model, order_field):
+            query = query.order_by(asc(getattr(self.model, order_field)))
+        
+        query = query.limit(limit)
+        result = await self.db.execute(query)
+        all_items = list(result.scalars().all())
+        
+        # 构建树结构
+        return self._build_tree_options(
+            all_items, selectable, parent_field, children_field
+        )
+    
+    def _build_select_options(
+        self,
+        items: list[ModelType],
+        selectable: dict[str, Any],
+        tree_mode: bool = False,
+        children_field: str = "children",
+    ) -> list[SelectOption]:
+        """
+        构建 SelectOption 列表
+        
+        Args:
+            items: 模型实例列表
+            selectable: __selectable__ 配置
+            tree_mode: 是否树型模式（包含 is_leaf 字段）
+            children_field: 子节点关联名称
+        """
+        label_field = selectable.get("label", "name")
+        value_field = selectable.get("value", "id")
+        extra_fields = selectable.get("extra", [])
+        
         options = []
         for item in items:
             label = getattr(item, label_field, "")
@@ -638,19 +777,106 @@ class BaseRepository(Generic[ModelType]):
                     if hasattr(item, ef):
                         extra[ef] = getattr(item, ef)
             
-            # 检查是否禁用（如果有 is_active 字段）
+            # 检查是否禁用
             disabled = False
             if hasattr(item, "is_active"):
                 disabled = not item.is_active
             
-            options.append(SelectOption(
+            option = SelectOption(
                 label=str(label),
                 value=value,
                 extra=extra,
                 disabled=disabled,
-            ))
+            )
+            
+            # 树型模式时添加 is_leaf 标记
+            if tree_mode:
+                children = getattr(item, children_field, None)
+                if children is not None:
+                    # 过滤已删除的子节点
+                    active_children = [
+                        c for c in children 
+                        if not getattr(c, "is_deleted", False)
+                    ]
+                    option.is_leaf = len(active_children) == 0
+                else:
+                    option.is_leaf = True
+            
+            options.append(option)
         
         return options
+    
+    def _build_tree_options(
+        self,
+        items: list[ModelType],
+        selectable: dict[str, Any],
+        parent_field: str,
+        children_field: str,
+    ) -> list[SelectOption]:
+        """
+        构建树型 SelectOption 结构
+        
+        Args:
+            items: 所有模型实例（平坦列表）
+            selectable: __selectable__ 配置
+            parent_field: 父节点 ID 字段名
+            children_field: 子节点关联名称
+        """
+        label_field = selectable.get("label", "name")
+        value_field = selectable.get("value", "id")
+        extra_fields = selectable.get("extra", [])
+        
+        # 构建 ID -> item 映射
+        item_map: dict[int, ModelType] = {}
+        for item in items:
+            item_map[getattr(item, value_field)] = item
+        
+        # 构建 ID -> SelectOption 映射
+        option_map: dict[int | str, SelectOption] = {}
+        for item in items:
+            value = getattr(item, value_field)
+            label = getattr(item, label_field, "")
+            
+            # 构建 extra 数据
+            extra = None
+            if extra_fields:
+                extra = {}
+                for ef in extra_fields:
+                    if hasattr(item, ef):
+                        extra[ef] = getattr(item, ef)
+            
+            # 检查是否禁用
+            disabled = False
+            if hasattr(item, "is_active"):
+                disabled = not item.is_active
+            
+            option_map[value] = SelectOption(
+                label=str(label),
+                value=value,
+                extra=extra,
+                disabled=disabled,
+                children=[],  # 初始化为空列表
+                is_leaf=True,  # 默认为叶子节点
+            )
+        
+        # 构建树结构
+        root_options: list[SelectOption] = []
+        for item in items:
+            value = getattr(item, value_field)
+            parent_id = getattr(item, parent_field, None)
+            option = option_map[value]
+            
+            if parent_id is None or parent_id not in option_map:
+                # 根节点
+                root_options.append(option)
+            else:
+                # 子节点，添加到父节点的 children
+                parent_option = option_map[parent_id]
+                if parent_option.children is not None:
+                    parent_option.children.append(option)
+                    parent_option.is_leaf = False  # 父节点不是叶子
+        
+        return root_options
 
 
 class TenantRepository(BaseRepository[ModelType]):
@@ -744,11 +970,20 @@ class TenantRepository(BaseRepository[ModelType]):
         search: str = "",
         limit: int = 50,
         filters: dict[str, Any] | None = None,
+        tree: bool = False,
+        parent_id: int | None = None,
     ) -> list[SelectOption]:
         """
         租户级下拉选项列表
         
-        自动注入 tenant_id 过滤
+        自动注入 tenant_id 过滤，支持列表和树型两种模式
+        
+        Args:
+            search: 搜索关键词
+            limit: 最大返回数量
+            filters: 额外过滤条件
+            tree: 是否返回树型结构
+            parent_id: 父节点 ID（树型模式下用于懒加载）
         """
         # 自动添加租户过滤
         all_filters = filters.copy() if filters else {}
@@ -758,6 +993,8 @@ class TenantRepository(BaseRepository[ModelType]):
             search=search,
             limit=limit,
             filters=all_filters,
+            tree=tree,
+            parent_id=parent_id,
         )
 
 

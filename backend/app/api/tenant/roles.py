@@ -78,13 +78,18 @@ class TenantRoleController(TenantController):
             current_admin: ActiveTenantAdmin,
             search: str = Query("", description="搜索关键词"),
             is_active: str = Query("", description="筛选状态，默认仅启用"),
+            tree: bool = Query(False, description="是否返回树型结构"),
+            parent_id: int | None = Query(None, description="父节点ID（树型模式下用于懒加载）"),
         ):
             """
             获取角色下拉选项
             
-            用于表单中的角色选择组件
+            支持列表和树型两种模式：
+            - tree=false（默认）: 返回扁平列表
+            - tree=true: 返回树型结构
+            - tree=true + parent_id: 懒加载指定父节点的子节点
             
-            权限: role:select
+            权限: organization:select
             """
             # 解析 is_active 参数
             active_filter = True  # 默认仅启用
@@ -96,8 +101,10 @@ class TenantRoleController(TenantController):
             service = TenantAdminRoleService(db, current_admin.tenant_id)
             options = await service.get_select_options(
                 search=search,
-                limit=50,
+                limit=500 if tree else 50,  # 树型模式需要更大的 limit
                 is_active=active_filter,
+                tree=tree,
+                parent_id=parent_id,
             )
             return success(
                 data=SelectResponse(items=options),

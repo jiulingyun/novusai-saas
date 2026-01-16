@@ -243,23 +243,31 @@ class BaseService(Generic[ModelType, RepoType]):
         self,
         search: str = "",
         limit: int = 50,
+        tree: bool = False,
+        parent_id: int | None = None,
         **filters: Any,
     ) -> list[SelectOption]:
         """
         获取下拉选项列表
         
+        支持列表和树型两种模式
+        
         Args:
             search: 搜索关键词
             limit: 最大返回数量
+            tree: 是否返回树型结构
+            parent_id: 父节点 ID（树型模式下用于懒加载）
             **filters: 额外过滤条件
         
         Returns:
-            SelectOption 列表
+            SelectOption 列表（列表模式或树型模式）
         """
         return await self.repo.get_select_options(
             search=search,
             limit=limit,
             filters=filters if filters else None,
+            tree=tree,
+            parent_id=parent_id,
         )
     
     # ========================================
