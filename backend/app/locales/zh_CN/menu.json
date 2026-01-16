@@ -7,7 +7,9 @@
       "permission": "权限查看",
       "organization": "组织架构",
       "tenant_mgmt": "租户管理",
-      "tenant": "租户列表"
+      "tenant": "租户列表",
+      "system_mgmt": "系统管理",
+      "platform_config": "平台配置"
     },
     "tenant": {
       "dashboard": "仪表板",
@@ -15,7 +17,9 @@
       "tenant_user": "用户管理",
       "permission": "权限查看",
       "organization": "组织架构",
-      "tenant_settings": "租户设置"
+      "tenant_settings": "租户设置",
+      "system_mgmt": "系统管理",
+      "tenant_config": "系统配置"
     }
   }
 }

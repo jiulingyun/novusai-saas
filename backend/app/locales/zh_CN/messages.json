@@ -201,6 +201,16 @@
       "domain_update": "更新域名设置",
       "domain_delete": "删除自定义域名",
       "domain_verify": "验证域名"
+    },
+    "platform_config": {
+      "groups": "查看配置分组",
+      "detail": "查看配置详情",
+      "update": "更新配置"
+    },
+    "tenant_config": {
+      "groups": "查看配置分组",
+      "detail": "查看配置详情",
+      "update": "更新配置"
     }
   },
   "role": {
@@ -533,28 +543,6 @@
         "name": "文件上传",
         "desc": "是否允许用户上传文件"
       }
-    }
-  },
-  "menu": {
-    "admin": {
-      "platform_config": "平台配置",
-      "system_mgmt": "系统管理"
-    },
-    "tenant": {
-      "tenant_config": "系统配置",
-      "system_mgmt": "系统管理"
-    }
-  },
-  "action": {
-    "platform_config": {
-      "groups": "查看配置分组",
-      "detail": "查看配置详情",
-      "update": "更新配置"
-    },
-    "tenant_config": {
-      "groups": "查看配置分组",
-      "detail": "查看配置详情",
-      "update": "更新配置"
     }
   },
   "validation": {
