@@ -139,9 +139,15 @@ export function useColumns<T = TenantInfo>(
             !isExpired &&
             new Date(row.expiresAt) <
               new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          return {
-            color: isExpired ? 'error' : isNearExpiry ? 'warning' : 'default',
-          };
+          let color: string;
+          if (isExpired) {
+            color = 'error';
+          } else if (isNearExpiry) {
+            color = 'warning';
+          } else {
+            color = 'default';
+          }
+          return { color };
         },
       },
       field: 'expiresAt',
@@ -163,7 +169,7 @@ export function useColumns<T = TenantInfo>(
       align: 'center',
       cellRender: {
         attrs: {
-          resource: 'tenant',  // 自动检查 tenant:update, tenant:delete
+          resource: 'tenant', // 自动检查 tenant:update, tenant:delete
           nameField: 'name',
           nameTitle: $t('admin.tenant.name'),
           onClick: onActionClick,
@@ -174,10 +180,10 @@ export function useColumns<T = TenantInfo>(
             code: 'impersonate',
             text: $t('admin.tenant.enterBackend'),
             icon: 'lucide:log-in',
-            accessCodes: ['tenant:impersonate'],  // 自定义权限
+            accessCodes: ['tenant:impersonate'], // 自定义权限
           },
-          'edit',  // 自动鉴权: tenant:update
-          'delete',  // 自动鉴权: tenant:delete
+          'edit', // 自动鉴权: tenant:update
+          'delete', // 自动鉴权: tenant:delete
         ],
       },
       field: 'operation',

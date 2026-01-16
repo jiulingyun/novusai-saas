@@ -53,6 +53,9 @@
   "deleteConfirm": "确定要删除 {name} 吗？删除后无法恢复。",
   "deleting": "正在删除 {name}...",
   "deleteSuccess": "删除成功",
+  "deleteFailed": "删除失败",
+  "createdAt": "创建时间",
+  "updatedAt": "更新时间",
   "filter": {
     "unknownField": "未知的筛选字段",
     "opNotAllowed": "不允许的操作符",

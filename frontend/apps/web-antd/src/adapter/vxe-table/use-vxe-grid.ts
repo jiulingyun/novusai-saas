@@ -19,9 +19,7 @@ import { exportToExcel } from './extensions';
  * gridApi.exportExcel({ filename: '用户列表' });
  * ```
  */
-export function useVbenVxeGrid(
-  options: Parameters<typeof useGrid>[0],
-) {
+export function useVbenVxeGrid(options: Parameters<typeof useGrid>[0]) {
   // 调用原始的 useGrid
   const result = useGrid(options);
 
@@ -89,16 +87,20 @@ export function useGridSearchFormOptions(schema: any[]) {
  * });
  * ```
  */
-export function useGridOptions(
-  config: GridOptionsConfig,
-) {
+export function useGridOptions(config: GridOptionsConfig) {
   const {
     columns,
     queryApi,
     defaultSort = '-created_at',
     rowHeight = 64,
     pager = true,
-    toolbar = { custom: true, export: true, refresh: true, search: true, zoom: true },
+    toolbar = {
+      custom: true,
+      export: true,
+      refresh: true,
+      search: true,
+      zoom: true,
+    },
     ...rest
   } = config;
 

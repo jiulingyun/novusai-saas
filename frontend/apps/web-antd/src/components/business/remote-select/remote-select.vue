@@ -29,16 +29,14 @@
  */
 import type { DefaultOptionType, SelectValue } from 'ant-design-vue/es/select';
 
+import type { UseRemoteSelectOptions } from '#/composables';
 import type { SelectOption } from '#/types';
 
 import { computed, watch } from 'vue';
 
 import { Select } from 'ant-design-vue';
 
-import {
-  useRemoteSelect,
-  type UseRemoteSelectOptions,
-} from '#/composables';
+import { useRemoteSelect } from '#/composables';
 
 // Props 定义
 interface Props {
@@ -97,7 +95,11 @@ const props = withDefaults(defineProps<Props>(), {
 // Emits 定义
 const emit = defineEmits<{
   (e: 'update:value', value: null | number | string | undefined): void;
-  (e: 'change', value: null | number | string | undefined, option: SelectOption | SelectOption[] | undefined): void;
+  (
+    e: 'change',
+    value: null | number | string | undefined,
+    option: SelectOption | SelectOption[] | undefined,
+  ): void;
   (e: 'search', value: string): void;
 }>();
 
@@ -159,7 +161,7 @@ defineExpose({
 
 <template>
   <Select
-    :value="(selectedValue as SelectValue)"
+    :value="selectedValue as SelectValue"
     :options="options"
     :loading="loading"
     :placeholder="placeholder"
@@ -170,7 +172,10 @@ defineExpose({
     :filter-option="searchable ? false : undefined"
     :dropdown-style="dropdownStyle"
     :popup-class-name="popupClassName"
-    @update:value="(v: SelectValue) => (selectedValue = v as null | number | string | undefined)"
+    @update:value="
+      (v: SelectValue) =>
+        (selectedValue = v as null | number | string | undefined)
+    "
     @change="handleChange"
     @search="searchable ? handleSearch : undefined"
   />

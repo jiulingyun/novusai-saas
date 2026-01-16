@@ -59,26 +59,6 @@ const mainRoutes: RouteRecordRaw = {
         title: $t('page.dashboard.title'),
       },
     },
-    // 系统管理
-    {
-      name: 'TenantSystem',
-      path: 'system',
-      meta: {
-        icon: 'lucide:settings',
-        title: $t('tenant.system.title'),
-      },
-      children: [
-        {
-          name: 'TenantSystemRole',
-          path: 'role',
-          component: () => import('#/views/tenant/system/role/list.vue'),
-          meta: {
-            icon: 'lucide:shield',
-            title: $t('tenant.system.role.title'),
-          },
-        },
-      ],
-    },
   ],
 };
 

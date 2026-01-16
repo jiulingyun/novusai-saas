@@ -23,7 +23,13 @@
  * ```
  */
 
-import type { BaseRow, FormMode, OnActionClickParams, ToggleStatusApi, UseCrudPageOptions } from './types';
+import type {
+  BaseRow,
+  FormMode,
+  OnActionClickParams,
+  ToggleStatusApi,
+  UseCrudPageOptions,
+} from './types';
 
 import { ref } from 'vue';
 
@@ -48,18 +54,28 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
     searchSchema,
     formComponent,
     formType = 'drawer',
+    formDefaults,
     i18nPrefix,
     nameField = 'name' as keyof T & string,
     defaultSort = '-created_at',
     rowHeight = 64,
     pager = true,
-    toolbar = { custom: true, export: true, refresh: true, search: true, zoom: true },
+    toolbar = {
+      custom: true,
+      export: true,
+      refresh: true,
+      search: true,
+      zoom: true,
+    },
     customActions = {},
   } = options;
 
   // ==================== 表单弹窗 ====================
-  let FormPopup: ReturnType<typeof useVbenDrawer>[0] | null = null;
-  let formPopupApi: ReturnType<typeof useVbenDrawer>[1] | ReturnType<typeof useVbenModal>[1] | null = null;
+  let FormPopup: null | ReturnType<typeof useVbenDrawer>[0] = null;
+  let formPopupApi:
+    | null
+    | ReturnType<typeof useVbenDrawer>[1]
+    | ReturnType<typeof useVbenModal>[1] = null;
 
   if (formComponent) {
     if (formType === 'modal') {
@@ -96,16 +112,23 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
 
   /** 新建 */
   function onCreate() {
-    formPopupApi?.setData({ mode: 'add' as FormMode, _resource: api.resource }).open();
+    const defaults =
+      typeof formDefaults === 'function' ? formDefaults() : formDefaults;
+    formPopupApi
+      ?.setData({
+        mode: 'add' as FormMode,
+        _resource: api.resource,
+        _defaults: defaults,
+      })
+      .open();
   }
 
   /** 编辑 */
   function onEdit(row: T) {
-    formPopupApi?.setData({ ...row, mode: 'edit' as FormMode, _resource: api.resource }).open();
+    formPopupApi
+      ?.setData({ ...row, mode: 'edit' as FormMode, _resource: api.resource })
+      .open();
   }
-
-  // 从 i18nPrefix 提取实体名称（用于 message key）
-  const entityNameForMessage = i18nPrefix.split('.').pop() || 'item';
 
   // 防抖状态：记录正在处理的操作
   const processingIds = ref<Set<number | string>>(new Set());
@@ -133,7 +156,9 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
 
     Modal.confirm({
       title: $t(`${i18nPrefix}.messages.deleteTitle`),
-      content: $t(`${i18nPrefix}.messages.deleteConfirm`, { name: displayName }),
+      content: $t(`${i18nPrefix}.messages.deleteConfirm`, {
+        name: displayName,
+      }),
       okText: $t('common.delete'),
       okButtonProps: { danger: true },
       type: 'warning',
@@ -161,18 +186,26 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
    * @param newStatus 新状态值
    * @param row 行数据
    */
-  async function onToggleField(fieldName: string, newStatus: boolean, row: T): Promise<boolean> {
+  async function onToggleField(
+    fieldName: string,
+    newStatus: boolean,
+    row: T,
+  ): Promise<boolean> {
     // 防抖：如果正在处理中，直接返回
     if (isProcessing(row.id)) return false;
 
     const toggleApi = api.toggles?.[fieldName] as ToggleStatusApi | undefined;
     if (!toggleApi) {
-      console.warn(`[useCrudPage] toggle API not found for field: ${fieldName}`);
+      console.warn(
+        `[useCrudPage] toggle API not found for field: ${fieldName}`,
+      );
       return false;
     }
 
     const displayName = String(row[nameField] || row.id);
-    const action = newStatus ? $t('admin.common.enable') : $t('admin.common.disable');
+    const action = newStatus
+      ? $t('admin.common.enable')
+      : $t('admin.common.disable');
 
     try {
       await new Promise<void>((resolve, reject) => {
@@ -241,7 +274,8 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
    * @param fieldName 字段名，如 'is_active', 'is_visible'
    */
   function createToggleHandler(fieldName: string) {
-    return (newStatus: boolean, row: T) => onToggleField(fieldName, newStatus, row);
+    return (newStatus: boolean, row: T) =>
+      onToggleField(fieldName, newStatus, row);
   }
 
   // ==================== 表格配置 ====================
@@ -269,7 +303,9 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
 
   // 创建表格
   const [Grid, _gridApi] = useVbenVxeGrid({
-    formOptions: searchSchema ? useGridSearchFormOptions(searchSchema) : undefined,
+    formOptions: searchSchema
+      ? useGridSearchFormOptions(searchSchema)
+      : undefined,
     gridOptions,
   });
 

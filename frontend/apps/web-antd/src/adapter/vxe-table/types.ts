@@ -3,8 +3,9 @@
  */
 import type { Component } from 'vue';
 
-import type { VbenFormSchema } from '#/adapter/form';
 import type { Recordable } from '@vben/types';
+
+import type { VbenFormSchema } from '#/adapter/form';
 
 // 从 vben 插件导出基础类型
 export type { VxeTableGridOptions } from '@vben/plugins/vxe-table';
@@ -44,14 +45,14 @@ export type FormMode = 'add' | 'copy' | 'edit' | 'view';
  * 列定义函数类型
  * 返回 VxeTableGridOptions['columns'] 类型（可以是 undefined）
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+
 export type ColumnsFactory<_T = any> = (...args: any[]) => any[] | undefined;
 
 /**
  * 切换状态 API 类型
  * 接受 id 和状态数据，返回 Promise
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export type ToggleStatusApi = (id: any, data: any) => Promise<unknown>;
 
 /**
@@ -120,6 +121,12 @@ export interface UseCrudPageOptions<T extends BaseRow = BaseRow> {
 
   /** 表单类型：drawer 或 modal，默认 drawer */
   formType?: 'drawer' | 'modal';
+
+  /**
+   * 新建模式的表单默认值
+   * 会通过 setData 传递给表单组件，表单组件需支持 _defaults 字段
+   */
+  formDefaults?: (() => Record<string, any>) | Record<string, any>;
 
   /** i18n 前缀（必填） */
   i18nPrefix: string;

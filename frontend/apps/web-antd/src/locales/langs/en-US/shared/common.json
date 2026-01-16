@@ -53,6 +53,9 @@
   "deleteConfirm": "Are you sure to delete {name}? This action cannot be undone.",
   "deleting": "Deleting {name}...",
   "deleteSuccess": "Deleted successfully",
+  "deleteFailed": "Delete failed",
+  "createdAt": "Created At",
+  "updatedAt": "Updated At",
   "filter": {
     "unknownField": "Unknown filter field",
     "opNotAllowed": "Operator not allowed",

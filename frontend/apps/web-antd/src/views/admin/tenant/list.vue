@@ -227,7 +227,7 @@ onMounted(() => {
               $t('admin.tenant.tip')
             }}</span>
           </Card>
-        <Card
+          <Card
             v-access:code="['tenant:create']"
             size="small"
             class="mr-2 cursor-pointer transition-shadow duration-200 hover:shadow-md"

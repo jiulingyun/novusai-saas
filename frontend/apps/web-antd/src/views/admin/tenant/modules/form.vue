@@ -49,7 +49,7 @@ const { Drawer, isEdit } = useCrudDrawer<TenantInfo>({
 });
 
 const title = computed(() =>
-  isEdit.value ? $t('admin.tenant.edit') : $t('admin.tenant.create')
+  isEdit.value ? $t('admin.tenant.edit') : $t('admin.tenant.create'),
 );
 </script>
 

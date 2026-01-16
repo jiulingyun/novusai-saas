@@ -34,9 +34,9 @@
  * ```
  */
 
-import type { SelectOption } from '#/types';
-
 import type { Ref } from 'vue';
+
+import type { SelectOption } from '#/types';
 
 import { onMounted, ref, watch } from 'vue';
 
@@ -110,7 +110,7 @@ export function useRemoteSelect(
   const loading = ref(false);
 
   // 防抖定时器
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let debounceTimer: null | ReturnType<typeof setTimeout> = null;
 
   /**
    * 获取选项数据
@@ -130,16 +130,14 @@ export function useRemoteSelect(
       }>(url, { params });
 
       // 转换数据
-      if (transform) {
-        selectOptions.value = transform(response.items);
-      } else {
-        selectOptions.value = response.items.map((item) => ({
-          label: String(item[labelField] ?? ''),
-          value: item[valueField] as number | string,
-          extra: item,
-          disabled: item.disabled as boolean | undefined,
-        }));
-      }
+      selectOptions.value = transform
+        ? transform(response.items)
+        : response.items.map((item) => ({
+            label: String(item[labelField] ?? ''),
+            value: item[valueField] as number | string,
+            extra: item,
+            disabled: item.disabled as boolean | undefined,
+          }));
     } catch (error) {
       console.error('Failed to fetch remote select options:', error);
       selectOptions.value = [];

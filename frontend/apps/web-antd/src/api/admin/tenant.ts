@@ -134,7 +134,7 @@ export async function getTenantListApi(
   }>(API_PREFIX, { params, ...options });
 
   return {
-    items: response.items.map(transformTenantInfo),
+    items: response.items.map((item) => transformTenantInfo(item)),
     total: response.total,
     page: response.page,
     page_size: response.page_size,
@@ -164,7 +164,11 @@ export async function createTenantApi(
   data: TenantCreateRequest,
   options?: ApiRequestOptions,
 ): Promise<TenantInfo> {
-  const raw = await requestClient.post<TenantInfoRaw>(API_PREFIX, data, options);
+  const raw = await requestClient.post<TenantInfoRaw>(
+    API_PREFIX,
+    data,
+    options,
+  );
   return transformTenantInfo(raw);
 }
 

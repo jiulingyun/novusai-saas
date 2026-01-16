@@ -12,7 +12,14 @@ import { useAccessStore } from '@vben/stores';
 import { get, isFunction, isString } from '@vben/utils';
 
 import { objectOmit } from '@vueuse/core';
-import { Button, Image, Popconfirm, Switch, Tag, Tooltip } from 'ant-design-vue';
+import {
+  Button,
+  Image,
+  Popconfirm,
+  Switch,
+  Tag,
+  Tooltip,
+} from 'ant-design-vue';
 
 import { $t } from '#/locales';
 import { checkPermission } from '#/utils/access';

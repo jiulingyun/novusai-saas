@@ -7,6 +7,21 @@
 // ============================================================
 
 /** 排除易混淆字符的字符集 */
+// ============================================================
+// 树形展开状态管理
+// ============================================================
+
+import type { Ref } from 'vue';
+
+import { ref } from 'vue';
+
+// ============================================================
+// 删除确认弹窗
+// ============================================================
+import { message, Modal } from 'ant-design-vue';
+
+import { $t } from '#/locales';
+
 const SAFE_CHARS = {
   /** 小写字母（排除 l, o） */
   lowercase: 'abcdefghjkmnpqrstuvwxyz',
@@ -94,6 +109,7 @@ export function generateCode(options: GenerateCodeOptions = {}): string {
     const randomValues = new Uint32Array(length);
     crypto.getRandomValues(randomValues);
     for (let i = 0; i < length; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       code += charset[randomValues[i]! % charsetLength];
     }
   } else {
@@ -128,7 +144,7 @@ export function generateUUID(): string {
 
   // 降级实现
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replaceAll(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
+    const r = Math.trunc(Math.random() * 16);
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
@@ -222,12 +238,13 @@ export function formatDate(
   };
 
   // 按长度降序排列 key，确保先替换长的（如 YYYY 优先于 YY）
-  const sortedKeys = Object.keys(replacements).sort(
+  const sortedKeys = Object.keys(replacements).toSorted(
     (a, b) => b.length - a.length,
   );
 
   let result = format;
   for (const key of sortedKeys) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     result = result.replaceAll(new RegExp(key, 'g'), replacements[key]!);
   }
 
@@ -407,7 +424,7 @@ export function buildTree<T extends TreeNodeBase>(
     options;
 
   // 使用 Record 类型以支持动态字段名
-  type TreeNode = T & Record<string, any>;
+  type TreeNode = Record<string, any> & T;
   const map = new Map<number, TreeNode>();
   const roots: TreeNode[] = [];
 
@@ -419,8 +436,10 @@ export function buildTree<T extends TreeNodeBase>(
 
   // 构建树形结构
   for (const item of items) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const node = map.get(item.id)!;
     if (item.parentId && map.has(item.parentId)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const parent = map.get(item.parentId)!;
       (parent[childrenField] as TreeNode[]).push(node);
     } else {
@@ -443,12 +462,6 @@ export function buildTree<T extends TreeNodeBase>(
 
   return roots as (T & { children: (T & { children: any[] })[] })[];
 }
-
-// ============================================================
-// 树形展开状态管理
-// ============================================================
-
-import { type Ref, ref } from 'vue';
 
 /** useTreeExpand 返回类型 */
 export interface TreeExpandReturn {
@@ -520,14 +533,6 @@ export function useTreeExpand<T extends { id: number }>(
     isExpanded,
   };
 }
-
-// ============================================================
-// 删除确认弹窗
-// ============================================================
-
-import { message, Modal } from 'ant-design-vue';
-
-import { $t } from '#/locales';
 
 /** confirmDelete 配置选项 */
 export interface ConfirmDeleteOptions<T> {
@@ -655,5 +660,6 @@ export function getLevelColor(
   level: number,
   colors: LevelColor[] = DEFAULT_LEVEL_COLORS,
 ): LevelColor {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return colors[Math.min(level, colors.length - 1)]!;
 }

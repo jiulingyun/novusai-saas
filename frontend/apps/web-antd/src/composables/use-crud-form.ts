@@ -27,30 +27,36 @@ import { useVbenDrawer } from '@vben/common-ui';
 import { $t } from '#/locales';
 import { requestClient } from '#/utils/request';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface UseCrudFormOptions<_T = any> {
   /** Drawer/Modal API */
-  drawerApi: {
-    getData: <D = any>() => D | undefined;
-    lock: () => void;
-    unlock: () => void;
-    close: () => void;
-  } | any;
+  drawerApi:
+    | any
+    | {
+        close: () => void;
+        getData: <D = any>() => D | undefined;
+        lock: () => void;
+        unlock: () => void;
+      };
 
   /** Form API */
-  formApi: {
-    validate: () => Promise<{ valid: boolean }>;
-    getValues: () => Promise<Record<string, any>>;
-    resetForm: () => Promise<void>;
-    setValues: (values: Record<string, any>) => void;
-  } | any;
+  formApi:
+    | any
+    | {
+        getValues: () => Promise<Record<string, any>>;
+        resetForm: () => Promise<void>;
+        setValues: (values: Record<string, any>) => void;
+        validate: () => Promise<{ valid: boolean }>;
+      };
 
   /**
    * 数据转换函数（表单值 -> API 请求体）
    * @param values 表单原始值
    * @param isEdit 是否编辑模式
    */
-  transform: (values: Record<string, any>, isEdit: boolean) => Record<string, any>;
+  transform: (
+    values: Record<string, any>,
+    isEdit: boolean,
+  ) => Record<string, any>;
 
   /** 成功回调 */
   onSuccess?: () => void;
@@ -72,10 +78,19 @@ export interface UseCrudDrawerOptions<T = any> {
   /**
    * 数据转换函数（表单值 -> API 请求体）
    */
-  transform: (values: Record<string, any>, isEdit: boolean) => Record<string, any>;
+  transform: (
+    values: Record<string, any>,
+    isEdit: boolean,
+  ) => Record<string, any>;
 
   /**
-   * 后端数据 -> 表单值（编辑模式填充）
+   * 新建模式的表单默认值
+   * 可以是静态对象或工厂函数
+   */
+  defaults?: (() => Record<string, any>) | Record<string, any>;
+
+  /**
+   * 后端数据 -> 表单值（编辑模式）
    * @param data 后端返回的数据
    */
   toFormValues?: (data: T) => Record<string, any>;
@@ -90,7 +105,6 @@ export interface UseCrudDrawerOptions<T = any> {
   afterOpen?: (formApi: any, isEdit: boolean) => Promise<void> | void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface UseCrudFormReturn<_T = any> {
   /** 提交表单 */
   submit: () => Promise<void>;
@@ -119,7 +133,9 @@ export function useCrudForm<T = any>(
    * 初始化表单数据（在 onOpenChange 中调用）
    */
   function initFromDrawerData() {
-    const data = drawerApi.getData() as (T & { mode?: FormMode; _resource?: string; id?: number | string }) | undefined;
+    const data = drawerApi.getData() as
+      | (T & { _resource?: string; id?: number | string; mode?: FormMode })
+      | undefined;
     mode.value = data?.mode ?? 'add';
     recordId.value = data?.id;
     resource.value = data?._resource ?? '';
@@ -139,19 +155,20 @@ export function useCrudForm<T = any>(
     drawerApi.lock();
 
     try {
-      if (isEdit.value && recordId.value) {
-        // 编辑模式：PUT {resource}/{id}
-        await requestClient.put(`${resource.value}/${recordId.value}`, requestData, {
-          showSuccessMessage: true,
-          successMessage: $t('ui.actionMessage.updateSuccess'),
-        });
-      } else {
-        // 新建模式：POST {resource}
-        await requestClient.post(resource.value, requestData, {
-          showSuccessMessage: true,
-          successMessage: $t('ui.actionMessage.createSuccess'),
-        });
-      }
+      // 编辑模式：PUT {resource}/{id}，新建模式：POST {resource}
+      await (isEdit.value && recordId.value
+        ? requestClient.put(
+            `${resource.value}/${recordId.value}`,
+            requestData,
+            {
+              showSuccessMessage: true,
+              successMessage: $t('ui.actionMessage.updateSuccess'),
+            },
+          )
+        : requestClient.post(resource.value, requestData, {
+            showSuccessMessage: true,
+            successMessage: $t('ui.actionMessage.createSuccess'),
+          }));
       onSuccess?.();
       drawerApi.close();
     } catch {
@@ -167,7 +184,9 @@ export function useCrudForm<T = any>(
     resource,
     /** 内部方法，供 onOpenChange 使用 */
     _initFromDrawerData: initFromDrawerData,
-  } as UseCrudFormReturn<T> & { _initFromDrawerData: typeof initFromDrawerData };
+  } as UseCrudFormReturn<T> & {
+    _initFromDrawerData: typeof initFromDrawerData;
+  };
 }
 
 /**
@@ -175,7 +194,16 @@ export function useCrudForm<T = any>(
  * 整合 useVbenDrawer + useCrudForm，进一步简化表单组件
  */
 export function useCrudDrawer<T = any>(options: UseCrudDrawerOptions<T>) {
-  const { formApi, schema, transform, toFormValues, onSuccess, onOpen, afterOpen } = options;
+  const {
+    formApi,
+    schema,
+    transform,
+    defaults,
+    toFormValues,
+    onSuccess,
+    onOpen,
+    afterOpen,
+  } = options;
 
   const mode = ref<FormMode>('add');
   const recordId = ref<number | string>();
@@ -202,17 +230,19 @@ export function useCrudDrawer<T = any>(options: UseCrudDrawerOptions<T>) {
       drawerApi.lock();
 
       try {
-        if (isEdit.value && recordId.value) {
-          await requestClient.put(`${resource.value}/${recordId.value}`, requestData, {
-            showSuccessMessage: true,
-            successMessage: $t('ui.actionMessage.updateSuccess'),
-          });
-        } else {
-          await requestClient.post(resource.value, requestData, {
-            showSuccessMessage: true,
-            successMessage: $t('ui.actionMessage.createSuccess'),
-          });
-        }
+        await (isEdit.value && recordId.value
+          ? requestClient.put(
+              `${resource.value}/${recordId.value}`,
+              requestData,
+              {
+                showSuccessMessage: true,
+                successMessage: $t('ui.actionMessage.updateSuccess'),
+              },
+            )
+          : requestClient.post(resource.value, requestData, {
+              showSuccessMessage: true,
+              successMessage: $t('ui.actionMessage.createSuccess'),
+            }));
         onSuccess?.();
         drawerApi.close();
       } catch {
@@ -226,7 +256,14 @@ export function useCrudDrawer<T = any>(options: UseCrudDrawerOptions<T>) {
       if (!isOpen) return;
 
       // 从 drawerApi 获取数据
-      const data = drawerApi.getData() as (T & { mode?: FormMode; _resource?: string; id?: number | string }) | undefined;
+      const data = drawerApi.getData() as
+        | (T & {
+            _defaults?: Record<string, any>;
+            _resource?: string;
+            id?: number | string;
+            mode?: FormMode;
+          })
+        | undefined;
       mode.value = data?.mode ?? 'add';
       recordId.value = data?.id;
       resource.value = data?._resource ?? '';
@@ -245,9 +282,20 @@ export function useCrudDrawer<T = any>(options: UseCrudDrawerOptions<T>) {
       // 执行 afterOpen（如更新下拉选项）
       await afterOpen?.(formApi, isEdit.value);
 
-      // 编辑模式填充数据
-      if (data && isEdit.value && toFormValues) {
-        formApi.setValues(toFormValues(data as T));
+      // 填充表单数据
+      if (isEdit.value) {
+        // 编辑模式：填充后端数据
+        if (toFormValues && data) {
+          formApi.setValues(toFormValues(data as T));
+        }
+      } else {
+        // 新建模式：优先使用 _defaults（从 useCrudPage 传入），否则使用本地 defaults 配置
+        const defaultValues =
+          data?._defaults ??
+          (typeof defaults === 'function' ? defaults() : defaults);
+        if (defaultValues) {
+          formApi.setValues(defaultValues);
+        }
       }
     },
   });

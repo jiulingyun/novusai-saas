@@ -49,7 +49,9 @@ export interface BackendMenuItemRaw {
  * @param menus 菜单列表
  * @returns 去重后的权限码数组
  */
-export function extractPermissionsFromMenus(menus: BackendMenuItemRaw[]): string[] {
+export function extractPermissionsFromMenus(
+  menus: BackendMenuItemRaw[],
+): string[] {
   const permissions = new Set<string>();
 
   function traverse(items: BackendMenuItemRaw[]) {
@@ -333,29 +335,27 @@ function printMissingComponentsWarning(
   missingComponents: MissingComponentInfo[],
   endpoint: ApiEndpoint,
 ): void {
-  const endpointName =
-    endpoint === 'admin'
-      ? '平台管理端'
-      : endpoint === 'tenant'
-        ? '租户端'
-        : '用户端';
+  let endpointName: string;
+  if (endpoint === 'admin') {
+    endpointName = '平台管理端';
+  } else if (endpoint === 'tenant') {
+    endpointName = '租户端';
+  } else {
+    endpointName = '用户端';
+  }
 
-  // 使用 console.groupCollapsed 组织输出，美化显示
-  console.groupCollapsed(
-    `%c${LOG_TAG} 📦 ${endpointName}有 ${missingComponents.length} 个菜单页面组件尚未创建`,
-    'color: #faad14; font-weight: bold;',
+  // 使用 console.warn 输出缺失组件信息
+  const componentList = missingComponents
+    .map(
+      ({ menuName, expectedFile }) => `  • 「${menuName}」 → ${expectedFile}`,
+    )
+    .join('\n');
+
+  console.warn(
+    `${LOG_TAG} 📦 ${endpointName}有 ${missingComponents.length} 个菜单页面组件尚未创建:\n` +
+      `请在以下路径创建对应的 Vue 组件文件:\n${componentList}\n` +
+      `提示: 这些菜单将显示为 404 页面，直到创建对应组件`,
   );
-  console.log('%c请在以下路径创建对应的 Vue 组件文件:', 'color: #1890ff;');
-
-  missingComponents.forEach(({ menuName, expectedFile }) => {
-    console.log(`  • 「${menuName}」 → %c${expectedFile}`, 'color: #52c41a;');
-  });
-
-  console.log(
-    '%c提示: 这些菜单将显示为 404 页面，直到创建对应组件',
-    'color: #999;',
-  );
-  console.groupEnd();
 }
 
 /**
