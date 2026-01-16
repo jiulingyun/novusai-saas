@@ -5,7 +5,15 @@
 """
 
 from app.models.system.admin import Admin
+from app.models.system.config import (
+    SystemConfigGroup,
+    SystemConfig,
+    SystemConfigValue,
+)
 
 __all__ = [
     "Admin",
+    "SystemConfigGroup",
+    "SystemConfig",
+    "SystemConfigValue",
 ]

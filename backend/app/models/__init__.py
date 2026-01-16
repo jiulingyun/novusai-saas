@@ -10,7 +10,12 @@
 """
 
 # 平台级模型
-from app.models.system import Admin
+from app.models.system import (
+    Admin,
+    SystemConfigGroup,
+    SystemConfig,
+    SystemConfigValue,
+)
 
 # 租户级模型
 from app.models.tenant import Tenant, TenantAdmin, TenantUser, TenantDomain
@@ -27,6 +32,9 @@ from app.models.auth import (
 __all__ = [
     # 平台级
     "Admin",
+    "SystemConfigGroup",
+    "SystemConfig",
+    "SystemConfigValue",
     # 租户级
     "Tenant",
     "TenantAdmin",

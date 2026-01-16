@@ -10,7 +10,7 @@ from sqlalchemy import Boolean, String, Integer, Text, Table, Column, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.base_model import TenantModel, Base
-from app.enums import RoleType
+from app.enums.role import RoleType
 
 
 # 角色-权限关联表（多对多）

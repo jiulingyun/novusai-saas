@@ -12,7 +12,7 @@ from typing import Optional
 from pydantic import Field
 
 from app.core.base_schema import BaseSchema
-from app.enums import RoleType
+from app.enums.role import RoleType
 
 
 class AdminRoleResponse(BaseSchema):
