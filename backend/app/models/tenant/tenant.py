@@ -88,9 +88,11 @@ class Tenant(BaseModel):
     )
     
     # 租户设置（JSON 格式）
-    # 包含: logo_url, favicon_url, theme_color, captcha_enabled, login_methods 等
+    # @deprecated: 已废弃，请使用 ConfigService.get_tenant_config() 获取配置
+    # 数据已迁移到 system_config_values 表
+    # 保留字段以兼容旧数据，但不再使用
     settings: Mapped[dict | None] = mapped_column(
-        JSON, nullable=True, comment="租户设置"
+        JSON, nullable=True, comment="租户设置(已废弃)"
     )
     
     # ==================== 关系 ====================
@@ -110,30 +112,12 @@ class Tenant(BaseModel):
         """获取租户子域名"""
         return self.code
     
-    @property
-    def logo_url(self) -> str | None:
-        """获取租户 logo URL"""
-        return (self.settings or {}).get("logo_url")
-    
-    @property
-    def favicon_url(self) -> str | None:
-        """获取租户 favicon URL"""
-        return (self.settings or {}).get("favicon_url")
-    
-    @property
-    def theme_color(self) -> str | None:
-        """获取租户主题色"""
-        return (self.settings or {}).get("theme_color")
-    
-    @property
-    def captcha_enabled(self) -> bool:
-        """是否启用验证码"""
-        return (self.settings or {}).get("captcha_enabled", False)
-    
-    @property
-    def login_methods(self) -> list[str]:
-        """获取登录方式列表"""
-        return (self.settings or {}).get("login_methods", ["password"])
+    # 以下属性已废弃，请使用 ConfigService.get_tenant_config() 代替
+    # - logo_url -> tenant_logo
+    # - favicon_url -> tenant_favicon  
+    # - theme_color -> tenant_primary_color
+    # - captcha_enabled -> tenant_captcha_enabled
+    # - login_methods -> tenant_login_methods
     
     @property
     def max_custom_domains(self) -> int:
