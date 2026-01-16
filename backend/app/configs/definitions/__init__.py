@@ -16,6 +16,9 @@ from app.configs.definitions.groups import (
 # 导入平台配置（触发配置项注册到分组）
 from app.configs.definitions import platform
 
+# 导入租户配置（触发配置项注册到分组）
+from app.configs.definitions import tenant
+
 
 def register_all_configs() -> None:
     """
