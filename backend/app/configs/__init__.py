@@ -22,6 +22,10 @@ from app.configs.registry import (
     config_registry,
     get_config_registry,
 )
+from app.configs.sync import (
+    ConfigSyncService,
+    sync_configs_on_startup,
+)
 
 __all__ = [
     # 元数据类
@@ -40,4 +44,7 @@ __all__ = [
     "max_length",
     "pattern",
     "option",
+    # 同步服务
+    "ConfigSyncService",
+    "sync_configs_on_startup",
 ]

@@ -59,6 +59,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             f"disabled={sync_result['disabled']}"
         )
     
+    # 同步配置到数据库（将代码定义的配置项同步到 DB）
+    from app.configs.sync import sync_configs_on_startup
+    
+    async with async_session_factory() as db:
+        config_sync_result = await sync_configs_on_startup(db)
+        logger.info(
+            f"✅ Configs synced: "
+            f"groups={config_sync_result['groups']}, "
+            f"configs={config_sync_result['configs']}"
+        )
+    
     # TODO: 初始化 Redis 连接
     # TODO: 初始化 Celery
     
