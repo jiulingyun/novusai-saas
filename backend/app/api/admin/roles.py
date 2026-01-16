@@ -44,22 +44,22 @@ from app.schemas.common.select import SelectResponse
 
 
 @permission_resource(
-    resource="role",
-    name="menu.admin.role",  # i18n key
+    resource="organization",
+    name="menu.admin.organization",  # i18n key
     scope=PermissionScope.ADMIN,
     menu=MenuConfig(
-        icon="lucide:users",
-        path="/system/roles",
-        component="system/role/List",
+        icon="lucide:git-branch",
+        path="/system/organization",
+        component="admin/system/organization/index",
         parent="system",  # 父菜单: 权限管理
-        sort_order=20,
+        sort_order=15,
     )
 )
 class AdminRoleController(GlobalController):
     """
-    平台角色控制器
+    平台组织架构控制器
     
-    提供角色 CRUD、权限分配、层级管理等接口
+    提供组织架构 CRUD、权限分配、层级管理等接口
     """
     
     prefix = "/roles"
@@ -70,7 +70,7 @@ class AdminRoleController(GlobalController):
         router = self.router
         
         @router.get("/select", summary="获取角色下拉选项")
-        @action_read("action.role.select")
+        @action_read("action.organization.select")
         async def select_roles(
             request: Request,
             db: DbSession,
@@ -104,7 +104,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.get("", summary="获取角色列表")
-        @action_read("action.role.list")
+        @action_read("action.organization.list")
         async def list_roles(
             request: Request,
             db: DbSession,
@@ -148,7 +148,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.get("/tree", summary="获取角色树")
-        @action_read("action.role.tree")
+        @action_read("action.organization.tree")
         async def get_role_tree(
             request: Request,
             db: DbSession,
@@ -178,7 +178,7 @@ class AdminRoleController(GlobalController):
             return success(data=tree, message=_("common.success"))
         
         @router.get("/organization", summary="获取组织架构树（根节点）")
-        @action_read("action.role.organization")
+        @action_read("action.organization.organization")
         async def get_organization_tree(
             request: Request,
             db: DbSession,
@@ -201,7 +201,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.get("/{role_id}", summary="获取角色详情")
-        @action_read("action.role.detail")
+        @action_read("action.organization.detail")
         async def get_role(
             request: Request,
             db: DbSession,
@@ -263,7 +263,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.get("/{role_id}/children", summary="获取子节点")
-        @action_read("action.role.children")
+        @action_read("action.organization.children")
         async def get_role_children(
             request: Request,
             db: DbSession,
@@ -294,7 +294,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.get("/{role_id}/permissions/effective", summary="获取有效权限")
-        @action_read("action.role.effective_permissions")
+        @action_read("action.organization.effective_permissions")
         async def get_effective_permissions(
             request: Request,
             db: DbSession,
@@ -332,7 +332,7 @@ class AdminRoleController(GlobalController):
             )
         
         @router.post("", summary="创建角色")
-        @action_create("action.role.create")
+        @action_create("action.organization.create")
         async def create_role(
             request: Request,
             db: DbSession,
@@ -414,7 +414,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.put("/{role_id}", summary="更新角色")
-        @action_update("action.role.update")
+        @action_update("action.organization.update")
         async def update_role(
             request: Request,
             db: DbSession,
@@ -509,7 +509,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.put("/{role_id}/move", summary="移动角色")
-        @action_update("action.role.move")
+        @action_update("action.organization.move")
         async def move_role(
             request: Request,
             db: DbSession,
@@ -577,7 +577,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.delete("/{role_id}", summary="删除角色")
-        @action_delete("action.role.delete")
+        @action_delete("action.organization.delete")
         async def delete_role(
             request: Request,
             db: DbSession,
@@ -634,7 +634,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.put("/{role_id}/permissions", summary="分配角色权限")
-        @action_update("action.role.assign_permissions")
+        @action_update("action.organization.assign_permissions")
         async def assign_permissions(
             request: Request,
             db: DbSession,
@@ -688,7 +688,7 @@ class AdminRoleController(GlobalController):
         # ========== 组织架构管理 API ==========
         
         @router.get("/{role_id}/members", summary="获取节点成员列表")
-        @action_read("action.role.members")
+        @action_read("action.organization.members")
         async def get_role_members(
             request: Request,
             db: DbSession,
@@ -740,7 +740,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.post("/{role_id}/members", summary="添加成员到节点")
-        @action_update("action.role.add_member")
+        @action_update("action.organization.add_member")
         async def add_member_to_role(
             request: Request,
             db: DbSession,
@@ -785,7 +785,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.delete("/{role_id}/members/{admin_id}", summary="从节点移除成员")
-        @action_update("action.role.remove_member")
+        @action_update("action.organization.remove_member")
         async def remove_member_from_role(
             request: Request,
             db: DbSession,
@@ -830,7 +830,7 @@ class AdminRoleController(GlobalController):
                 )
         
         @router.put("/{role_id}/leader", summary="设置节点负责人")
-        @action_update("action.role.set_leader")
+        @action_update("action.organization.set_leader")
         async def set_role_leader(
             request: Request,
             db: DbSession,

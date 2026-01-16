@@ -60,7 +60,7 @@ ADMIN_DIRECTORY_MENUS: list[PermissionMeta] = [
     # 子菜单由控制器声明:
     # - menu:admin.admin_user (用户管理)
     # - menu:admin.permission (权限管理) - 可选，一般隐藏
-    # - menu:admin.role (角色管理)
+    # - menu:admin.organization (组织架构) - 由 roles.py 控制器声明
     
     # ========================================
     # 租户管理（目录）

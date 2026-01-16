@@ -150,18 +150,23 @@
     "import": "Import"
   },
   "action": {
-    "role": {
-      "list": "View Role List",
-      "tree": "View Role Tree",
-      "detail": "View Role Details",
-      "children": "View Child Roles",
+    "organization": {
+      "list": "View Organization List",
+      "tree": "View Organization Tree",
+      "organization": "View Organization Structure",
+      "detail": "View Node Details",
+      "children": "View Child Nodes",
       "effective_permissions": "View Effective Permissions",
-      "create": "Create Role",
-      "update": "Update Role",
-      "move": "Move Role",
-      "delete": "Delete Role",
-      "assign_permissions": "Assign Role Permissions",
-      "select": "Role Remote Select"
+      "create": "Create Node",
+      "update": "Update Node",
+      "move": "Move Node",
+      "delete": "Delete Node",
+      "assign_permissions": "Assign Permissions",
+      "select": "Organization Remote Select",
+      "members": "View Node Members",
+      "add_member": "Add Member",
+      "remove_member": "Remove Member",
+      "set_leader": "Set Leader"
     },
     "admin": {
       "list": "View Admin List",

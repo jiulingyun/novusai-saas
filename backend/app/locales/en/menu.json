@@ -5,7 +5,7 @@
       "system": "System",
       "admin_user": "Users",
       "permission": "Permissions",
-      "role": "Roles",
+      "organization": "Organization",
       "tenant_mgmt": "Tenants",
       "tenant": "Tenant List"
     },
@@ -14,7 +14,7 @@
       "system": "System",
       "tenant_user": "Users",
       "permission": "Permissions",
-      "role": "Roles",
+      "organization": "Organization",
       "tenant_settings": "Settings"
     }
   }

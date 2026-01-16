@@ -59,7 +59,7 @@ TENANT_DIRECTORY_MENUS: list[PermissionMeta] = [
     # 子菜单由控制器声明:
     # - menu:tenant.tenant_user (用户管理)
     # - menu:tenant.permission (权限管理) - 可选，一般隐藏
-    # - menu:tenant.role (角色管理)
+    # - menu:tenant.organization (组织架构) - 由 roles.py 控制器声明
     
     # ========================================
     # 业务管理（目录，预留）

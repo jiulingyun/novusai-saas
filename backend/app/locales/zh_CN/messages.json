@@ -150,18 +150,23 @@
     "import": "导入"
   },
   "action": {
-    "role": {
-      "list": "查看角色列表",
-      "tree": "查看角色树",
-      "detail": "查看角色详情",
-      "children": "查看子角色",
+    "organization": {
+      "list": "查看组织列表",
+      "tree": "查看组织树",
+      "organization": "查看组织架构",
+      "detail": "查看节点详情",
+      "children": "查看子节点",
       "effective_permissions": "查看有效权限",
-      "create": "创建角色",
-      "update": "更新角色",
-      "move": "移动角色",
-      "delete": "删除角色",
-      "assign_permissions": "分配角色权限",
-      "select": "角色远程下拉"
+      "create": "创建节点",
+      "update": "更新节点",
+      "move": "移动节点",
+      "delete": "删除节点",
+      "assign_permissions": "分配权限",
+      "select": "组织远程下拉",
+      "members": "查看节点成员",
+      "add_member": "添加成员",
+      "remove_member": "移除成员",
+      "set_leader": "设置负责人"
     },
     "admin": {
       "list": "查看管理员列表",
