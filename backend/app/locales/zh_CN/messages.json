@@ -303,130 +303,236 @@
     "invalid_keys": "无效的配置键: {keys}",
     "updated": "配置更新成功",
     "group": {
-      "platform_general": "通用设置",
-      "platform_general.desc": "站点基本信息、维护模式等配置",
-      "platform_security": "安全设置",
-      "platform_security.desc": "密码策略、登录安全、会话设置",
-      "platform_email": "邮件设置",
-      "platform_email.desc": "SMTP 服务器配置、发件人信息",
-      "platform_storage": "存储设置",
-      "platform_storage.desc": "文件存储和对象存储配置",
-      "tenant_general": "基础设置",
-      "tenant_general.desc": "登录安全、密码策略、会话设置",
-      "tenant_appearance": "外观设置",
-      "tenant_appearance.desc": "Logo、主题色、登录页定制",
-      "tenant_features": "功能设置",
-      "tenant_features.desc": "功能模块的启用和禁用"
+      "platform_general": {
+        "name": "通用设置",
+        "desc": "站点基本信息、维护模式等配置"
+      },
+      "platform_security": {
+        "name": "安全设置",
+        "desc": "密码策略、登录安全、会话设置"
+      },
+      "platform_email": {
+        "name": "邮件设置",
+        "desc": "SMTP 服务器配置、发件人信息"
+      },
+      "platform_storage": {
+        "name": "存储设置",
+        "desc": "文件存储和对象存储配置"
+      },
+      "tenant_general": {
+        "name": "基础设置",
+        "desc": "登录安全、密码策略、会话设置"
+      },
+      "tenant_appearance": {
+        "name": "外观设置",
+        "desc": "Logo、主题色、登录页定制"
+      },
+      "tenant_features": {
+        "name": "功能设置",
+        "desc": "功能模块的启用和禁用"
+      }
     },
     "platform": {
-      "site_name": "站点名称",
-      "site_name.desc": "显示在浏览器标题栏和页面顶部的名称",
-      "site_description": "站点描述",
-      "site_description.desc": "用于 SEO 和站点介绍",
-      "site_logo": "站点 Logo",
-      "site_logo.desc": "显示在页面顶部的 Logo 图片",
-      "site_favicon": "站点图标",
-      "site_favicon.desc": "显示在浏览器标签页的小图标",
-      "site_copyright": "版权信息",
-      "site_copyright.desc": "显示在页面底部的版权声明",
-      "site_icp": "ICP 备案号",
-      "site_icp.desc": "中国大陆地区需要的备案号",
-      "maintenance_mode": "维护模式",
-      "maintenance_mode.desc": "开启后用户将无法访问系统",
-      "maintenance_message": "维护提示",
-      "maintenance_message.desc": "维护模式下显示给用户的提示信息",
-      "password_min_length": "密码最小长度",
-      "password_min_length.desc": "用户密码的最小字符数要求",
-      "password_complexity": "密码复杂度",
-      "password_complexity.desc": "密码必须包含的字符类型要求",
-      "password_complexity.low": "低（仅限制长度）",
-      "password_complexity.medium": "中（字母+数字）",
-      "password_complexity.high": "高（字母+数字+特殊字符）",
-      "password_expiry_days": "密码过期天数",
-      "password_expiry_days.desc": "密码有效期，0 表示永不过期",
-      "login_max_attempts": "登录失败锁定次数",
-      "login_max_attempts.desc": "连续登录失败达到此次数后锁定账户",
-      "login_lockout_minutes": "账户锁定时长",
-      "login_lockout_minutes.desc": "账户被锁定后的等待时间（分钟）",
-      "login_captcha_enabled": "启用验证码",
-      "login_captcha_enabled.desc": "登录时是否需要验证码",
-      "session_timeout_minutes": "会话超时时间",
-      "session_timeout_minutes.desc": "用户无操作后自动退出的时间（分钟）",
-      "session_max_devices": "最大登录设备数",
-      "session_max_devices.desc": "允许同时登录的设备数量，0 表示不限制",
-      "email_smtp_host": "SMTP 服务器",
-      "email_smtp_host.desc": "邮件服务器地址",
-      "email_smtp_port": "SMTP 端口",
-      "email_smtp_port.desc": "邮件服务器端口号",
-      "email_smtp_encryption": "加密方式",
-      "email_smtp_encryption.desc": "SMTP 连接加密方式",
-      "email_smtp_encryption.none": "无加密",
-      "email_smtp_encryption.ssl": "SSL",
-      "email_smtp_encryption.tls": "TLS",
-      "email_smtp_username": "SMTP 用户名",
-      "email_smtp_username.desc": "邮件服务器认证用户名",
-      "email_smtp_password": "SMTP 密码",
-      "email_smtp_password.desc": "邮件服务器认证密码",
-      "email_from_address": "发件人邮箱",
-      "email_from_address.desc": "系统发送邮件使用的邮箱地址",
-      "email_from_name": "发件人名称",
-      "email_from_name.desc": "系统发送邮件显示的发件人名称",
-      "email_enabled": "启用邮件发送",
-      "email_enabled.desc": "是否启用邮件发送功能"
+      "site_name": {
+        "name": "站点名称",
+        "desc": "显示在浏览器标题栏和页面顶部的名称"
+      },
+      "site_description": {
+        "name": "站点描述",
+        "desc": "用于 SEO 和站点介绍"
+      },
+      "site_logo": {
+        "name": "站点 Logo",
+        "desc": "显示在页面顶部的 Logo 图片"
+      },
+      "site_favicon": {
+        "name": "站点图标",
+        "desc": "显示在浏览器标签页的小图标"
+      },
+      "site_copyright": {
+        "name": "版权信息",
+        "desc": "显示在页面底部的版权声明"
+      },
+      "site_icp": {
+        "name": "ICP 备案号",
+        "desc": "中国大陆地区需要的备案号"
+      },
+      "maintenance_mode": {
+        "name": "维护模式",
+        "desc": "开启后用户将无法访问系统"
+      },
+      "maintenance_message": {
+        "name": "维护提示",
+        "desc": "维护模式下显示给用户的提示信息"
+      },
+      "password_min_length": {
+        "name": "密码最小长度",
+        "desc": "用户密码的最小字符数要求"
+      },
+      "password_complexity": {
+        "name": "密码复杂度",
+        "desc": "密码必须包含的字符类型要求",
+        "low": "低（仅限制长度）",
+        "medium": "中（字母+数字）",
+        "high": "高（字母+数字+特殊字符）"
+      },
+      "password_expiry_days": {
+        "name": "密码过期天数",
+        "desc": "密码有效期，0 表示永不过期"
+      },
+      "login_max_attempts": {
+        "name": "登录失败锁定次数",
+        "desc": "连续登录失败达到此次数后锁定账户"
+      },
+      "login_lockout_minutes": {
+        "name": "账户锁定时长",
+        "desc": "账户被锁定后的等待时间（分钟）"
+      },
+      "login_captcha_enabled": {
+        "name": "启用验证码",
+        "desc": "登录时是否需要验证码"
+      },
+      "session_timeout_minutes": {
+        "name": "会话超时时间",
+        "desc": "用户无操作后自动退出的时间（分钟）"
+      },
+      "session_max_devices": {
+        "name": "最大登录设备数",
+        "desc": "允许同时登录的设备数量，0 表示不限制"
+      },
+      "email_smtp_host": {
+        "name": "SMTP 服务器",
+        "desc": "邮件服务器地址"
+      },
+      "email_smtp_port": {
+        "name": "SMTP 端口",
+        "desc": "邮件服务器端口号"
+      },
+      "email_smtp_encryption": {
+        "name": "加密方式",
+        "desc": "SMTP 连接加密方式",
+        "none": "无加密",
+        "ssl": "SSL",
+        "tls": "TLS"
+      },
+      "email_smtp_username": {
+        "name": "SMTP 用户名",
+        "desc": "邮件服务器认证用户名"
+      },
+      "email_smtp_password": {
+        "name": "SMTP 密码",
+        "desc": "邮件服务器认证密码"
+      },
+      "email_from_address": {
+        "name": "发件人邮箱",
+        "desc": "系统发送邮件使用的邮箱地址"
+      },
+      "email_from_name": {
+        "name": "发件人名称",
+        "desc": "系统发送邮件显示的发件人名称"
+      },
+      "email_enabled": {
+        "name": "启用邮件发送",
+        "desc": "是否启用邮件发送功能"
+      }
     },
     "tenant": {
-      "logo": "租户 Logo",
-      "logo.desc": "租户管理后台显示的 Logo",
-      "favicon": "租户图标",
-      "favicon.desc": "租户页面浏览器标签图标",
-      "login_bg": "登录页背景",
-      "login_bg.desc": "登录页面的背景图片",
-      "primary_color": "主题主色",
-      "primary_color.desc": "界面的主要颜色",
-      "accent_color": "主题强调色",
-      "accent_color.desc": "用于强调和高亮的颜色",
-      "login_title": "登录页标题",
-      "login_title.desc": "登录页面显示的标题文字",
-      "login_subtitle": "登录页副标题",
-      "login_subtitle.desc": "登录页面显示的副标题文字",
-      "footer_copyright": "页脚版权",
-      "footer_copyright.desc": "页面底部显示的版权信息",
-      "captcha_enabled": "启用验证码",
-      "captcha_enabled.desc": "租户登录时是否需要验证码",
-      "login_methods": "登录方式",
-      "login_methods.desc": "允许的用户登录方式",
-      "login_methods.password": "密码登录",
-      "login_methods.sms": "短信验证码",
-      "login_methods.email": "邮箱验证码",
-      "login_methods.wechat": "微信登录",
-      "login_methods.dingtalk": "钉钉登录",
-      "login_max_attempts": "登录失败锁定次数",
-      "login_max_attempts.desc": "连续登录失败达到此次数后锁定账户",
-      "login_lockout_minutes": "账户锁定时长",
-      "login_lockout_minutes.desc": "账户被锁定后的等待时间（分钟）",
-      "password_min_length": "密码最小长度",
-      "password_min_length.desc": "用户密码的最小字符数要求",
-      "password_complexity": "密码复杂度",
-      "password_complexity.desc": "密码必须包含的字符类型要求",
-      "password_complexity.low": "低（仅限制长度）",
-      "password_complexity.medium": "中（字母+数字）",
-      "password_complexity.high": "高（字母+数字+特殊字符）",
-      "session_timeout": "会话超时时间",
-      "session_timeout.desc": "用户无操作后自动退出的时间（分钟）",
-      "allow_registration": "允许用户注册",
-      "allow_registration.desc": "是否允许用户自助注册账号",
-      "registration_approval": "新用户需要审批",
-      "registration_approval.desc": "新注册用户是否需要管理员审批",
-      "allow_profile_edit": "允许修改资料",
-      "allow_profile_edit.desc": "是否允许用户修改自己的个人资料",
-      "email_notification": "邮件通知",
-      "email_notification.desc": "是否启用邮件通知功能",
-      "sms_notification": "短信通知",
-      "sms_notification.desc": "是否启用短信通知功能",
-      "api_access": "API 访问",
-      "api_access.desc": "是否允许通过 API 访问系统",
-      "file_upload": "文件上传",
-      "file_upload.desc": "是否允许用户上传文件"
+      "logo": {
+        "name": "租户 Logo",
+        "desc": "租户管理后台显示的 Logo"
+      },
+      "favicon": {
+        "name": "租户图标",
+        "desc": "租户页面浏览器标签图标"
+      },
+      "login_bg": {
+        "name": "登录页背景",
+        "desc": "登录页面的背景图片"
+      },
+      "primary_color": {
+        "name": "主题主色",
+        "desc": "界面的主要颜色"
+      },
+      "accent_color": {
+        "name": "主题强调色",
+        "desc": "用于强调和高亮的颜色"
+      },
+      "login_title": {
+        "name": "登录页标题",
+        "desc": "登录页面显示的标题文字"
+      },
+      "login_subtitle": {
+        "name": "登录页副标题",
+        "desc": "登录页面显示的副标题文字"
+      },
+      "footer_copyright": {
+        "name": "页脚版权",
+        "desc": "页面底部显示的版权信息"
+      },
+      "captcha_enabled": {
+        "name": "启用验证码",
+        "desc": "租户登录时是否需要验证码"
+      },
+      "login_methods": {
+        "name": "登录方式",
+        "desc": "允许的用户登录方式",
+        "password": "密码登录",
+        "sms": "短信验证码",
+        "email": "邮箱验证码",
+        "wechat": "微信登录",
+        "dingtalk": "钉钉登录"
+      },
+      "login_max_attempts": {
+        "name": "登录失败锁定次数",
+        "desc": "连续登录失败达到此次数后锁定账户"
+      },
+      "login_lockout_minutes": {
+        "name": "账户锁定时长",
+        "desc": "账户被锁定后的等待时间（分钟）"
+      },
+      "password_min_length": {
+        "name": "密码最小长度",
+        "desc": "用户密码的最小字符数要求"
+      },
+      "password_complexity": {
+        "name": "密码复杂度",
+        "desc": "密码必须包含的字符类型要求",
+        "low": "低（仅限制长度）",
+        "medium": "中（字母+数字）",
+        "high": "高（字母+数字+特殊字符）"
+      },
+      "session_timeout": {
+        "name": "会话超时时间",
+        "desc": "用户无操作后自动退出的时间（分钟）"
+      },
+      "allow_registration": {
+        "name": "允许用户注册",
+        "desc": "是否允许用户自助注册账号"
+      },
+      "registration_approval": {
+        "name": "新用户需要审批",
+        "desc": "新注册用户是否需要管理员审批"
+      },
+      "allow_profile_edit": {
+        "name": "允许修改资料",
+        "desc": "是否允许用户修改自己的个人资料"
+      },
+      "email_notification": {
+        "name": "邮件通知",
+        "desc": "是否启用邮件通知功能"
+      },
+      "sms_notification": {
+        "name": "短信通知",
+        "desc": "是否启用短信通知功能"
+      },
+      "api_access": {
+        "name": "API 访问",
+        "desc": "是否允许通过 API 访问系统"
+      },
+      "file_upload": {
+        "name": "文件上传",
+        "desc": "是否允许用户上传文件"
+      }
     }
   },
   "menu": {
@@ -454,6 +560,9 @@
   "validation": {
     "min_value": "不能小于 {min}",
     "max_value": "不能大于 {max}",
+    "min_length": "长度不能少于 {min} 个字符",
+    "max_length": "长度不能超过 {max} 个字符",
+    "pattern": "格式不正确",
     "color_format": "颜色格式不正确，应为 #RRGGBB"
   },
   "error": {

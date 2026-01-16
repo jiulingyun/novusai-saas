@@ -16,7 +16,7 @@ from app.enums.config import ConfigScope, ConfigValueType
 # 密码最小长度
 PASSWORD_MIN_LENGTH = ConfigMeta(
     key="password_min_length",
-    name_key="config.platform.password_min_length",
+    name_key="config.platform.password_min_length.name",
     description_key="config.platform.password_min_length.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -32,7 +32,7 @@ PASSWORD_MIN_LENGTH = ConfigMeta(
 # 密码复杂度要求
 PASSWORD_COMPLEXITY = ConfigMeta(
     key="password_complexity",
-    name_key="config.platform.password_complexity",
+    name_key="config.platform.password_complexity.name",
     description_key="config.platform.password_complexity.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.SELECT,
@@ -48,7 +48,7 @@ PASSWORD_COMPLEXITY = ConfigMeta(
 # 密码过期天数（0 表示永不过期）
 PASSWORD_EXPIRY_DAYS = ConfigMeta(
     key="password_expiry_days",
-    name_key="config.platform.password_expiry_days",
+    name_key="config.platform.password_expiry_days.name",
     description_key="config.platform.password_expiry_days.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -68,7 +68,7 @@ PASSWORD_EXPIRY_DAYS = ConfigMeta(
 # 登录失败锁定次数
 LOGIN_MAX_ATTEMPTS = ConfigMeta(
     key="login_max_attempts",
-    name_key="config.platform.login_max_attempts",
+    name_key="config.platform.login_max_attempts.name",
     description_key="config.platform.login_max_attempts.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -84,7 +84,7 @@ LOGIN_MAX_ATTEMPTS = ConfigMeta(
 # 账户锁定时长（分钟）
 LOGIN_LOCKOUT_MINUTES = ConfigMeta(
     key="login_lockout_minutes",
-    name_key="config.platform.login_lockout_minutes",
+    name_key="config.platform.login_lockout_minutes.name",
     description_key="config.platform.login_lockout_minutes.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -100,7 +100,7 @@ LOGIN_LOCKOUT_MINUTES = ConfigMeta(
 # 启用验证码
 LOGIN_CAPTCHA_ENABLED = ConfigMeta(
     key="login_captcha_enabled",
-    name_key="config.platform.login_captcha_enabled",
+    name_key="config.platform.login_captcha_enabled.name",
     description_key="config.platform.login_captcha_enabled.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.BOOLEAN,
@@ -116,7 +116,7 @@ LOGIN_CAPTCHA_ENABLED = ConfigMeta(
 # 会话超时时间（分钟）
 SESSION_TIMEOUT_MINUTES = ConfigMeta(
     key="session_timeout_minutes",
-    name_key="config.platform.session_timeout_minutes",
+    name_key="config.platform.session_timeout_minutes.name",
     description_key="config.platform.session_timeout_minutes.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -132,7 +132,7 @@ SESSION_TIMEOUT_MINUTES = ConfigMeta(
 # 允许同时登录的设备数（0 表示不限制）
 SESSION_MAX_DEVICES = ConfigMeta(
     key="session_max_devices",
-    name_key="config.platform.session_max_devices",
+    name_key="config.platform.session_max_devices.name",
     description_key="config.platform.session_max_devices.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,

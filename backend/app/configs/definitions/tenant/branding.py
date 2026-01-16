@@ -16,7 +16,7 @@ from app.enums.config import ConfigScope, ConfigValueType
 # 租户 Logo
 TENANT_LOGO = ConfigMeta(
     key="tenant_logo",
-    name_key="config.tenant.logo",
+    name_key="config.tenant.logo.name",
     description_key="config.tenant.logo.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.IMAGE,
@@ -27,7 +27,7 @@ TENANT_LOGO = ConfigMeta(
 # 租户 Favicon
 TENANT_FAVICON = ConfigMeta(
     key="tenant_favicon",
-    name_key="config.tenant.favicon",
+    name_key="config.tenant.favicon.name",
     description_key="config.tenant.favicon.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.IMAGE,
@@ -38,7 +38,7 @@ TENANT_FAVICON = ConfigMeta(
 # 登录页背景图
 TENANT_LOGIN_BG = ConfigMeta(
     key="tenant_login_bg",
-    name_key="config.tenant.login_bg",
+    name_key="config.tenant.login_bg.name",
     description_key="config.tenant.login_bg.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.IMAGE,
@@ -54,7 +54,7 @@ TENANT_LOGIN_BG = ConfigMeta(
 # 主题主色调
 TENANT_PRIMARY_COLOR = ConfigMeta(
     key="tenant_primary_color",
-    name_key="config.tenant.primary_color",
+    name_key="config.tenant.primary_color.name",
     description_key="config.tenant.primary_color.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.COLOR,
@@ -68,7 +68,7 @@ TENANT_PRIMARY_COLOR = ConfigMeta(
 # 主题强调色
 TENANT_ACCENT_COLOR = ConfigMeta(
     key="tenant_accent_color",
-    name_key="config.tenant.accent_color",
+    name_key="config.tenant.accent_color.name",
     description_key="config.tenant.accent_color.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.COLOR,
@@ -87,7 +87,7 @@ TENANT_ACCENT_COLOR = ConfigMeta(
 # 登录页标题
 TENANT_LOGIN_TITLE = ConfigMeta(
     key="tenant_login_title",
-    name_key="config.tenant.login_title",
+    name_key="config.tenant.login_title.name",
     description_key="config.tenant.login_title.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.STRING,
@@ -101,7 +101,7 @@ TENANT_LOGIN_TITLE = ConfigMeta(
 # 登录页副标题
 TENANT_LOGIN_SUBTITLE = ConfigMeta(
     key="tenant_login_subtitle",
-    name_key="config.tenant.login_subtitle",
+    name_key="config.tenant.login_subtitle.name",
     description_key="config.tenant.login_subtitle.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.STRING,
@@ -115,7 +115,7 @@ TENANT_LOGIN_SUBTITLE = ConfigMeta(
 # 页脚版权
 TENANT_FOOTER_COPYRIGHT = ConfigMeta(
     key="tenant_footer_copyright",
-    name_key="config.tenant.footer_copyright",
+    name_key="config.tenant.footer_copyright.name",
     description_key="config.tenant.footer_copyright.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.STRING,

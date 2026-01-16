@@ -16,7 +16,7 @@ from app.enums.config import ConfigScope, ConfigValueType
 # SMTP 服务器地址
 EMAIL_SMTP_HOST = ConfigMeta(
     key="email_smtp_host",
-    name_key="config.platform.email_smtp_host",
+    name_key="config.platform.email_smtp_host.name",
     description_key="config.platform.email_smtp_host.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -30,7 +30,7 @@ EMAIL_SMTP_HOST = ConfigMeta(
 # SMTP 端口
 EMAIL_SMTP_PORT = ConfigMeta(
     key="email_smtp_port",
-    name_key="config.platform.email_smtp_port",
+    name_key="config.platform.email_smtp_port.name",
     description_key="config.platform.email_smtp_port.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.NUMBER,
@@ -45,7 +45,7 @@ EMAIL_SMTP_PORT = ConfigMeta(
 # SMTP 加密方式
 EMAIL_SMTP_ENCRYPTION = ConfigMeta(
     key="email_smtp_encryption",
-    name_key="config.platform.email_smtp_encryption",
+    name_key="config.platform.email_smtp_encryption.name",
     description_key="config.platform.email_smtp_encryption.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.SELECT,
@@ -61,7 +61,7 @@ EMAIL_SMTP_ENCRYPTION = ConfigMeta(
 # SMTP 用户名
 EMAIL_SMTP_USERNAME = ConfigMeta(
     key="email_smtp_username",
-    name_key="config.platform.email_smtp_username",
+    name_key="config.platform.email_smtp_username.name",
     description_key="config.platform.email_smtp_username.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -75,7 +75,7 @@ EMAIL_SMTP_USERNAME = ConfigMeta(
 # SMTP 密码
 EMAIL_SMTP_PASSWORD = ConfigMeta(
     key="email_smtp_password",
-    name_key="config.platform.email_smtp_password",
+    name_key="config.platform.email_smtp_password.name",
     description_key="config.platform.email_smtp_password.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.PASSWORD,
@@ -92,7 +92,7 @@ EMAIL_SMTP_PASSWORD = ConfigMeta(
 # 发件人邮箱
 EMAIL_FROM_ADDRESS = ConfigMeta(
     key="email_from_address",
-    name_key="config.platform.email_from_address",
+    name_key="config.platform.email_from_address.name",
     description_key="config.platform.email_from_address.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -106,7 +106,7 @@ EMAIL_FROM_ADDRESS = ConfigMeta(
 # 发件人名称
 EMAIL_FROM_NAME = ConfigMeta(
     key="email_from_name",
-    name_key="config.platform.email_from_name",
+    name_key="config.platform.email_from_name.name",
     description_key="config.platform.email_from_name.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -125,7 +125,7 @@ EMAIL_FROM_NAME = ConfigMeta(
 # 启用邮件发送
 EMAIL_ENABLED = ConfigMeta(
     key="email_enabled",
-    name_key="config.platform.email_enabled",
+    name_key="config.platform.email_enabled.name",
     description_key="config.platform.email_enabled.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.BOOLEAN,

@@ -16,7 +16,7 @@ from app.enums.config import ConfigScope, ConfigValueType
 # 启用验证码
 TENANT_CAPTCHA_ENABLED = ConfigMeta(
     key="tenant_captcha_enabled",
-    name_key="config.tenant.captcha_enabled",
+    name_key="config.tenant.captcha_enabled.name",
     description_key="config.tenant.captcha_enabled.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.BOOLEAN,
@@ -27,7 +27,7 @@ TENANT_CAPTCHA_ENABLED = ConfigMeta(
 # 允许的登录方式
 TENANT_LOGIN_METHODS = ConfigMeta(
     key="tenant_login_methods",
-    name_key="config.tenant.login_methods",
+    name_key="config.tenant.login_methods.name",
     description_key="config.tenant.login_methods.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.MULTI_SELECT,
@@ -45,7 +45,7 @@ TENANT_LOGIN_METHODS = ConfigMeta(
 # 登录失败锁定次数（覆盖平台默认）
 TENANT_LOGIN_MAX_ATTEMPTS = ConfigMeta(
     key="tenant_login_max_attempts",
-    name_key="config.tenant.login_max_attempts",
+    name_key="config.tenant.login_max_attempts.name",
     description_key="config.tenant.login_max_attempts.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.NUMBER,
@@ -60,7 +60,7 @@ TENANT_LOGIN_MAX_ATTEMPTS = ConfigMeta(
 # 账户锁定时长（分钟）
 TENANT_LOGIN_LOCKOUT_MINUTES = ConfigMeta(
     key="tenant_login_lockout_minutes",
-    name_key="config.tenant.login_lockout_minutes",
+    name_key="config.tenant.login_lockout_minutes.name",
     description_key="config.tenant.login_lockout_minutes.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.NUMBER,
@@ -80,7 +80,7 @@ TENANT_LOGIN_LOCKOUT_MINUTES = ConfigMeta(
 # 密码最小长度
 TENANT_PASSWORD_MIN_LENGTH = ConfigMeta(
     key="tenant_password_min_length",
-    name_key="config.tenant.password_min_length",
+    name_key="config.tenant.password_min_length.name",
     description_key="config.tenant.password_min_length.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.NUMBER,
@@ -95,7 +95,7 @@ TENANT_PASSWORD_MIN_LENGTH = ConfigMeta(
 # 密码复杂度要求
 TENANT_PASSWORD_COMPLEXITY = ConfigMeta(
     key="tenant_password_complexity",
-    name_key="config.tenant.password_complexity",
+    name_key="config.tenant.password_complexity.name",
     description_key="config.tenant.password_complexity.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.SELECT,
@@ -116,7 +116,7 @@ TENANT_PASSWORD_COMPLEXITY = ConfigMeta(
 # 会话超时时间（分钟）
 TENANT_SESSION_TIMEOUT = ConfigMeta(
     key="tenant_session_timeout",
-    name_key="config.tenant.session_timeout",
+    name_key="config.tenant.session_timeout.name",
     description_key="config.tenant.session_timeout.desc",
     scope=ConfigScope.TENANT,
     value_type=ConfigValueType.NUMBER,

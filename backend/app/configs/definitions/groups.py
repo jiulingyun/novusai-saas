@@ -15,7 +15,7 @@ from app.enums.config import ConfigScope
 # 通用设置分组
 PLATFORM_GENERAL_GROUP = ConfigGroupMeta(
     code="platform_general",
-    name_key="config.group.platform_general",
+    name_key="config.group.platform_general.name",
     description_key="config.group.platform_general.desc",
     scope=ConfigScope.PLATFORM,
     icon="settings",
@@ -25,7 +25,7 @@ PLATFORM_GENERAL_GROUP = ConfigGroupMeta(
 # 安全设置分组
 PLATFORM_SECURITY_GROUP = ConfigGroupMeta(
     code="platform_security",
-    name_key="config.group.platform_security",
+    name_key="config.group.platform_security.name",
     description_key="config.group.platform_security.desc",
     scope=ConfigScope.PLATFORM,
     icon="shield",
@@ -35,7 +35,7 @@ PLATFORM_SECURITY_GROUP = ConfigGroupMeta(
 # 邮件设置分组
 PLATFORM_EMAIL_GROUP = ConfigGroupMeta(
     code="platform_email",
-    name_key="config.group.platform_email",
+    name_key="config.group.platform_email.name",
     description_key="config.group.platform_email.desc",
     scope=ConfigScope.PLATFORM,
     icon="mail",
@@ -45,7 +45,7 @@ PLATFORM_EMAIL_GROUP = ConfigGroupMeta(
 # 存储设置分组
 PLATFORM_STORAGE_GROUP = ConfigGroupMeta(
     code="platform_storage",
-    name_key="config.group.platform_storage",
+    name_key="config.group.platform_storage.name",
     description_key="config.group.platform_storage.desc",
     scope=ConfigScope.PLATFORM,
     icon="database",
@@ -60,7 +60,7 @@ PLATFORM_STORAGE_GROUP = ConfigGroupMeta(
 # 租户基础设置分组
 TENANT_GENERAL_GROUP = ConfigGroupMeta(
     code="tenant_general",
-    name_key="config.group.tenant_general",
+    name_key="config.group.tenant_general.name",
     description_key="config.group.tenant_general.desc",
     scope=ConfigScope.TENANT,
     icon="building",
@@ -70,7 +70,7 @@ TENANT_GENERAL_GROUP = ConfigGroupMeta(
 # 租户外观设置分组
 TENANT_APPEARANCE_GROUP = ConfigGroupMeta(
     code="tenant_appearance",
-    name_key="config.group.tenant_appearance",
+    name_key="config.group.tenant_appearance.name",
     description_key="config.group.tenant_appearance.desc",
     scope=ConfigScope.TENANT,
     icon="palette",
@@ -80,7 +80,7 @@ TENANT_APPEARANCE_GROUP = ConfigGroupMeta(
 # 租户功能设置分组
 TENANT_FEATURES_GROUP = ConfigGroupMeta(
     code="tenant_features",
-    name_key="config.group.tenant_features",
+    name_key="config.group.tenant_features.name",
     description_key="config.group.tenant_features.desc",
     scope=ConfigScope.TENANT,
     icon="puzzle",

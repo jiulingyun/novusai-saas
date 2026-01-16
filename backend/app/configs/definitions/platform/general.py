@@ -16,7 +16,7 @@ from app.enums.config import ConfigScope, ConfigValueType
 # 站点名称
 SITE_NAME = ConfigMeta(
     key="site_name",
-    name_key="config.platform.site_name",
+    name_key="config.platform.site_name.name",
     description_key="config.platform.site_name.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -32,7 +32,7 @@ SITE_NAME = ConfigMeta(
 # 站点描述
 SITE_DESCRIPTION = ConfigMeta(
     key="site_description",
-    name_key="config.platform.site_description",
+    name_key="config.platform.site_description.name",
     description_key="config.platform.site_description.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.TEXT,
@@ -46,7 +46,7 @@ SITE_DESCRIPTION = ConfigMeta(
 # 站点 Logo
 SITE_LOGO = ConfigMeta(
     key="site_logo",
-    name_key="config.platform.site_logo",
+    name_key="config.platform.site_logo.name",
     description_key="config.platform.site_logo.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.IMAGE,
@@ -57,7 +57,7 @@ SITE_LOGO = ConfigMeta(
 # 站点 Favicon
 SITE_FAVICON = ConfigMeta(
     key="site_favicon",
-    name_key="config.platform.site_favicon",
+    name_key="config.platform.site_favicon.name",
     description_key="config.platform.site_favicon.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.IMAGE,
@@ -68,7 +68,7 @@ SITE_FAVICON = ConfigMeta(
 # 版权信息
 SITE_COPYRIGHT = ConfigMeta(
     key="site_copyright",
-    name_key="config.platform.site_copyright",
+    name_key="config.platform.site_copyright.name",
     description_key="config.platform.site_copyright.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -82,7 +82,7 @@ SITE_COPYRIGHT = ConfigMeta(
 # ICP 备案号
 SITE_ICP = ConfigMeta(
     key="site_icp",
-    name_key="config.platform.site_icp",
+    name_key="config.platform.site_icp.name",
     description_key="config.platform.site_icp.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.STRING,
@@ -98,7 +98,7 @@ SITE_ICP = ConfigMeta(
 # 维护模式开关
 MAINTENANCE_MODE = ConfigMeta(
     key="maintenance_mode",
-    name_key="config.platform.maintenance_mode",
+    name_key="config.platform.maintenance_mode.name",
     description_key="config.platform.maintenance_mode.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.BOOLEAN,
@@ -109,7 +109,7 @@ MAINTENANCE_MODE = ConfigMeta(
 # 维护模式提示信息
 MAINTENANCE_MESSAGE = ConfigMeta(
     key="maintenance_message",
-    name_key="config.platform.maintenance_message",
+    name_key="config.platform.maintenance_message.name",
     description_key="config.platform.maintenance_message.desc",
     scope=ConfigScope.PLATFORM,
     value_type=ConfigValueType.TEXT,
