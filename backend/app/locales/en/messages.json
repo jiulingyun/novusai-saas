@@ -68,6 +68,15 @@
     "identification_failed": "Unable to identify tenant",
     "owner_not_found": "Tenant owner not found"
   },
+  "tenant_plan": {
+    "not_found": "Plan not found",
+    "code_exists": "Plan code already exists",
+    "created": "Plan created successfully",
+    "updated": "Plan updated successfully",
+    "deleted": "Plan deleted successfully",
+    "has_tenants": "Plan is in use by tenants and cannot be deleted",
+    "permissions_updated": "Plan permissions updated successfully"
+  },
   "domain": {
     "not_found": "Domain not found",
     "already_exists": "Domain is already in use",

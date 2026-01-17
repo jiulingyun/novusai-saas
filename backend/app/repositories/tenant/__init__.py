@@ -6,9 +6,11 @@
 
 from app.repositories.tenant.tenant_admin_repository import TenantAdminRepository
 from app.repositories.tenant.tenant_role_repository import TenantRoleRepository
+from app.repositories.tenant.tenant_plan_repository import TenantPlanRepository
 
 
 __all__ = [
     "TenantAdminRepository",
     "TenantRoleRepository",
+    "TenantPlanRepository",
 ]
