@@ -132,11 +132,12 @@ class TenantPlan(BaseModel):
     )
     
     # 使用该套餐的租户（一对多）
-    tenants: Mapped[list["Tenant"]] = relationship(
-        "Tenant",
-        back_populates="plan",
-        lazy="selectin",
-    )
+    # 注意：需要在 Tenant 模型添加 plan_id 外键后启用（M19-T4）
+    # tenants: Mapped[list["Tenant"]] = relationship(
+    #     "Tenant",
+    #     back_populates="plan",
+    #     lazy="selectin",
+    # )
     
     # ==================== 辅助属性 ====================
     
@@ -145,15 +146,16 @@ class TenantPlan(BaseModel):
         """获取权限数量"""
         return len(self.permissions)
     
-    @property
-    def tenants_count(self) -> int:
-        """获取使用该套餐的租户数量"""
-        return len([t for t in self.tenants if not t.is_deleted])
-    
-    @property
-    def has_tenants(self) -> bool:
-        """是否有租户使用该套餐"""
-        return self.tenants_count > 0
+    # 注意：以下属性需要在 Tenant 模型添加 plan_id 外键后启用（M19-T4）
+    # @property
+    # def tenants_count(self) -> int:
+    #     """获取使用该套餐的租户数量"""
+    #     return len([t for t in self.tenants if not t.is_deleted])
+    # 
+    # @property
+    # def has_tenants(self) -> bool:
+    #     """是否有租户使用该套餐"""
+    #     return self.tenants_count > 0
     
     def get_quota_value(self, key: str, default: int | bool | None = None):
         """

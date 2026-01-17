@@ -306,6 +306,12 @@
       "department": "部门",
       "position": "岗位",
       "role": "职能角色"
+    },
+    "billing_cycle": {
+      "monthly": "月付",
+      "yearly": "年付",
+      "lifetime": "终身",
+      "custom": "自定义"
     }
   },
   "config": {

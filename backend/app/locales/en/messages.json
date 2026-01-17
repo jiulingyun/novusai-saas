@@ -296,6 +296,12 @@
       "department": "Department",
       "position": "Position",
       "role": "Functional Role"
+    },
+    "billing_cycle": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "lifetime": "Lifetime",
+      "custom": "Custom"
     }
   },
   "config": {
