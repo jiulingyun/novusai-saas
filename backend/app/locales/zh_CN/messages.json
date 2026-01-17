@@ -220,6 +220,17 @@
       "groups": "查看配置分组",
       "detail": "查看配置详情",
       "update": "更新配置"
+    },
+    "tenant_plan": {
+      "list": "查看套餐列表",
+      "detail": "查看套餐详情",
+      "create": "创建套餐",
+      "update": "更新套餐",
+      "delete": "删除套餐",
+      "select": "套餐远程下拉",
+      "permissions": "查看套餐权限",
+      "assign_permissions": "分配套餐权限",
+      "available_permissions": "查看可分配权限"
     }
   },
   "role": {

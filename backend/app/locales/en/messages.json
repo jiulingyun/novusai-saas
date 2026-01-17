@@ -570,6 +570,17 @@
       "groups": "View Config Groups",
       "detail": "View Config Details",
       "update": "Update Config"
+    },
+    "tenant_plan": {
+      "list": "View Plan List",
+      "detail": "View Plan Details",
+      "create": "Create Plan",
+      "update": "Update Plan",
+      "delete": "Delete Plan",
+      "select": "Plan Remote Select",
+      "permissions": "View Plan Permissions",
+      "assign_permissions": "Assign Plan Permissions",
+      "available_permissions": "View Available Permissions"
     }
   },
   "validation": {

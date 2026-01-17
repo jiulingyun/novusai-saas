@@ -15,6 +15,7 @@ from app.api.admin.roles import router as roles_router, AdminRoleController
 from app.api.admin.admins import router as admins_router, AdminAdminController
 from app.api.admin.tenants import router as tenants_router, AdminTenantController
 from app.api.admin.configs import router as configs_router, AdminConfigController
+from app.api.admin.plans import router as plans_router, AdminPlanController
 
 # 创建平台管理后台路由器
 admin_router = APIRouter()
@@ -26,6 +27,7 @@ admin_router.include_router(roles_router)
 admin_router.include_router(admins_router)
 admin_router.include_router(tenants_router)
 admin_router.include_router(configs_router)
+admin_router.include_router(plans_router)
 
 
 __all__ = [
@@ -36,4 +38,5 @@ __all__ = [
     "AdminAdminController",
     "AdminTenantController",
     "AdminConfigController",
+    "AdminPlanController",
 ]
