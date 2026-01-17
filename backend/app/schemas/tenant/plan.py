@@ -96,6 +96,25 @@ class PermissionSimpleResponse(BaseSchema):
     resource: str = Field(..., description="资源标识")
 
 
+class PermissionTreeSimpleResponse(BaseSchema):
+    """权限树简要响应（用于套餐权限分配）"""
+    
+    id: int = Field(..., description="权限 ID")
+    code: str = Field(..., description="权限代码")
+    name: str = Field(..., description="权限名称")
+    type: str = Field(..., description="权限类型")
+    resource: str | None = Field(None, description="资源标识")
+    parent_id: int | None = Field(None, description="父级权限 ID")
+    sort_order: int = Field(0, description="排序")
+    children: list["PermissionTreeSimpleResponse"] = Field(
+        default_factory=list, description="子权限"
+    )
+
+
+# 解决循环引用
+PermissionTreeSimpleResponse.model_rebuild()
+
+
 class TenantPlanDetailResponse(TenantPlanResponse):
     """套餐详情响应（含权限列表）"""
     
@@ -203,6 +222,7 @@ __all__ = [
     "TenantPlanResponse",
     "TenantPlanDetailResponse",
     "PermissionSimpleResponse",
+    "PermissionTreeSimpleResponse",
     "TenantPlanCreateRequest",
     "TenantPlanUpdateRequest",
     "TenantPlanPermissionsRequest",

@@ -121,20 +121,28 @@ class TestAdminPlans(BaseAPITest):
         assert_true(isinstance(data["data"]["items"], list), "items 应为列表")
     
     def test_get_available_permissions(self) -> None:
-        """测试获取可分配权限列表"""
+        """测试获取可分配权限树"""
         resp = self.client.get("/admin/plans/available-permissions")
-        data = assert_success(resp, "获取可分配权限列表失败")
+        data = assert_success(resp, "获取可分配权限树失败")
         
         assert_true(isinstance(data["data"], list), "data 应为列表")
         
-        # 验证返回的权限都是 menu 类型
-        for perm in data["data"]:
-            assert_has_keys(perm, ["id", "code", "name", "type"])
-            assert_equals(perm["type"], "menu", "应只返回 menu 类型权限")
+        # 收集所有权限 ID（包括子节点）
+        def collect_permission_ids(nodes: list, ids: list) -> None:
+            """递归收集权限 ID"""
+            for node in nodes:
+                assert_has_keys(node, ["id", "code", "name", "type", "children"])
+                assert_equals(node["type"], "menu", "应只返回 menu 类型权限")
+                ids.append(node["id"])
+                if node.get("children"):
+                    collect_permission_ids(node["children"], ids)
+        
+        permission_ids = []
+        collect_permission_ids(data["data"], permission_ids)
         
         # 保存权限用于后续测试
-        if data["data"]:
-            self._test_data["available_permission_ids"] = [p["id"] for p in data["data"][:3]]
+        if permission_ids:
+            self._test_data["available_permission_ids"] = permission_ids[:3]
     
     # ========== 创建测试 ==========
     

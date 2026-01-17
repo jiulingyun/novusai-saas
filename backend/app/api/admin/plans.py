@@ -45,6 +45,7 @@ from app.schemas.tenant.plan import (
     TenantPlanUpdateRequest,
     TenantPlanPermissionsRequest,
     PermissionSimpleResponse,
+    PermissionTreeSimpleResponse,
 )
 from app.schemas.common.select import SelectResponse
 from app.services.tenant import TenantPlanService
@@ -151,7 +152,7 @@ class AdminPlanController(GlobalController):
                 message=_("common.success"),
             )
         
-        @router.get("/available-permissions", summary="获取可分配的权限列表")
+        @router.get("/available-permissions", summary="获取可分配的权限树")
         @action_read("action.tenant_plan.available_permissions")
         async def get_available_permissions(
             request: Request,
@@ -159,26 +160,39 @@ class AdminPlanController(GlobalController):
             current_admin: ActiveAdmin,
         ):
             """
-            获取可分配给套餐的权限列表
+            获取可分配给套餐的权限树
             
-            仅返回 tenant/both scope 的 menu 类型权限
+            返回 tenant/both scope 的 menu 类型权限（树形结构）
             
             权限: tenant_plan:available_permissions
             """
             service = TenantPlanService(db)
             permissions = await service.get_available_permissions()
             
+            # 构建权限树
+            def build_tree(
+                perms: list, 
+                parent_id: int | None = None
+            ) -> list[PermissionTreeSimpleResponse]:
+                """递归构建权限树"""
+                tree = []
+                for p in perms:
+                    if p.parent_id == parent_id:
+                        children = build_tree(perms, p.id)
+                        tree.append(PermissionTreeSimpleResponse(
+                            id=p.id,
+                            code=p.code,
+                            name=_translate_permission_name(p.name),
+                            type=p.type,
+                            resource=p.resource,
+                            parent_id=p.parent_id,
+                            sort_order=p.sort_order,
+                            children=children,
+                        ))
+                return sorted(tree, key=lambda x: x.sort_order)
+            
             return success(
-                data=[
-                    PermissionSimpleResponse(
-                        id=p.id,
-                        code=p.code,
-                        name=_translate_permission_name(p.name),
-                        type=p.type,
-                        resource=p.resource,
-                    )
-                    for p in permissions
-                ],
+                data=build_tree(permissions),
                 message=_("common.success"),
             )
         
