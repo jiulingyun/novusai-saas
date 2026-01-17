@@ -59,6 +59,17 @@ const mainRoutes: RouteRecordRaw = {
         title: $t('page.dashboard.title'),
       },
     },
+    // Fallback 静态注册：系统配置（后端菜单动态路由优先生效）
+    {
+      name: 'TenantSystemConfigs',
+      path: 'system/configs',
+      component: () => import('#/views/tenant/system/configs/index.vue'),
+      meta: {
+        hideInMenu: true,
+        icon: 'lucide:settings',
+        title: 'System Configs',
+      },
+    },
   ],
 };
 

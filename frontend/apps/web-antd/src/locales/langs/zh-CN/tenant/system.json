@@ -89,6 +89,10 @@
     },
     "tip": "管理租户角色，配置角色对应的功能权限"
   },
+  "configs": {
+    "title": "系统配置",
+    "description": "管理租户级配置项"
+  },
   "organization": {
     "title": "组织架构管理",
     "tree": "组织架构",

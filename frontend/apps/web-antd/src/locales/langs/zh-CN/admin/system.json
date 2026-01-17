@@ -115,6 +115,10 @@
     },
     "noData": "暂无权限数据"
   },
+  "configs": {
+    "title": "系统配置",
+    "description": "管理平台级系统配置项"
+  },
   "organization": {
     "title": "组织架构管理",
     "tree": "组织架构",

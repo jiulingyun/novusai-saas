@@ -89,6 +89,10 @@
     },
     "tip": "Manage tenant roles and configure role permissions"
   },
+  "configs": {
+    "title": "System Configs",
+    "description": "Manage tenant-level configurations"
+  },
   "organization": {
     "title": "Organization Management",
     "tree": "Organization",

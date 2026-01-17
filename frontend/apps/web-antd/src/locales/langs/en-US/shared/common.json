@@ -30,6 +30,7 @@
   "refresh": "Refresh",
   "export": "Export",
   "import": "Import",
+  "upload": "Upload",
   "back": "Back",
   "loading": "Loading...",
   "noData": "No Data",

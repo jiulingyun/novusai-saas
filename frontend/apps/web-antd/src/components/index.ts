@@ -20,3 +20,9 @@ export { PermissionSelector } from './business/permission-selector';
 
 // 角色树
 export { RoleTreeNode } from './business/role-tree';
+
+// 配置表单动态渲染组件
+export { ConfigForm } from './business/config-form';
+
+// 通用图片上传组件
+export { default as ImageUpload } from './business/image-upload/image-upload.vue';

@@ -115,6 +115,10 @@
     },
     "noData": "No permission data"
   },
+  "configs": {
+    "title": "System Configs",
+    "description": "Manage platform-level system configurations"
+  },
   "organization": {
     "title": "Organization Management",
     "tree": "Organization",
