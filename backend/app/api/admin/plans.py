@@ -11,6 +11,24 @@ from app.core.base_schema import PageResponse
 from app.core.deps import DbSession, QueryParams, ActiveAdmin
 from app.core.i18n import _
 from app.core.response import success
+
+
+def _translate_permission_name(name: str) -> str:
+    """
+    翻译权限名称
+    
+    Args:
+        name: 权限名称（可能是 i18n key）
+    
+    Returns:
+        翻译后的名称
+    """
+    if name and "." in name:
+        translated = _(name)
+        if translated == name:
+            return name.split(".")[-1]
+        return translated
+    return name or ""
 from app.enums.rbac import PermissionScope
 from app.rbac.decorators import (
     permission_resource,
@@ -155,7 +173,7 @@ class AdminPlanController(GlobalController):
                     PermissionSimpleResponse(
                         id=p.id,
                         code=p.code,
-                        name=p.name,
+                        name=_translate_permission_name(p.name),
                         type=p.type,
                         resource=p.resource,
                     )
@@ -286,7 +304,7 @@ class AdminPlanController(GlobalController):
                     PermissionSimpleResponse(
                         id=p.id,
                         code=p.code,
-                        name=p.name,
+                        name=_translate_permission_name(p.name),
                         type=p.type,
                         resource=p.resource,
                     )
