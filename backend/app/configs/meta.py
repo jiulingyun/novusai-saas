@@ -135,7 +135,6 @@ class ConfigMeta:
         }
 
 
-@dataclass
 class ConfigGroupMeta:
     """
     配置分组元数据
@@ -152,39 +151,44 @@ class ConfigGroupMeta:
         )
     """
     
-    code: str
-    """分组代码（全局唯一）"""
+    def __init__(
+        self,
+        code: str,
+        name_key: str,
+        scope: ConfigScope = ConfigScope.PLATFORM,
+        description_key: str = "",
+        icon: str = "",
+        parent_code: str = "",
+        sort_order: int = 0,
+        is_active: bool = True,
+        configs: list[ConfigMeta] | None = None,
+        children: list["ConfigGroupMeta"] | None = None,
+    ):
+        self.code = code
+        self.name_key = name_key
+        self.scope = scope
+        self.description_key = description_key
+        self.icon = icon
+        self.parent_code = parent_code
+        self.sort_order = sort_order
+        self.is_active = is_active
+        self._configs: list[ConfigMeta] = []
+        self.children: list["ConfigGroupMeta"] = children or []
+        
+        # 设置配置项（通过 property setter）
+        if configs:
+            self.configs = configs
     
-    name_key: str
-    """名称的 i18n 键"""
+    @property
+    def configs(self) -> list[ConfigMeta]:
+        """分组下的配置项列表"""
+        return self._configs
     
-    scope: ConfigScope = ConfigScope.PLATFORM
-    """作用域：platform/tenant"""
-    
-    description_key: str = ""
-    """描述的 i18n 键"""
-    
-    icon: str = ""
-    """分组图标"""
-    
-    parent_code: str = ""
-    """父分组代码（用于嵌套分组）"""
-    
-    sort_order: int = 0
-    """排序顺序"""
-    
-    is_active: bool = True
-    """是否启用"""
-    
-    configs: list[ConfigMeta] = field(default_factory=list)
-    """分组下的配置项列表"""
-    
-    children: list["ConfigGroupMeta"] = field(default_factory=list)
-    """子分组列表"""
-    
-    def __post_init__(self) -> None:
-        """初始化后处理：设置配置项的分组代码"""
-        for config in self.configs:
+    @configs.setter
+    def configs(self, value: list[ConfigMeta]) -> None:
+        """设置配置项列表，同时更新每个配置项的 group_code"""
+        self._configs = value
+        for config in self._configs:
             config.group_code = self.code
             # 继承分组的作用域
             if config.scope != self.scope:

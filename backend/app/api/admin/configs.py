@@ -4,7 +4,9 @@
 提供平台级配置管理接口（平台管理员专用）
 """
 
-from fastapi import Request
+from typing import Any
+
+from fastapi import Request, Body
 
 from app.configs.service import ConfigService
 from app.configs.registry import config_registry
@@ -194,11 +196,15 @@ class AdminConfigController(GlobalController):
             request: Request,
             db: DbSession,
             group_code: str,
-            data: ConfigUpdateRequest,
             current_admin: ActiveAdmin,
+            body: dict[str, Any] = Body(...),
         ):
             """
             批量更新分组下的配置项
+            
+            支持两种格式：
+            1. 扁平格式: {"site_name": "xxx", "site_logo": "xxx"}
+            2. 包裹格式: {"configs": {"site_name": "xxx", ...}}
             
             权限: platform_config:update
             """
@@ -210,11 +216,17 @@ class AdminConfigController(GlobalController):
                     code=ErrorCode.CONFIG_GROUP_NOT_FOUND,
                 )
             
+            # 支持两种格式
+            if "configs" in body and isinstance(body["configs"], dict):
+                configs = body["configs"]
+            else:
+                configs = body
+            
             # 获取分组下的配置键列表
             valid_keys = {c.key for c in group.configs}
             
             # 验证传入的配置键
-            invalid_keys = set(data.configs.keys()) - valid_keys
+            invalid_keys = set(configs.keys()) - valid_keys
             if invalid_keys:
                 raise BusinessException(
                     message=_("config.invalid_keys", keys=", ".join(invalid_keys)),
@@ -223,7 +235,7 @@ class AdminConfigController(GlobalController):
             
             # 更新配置
             config_service = ConfigService(db)
-            for key, value in data.configs.items():
+            for key, value in configs.items():
                 await config_service.set_platform_config(key, value)
             
             await db.commit()
