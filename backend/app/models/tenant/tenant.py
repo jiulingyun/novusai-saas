@@ -6,8 +6,9 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, JSON
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import TYPE_CHECKING
 
 from app.core.base_model import BaseModel
 
@@ -31,7 +32,7 @@ class Tenant(BaseModel):
         "contact_phone": "contact_phone",
         "contact_email": "contact_email",
         "is_active": "is_active",
-        "plan": "plan",
+        "plan_id": "plan_id",
         "expires_at": "expires_at",
         "created_at": "created_at",
         "updated_at": "updated_at",
@@ -70,11 +71,24 @@ class Tenant(BaseModel):
     )
     
     # 套餐/配额
-    plan: Mapped[str] = mapped_column(
-        String(50), default="free", comment="套餐类型"
+    # @deprecated: plan 字段已废弃，请使用 plan_id 关联 TenantPlan
+    # 保留字段以兼容旧数据，迁移后删除
+    plan: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, default=None, comment="套餐类型(已废弃)"
     )
+    
+    # 套餐外键关联
+    plan_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("tenant_plans.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="关联套餐ID"
+    )
+    
+    # 租户级配额覆盖（可覆盖套餐默认配额）
     quota: Mapped[dict | None] = mapped_column(
-        JSON, nullable=True, comment="配额配置"
+        JSON, nullable=True, comment="配额配置(可覆盖套餐默认值)"
     )
     
     # 有效期
@@ -96,6 +110,13 @@ class Tenant(BaseModel):
     )
     
     # ==================== 关系 ====================
+    
+    # 关联套餐
+    tenant_plan: Mapped["TenantPlan | None"] = relationship(
+        "TenantPlan",
+        back_populates="tenants",
+        lazy="selectin",
+    )
     
     # 租户绑定的域名列表
     domains = relationship(
@@ -122,13 +143,38 @@ class Tenant(BaseModel):
     @property
     def max_custom_domains(self) -> int:
         """获取最大自定义域名数量（由套餐决定）"""
-        # 从 quota 或 settings 中获取，默认为 0
-        if self.quota:
+        # 优先从租户级 quota 获取，其次从套餐获取
+        if self.quota and "max_custom_domains" in self.quota:
             return self.quota.get("max_custom_domains", 0)
+        if self.tenant_plan:
+            return self.tenant_plan.get_quota_value("max_custom_domains", 0)
         return 0
+    
+    def get_quota_value(self, key: str, default: int | bool | None = None):
+        """
+        获取配额值（优先租户级覆盖，其次套餐默认值）
+        
+        Args:
+            key: 配额键名
+            default: 默认值
+        
+        Returns:
+            配额值
+        """
+        # 优先从租户级 quota 获取
+        if self.quota and key in self.quota:
+            return self.quota.get(key, default)
+        # 其次从套餐获取
+        if self.tenant_plan:
+            return self.tenant_plan.get_quota_value(key, default)
+        return default
     
     def __repr__(self) -> str:
         return f"<Tenant(id={self.id}, code={self.code}, name={self.name})>"
+
+
+if TYPE_CHECKING:
+    from app.models.tenant.tenant_plan import TenantPlan
 
 
 __all__ = ["Tenant"]

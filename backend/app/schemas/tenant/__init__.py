@@ -38,6 +38,16 @@ from app.schemas.tenant.domain import (
     TenantSettingsResponse,
     TenantSettingsUpdateRequest,
 )
+from app.schemas.tenant.plan import (
+    QuotaSchema,
+    FeaturesSchema,
+    TenantPlanResponse,
+    TenantPlanDetailResponse,
+    PermissionSimpleResponse,
+    TenantPlanCreateRequest,
+    TenantPlanUpdateRequest,
+    TenantPlanPermissionsRequest,
+)
 
 __all__ = [
     # TenantAdmin
@@ -70,4 +80,13 @@ __all__ = [
     "TenantDomainVerifyRequest",
     "TenantSettingsResponse",
     "TenantSettingsUpdateRequest",
+    # Plan
+    "QuotaSchema",
+    "FeaturesSchema",
+    "TenantPlanResponse",
+    "TenantPlanDetailResponse",
+    "PermissionSimpleResponse",
+    "TenantPlanCreateRequest",
+    "TenantPlanUpdateRequest",
+    "TenantPlanPermissionsRequest",
 ]
