@@ -14,6 +14,8 @@ from app.core.i18n import _
 from app.models import Admin, TenantAdmin, Permission
 from app.models.auth.admin_role import AdminRole
 from app.models.auth.tenant_admin_role import TenantAdminRole
+from app.models.tenant.tenant import Tenant
+from app.models.tenant.tenant_plan import TenantPlan
 from app.repositories.system.admin_role_repository import AdminRoleRepository
 from app.repositories.tenant.tenant_role_repository import TenantRoleRepository
 from app.schemas.common import MenuResponse, PermissionTreeResponse, PermissionResponse
@@ -168,12 +170,57 @@ class PermissionService:
         
         return visible_ids
     
+    async def _get_tenant_plan_permissions(
+        self,
+        tenant_id: int,
+    ) -> tuple[set[str], set[int]] | None:
+        """
+        获取租户套餐的权限集合
+        
+        Args:
+            tenant_id: 租户 ID
+        
+        Returns:
+            (权限码集合, 权限ID集合) 或 None（如果租户无套餐）
+        """
+        # 查询租户及其套餐（并加载套餐的权限列表）
+        result = await self.db.execute(
+            select(Tenant)
+            .where(Tenant.id == tenant_id)
+            .options(
+                selectinload(Tenant.tenant_plan)
+                .selectinload(TenantPlan.permissions)
+            )
+        )
+        tenant = result.scalar_one_or_none()
+        
+        if tenant is None or tenant.plan_id is None:
+            return None
+        
+        plan = tenant.tenant_plan
+        if plan is None or not plan.is_active:
+            return None
+        
+        # 收集套餐权限（只包含启用且未删除的）
+        plan_codes = set()
+        plan_ids = set()
+        for p in plan.permissions:
+            if p.is_enabled and not p.is_deleted:
+                plan_codes.add(p.code)
+                plan_ids.add(p.id)
+        
+        return plan_codes, plan_ids
+    
     async def get_tenant_admin_permissions(
         self, 
         tenant_admin: TenantAdmin,
     ) -> set[str]:
         """
-        获取租户管理员的直接权限集合（不含继承）
+        获取租户管理员的权限集合
+        
+        权限逻辑：
+        - 租户所有者：获取套餐全部权限（或无套餐时返回 "*"）
+        - 普通管理员：角色权限 ∩ 套餐权限（无套餐时仅角色权限）
         
         Args:
             tenant_admin: 租户管理员
@@ -181,9 +228,17 @@ class PermissionService:
         Returns:
             权限代码集合
         """
-        # 租户所有者拥有租户内所有权限
+        # 获取套餐权限（如果有）
+        plan_perms = await self._get_tenant_plan_permissions(tenant_admin.tenant_id)
+        
+        # 租户所有者
         if tenant_admin.is_owner:
-            return {"*"}
+            if plan_perms is not None:
+                # 有套餐：返回套餐全部权限
+                return plan_perms[0]
+            else:
+                # 无套餐：保持原逻辑，返回 "*"
+                return {"*"}
         
         # 无角色则无权限
         if tenant_admin.role_id is None:
@@ -200,17 +255,27 @@ class PermissionService:
         if role is None or not role.is_active:
             return set()
         
-        return {
+        # 角色权限
+        role_perms = {
             p.code for p in role.permissions 
             if p.is_enabled and not p.is_deleted
         }
+        
+        # 有套餐时取交集，无套餐时仅角色权限
+        if plan_perms is not None:
+            return role_perms & plan_perms[0]
+        return role_perms
     
     async def get_tenant_admin_effective_permission_ids(
         self, 
         tenant_admin: TenantAdmin,
     ) -> set[int]:
         """
-        获取租户管理员的直接权限 ID 集合（不含继承）
+        获取租户管理员的有效权限 ID 集合
+        
+        权限逻辑：
+        - 租户所有者：套餐全部权限 ID（或无套餐时返回所有 tenant 作用域权限）
+        - 普通管理员：角色权限 ∩ 套餐权限（无套餐时仅角色权限）
         
         Args:
             tenant_admin: 租户管理员
@@ -218,15 +283,23 @@ class PermissionService:
         Returns:
             权限 ID 集合
         """
-        # 租户所有者拥有所有权限
+        # 获取套餐权限（如果有）
+        plan_perms = await self._get_tenant_plan_permissions(tenant_admin.tenant_id)
+        
+        # 租户所有者
         if tenant_admin.is_owner:
-            result = await self.db.execute(
-                select(Permission.id).where(
-                    Permission.is_enabled == True,
-                    Permission.is_deleted == False,
+            if plan_perms is not None:
+                # 有套餐：返回套餐全部权限 ID
+                return plan_perms[1]
+            else:
+                # 无套餐：保持原逻辑，返回所有租户端权限
+                result = await self.db.execute(
+                    select(Permission.id).where(
+                        Permission.is_enabled == True,
+                        Permission.is_deleted == False,
+                    )
                 )
-            )
-            return set(result.scalars().all())
+                return set(result.scalars().all())
         
         # 无角色则无权限
         if tenant_admin.role_id is None:
@@ -247,6 +320,9 @@ class PermissionService:
                 if p.is_enabled and not p.is_deleted:
                     permission_ids.add(p.id)
         
+        # 有套餐时取交集，无套餐时仅角色权限
+        if plan_perms is not None:
+            return permission_ids & plan_perms[1]
         return permission_ids
     
     async def get_tenant_admin_manageable_role_ids(
@@ -520,12 +596,7 @@ class PermissionService:
         Returns:
             权限树列表
         """
-        # 租户所有者返回所有权限
-        if tenant_admin.is_owner:
-            all_permissions = await self.get_enabled_permissions_by_scope("tenant")
-            return self._build_permission_tree(all_permissions)
-        
-        # 获取用户的有效权限 ID 集合
+        # 获取用户的有效权限 ID 集合（已包含套餐过滤逻辑）
         effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
         
         if not effective_ids:
@@ -628,35 +699,22 @@ class PermissionService:
         Returns:
             权限列表
         """
-        # 租户所有者返回所有权限
-        if tenant_admin.is_owner:
-            query = select(Permission).where(
-                Permission.is_enabled == True,
-                Permission.is_deleted == False,
-                Permission.scope.in_(["tenant", "both"]),
-            )
-            if perm_type:
-                query = query.where(Permission.type == perm_type)
-            query = query.order_by(Permission.sort_order)
-            result = await self.db.execute(query)
-            permissions = list(result.scalars().all())
-        else:
-            # 普通管理员只返回自己拥有的权限
-            effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
-            
-            if not effective_ids:
-                return []
-            
-            query = select(Permission).where(
-                Permission.id.in_(effective_ids),
-                Permission.is_enabled == True,
-                Permission.is_deleted == False,
-            )
-            if perm_type:
-                query = query.where(Permission.type == perm_type)
-            query = query.order_by(Permission.sort_order)
-            result = await self.db.execute(query)
-            permissions = list(result.scalars().all())
+        # 获取用户有效权限 ID（已包含套餐过滤逻辑）
+        effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
+        
+        if not effective_ids:
+            return []
+        
+        query = select(Permission).where(
+            Permission.id.in_(effective_ids),
+            Permission.is_enabled == True,
+            Permission.is_deleted == False,
+        )
+        if perm_type:
+            query = query.where(Permission.type == perm_type)
+        query = query.order_by(Permission.sort_order)
+        result = await self.db.execute(query)
+        permissions = list(result.scalars().all())
         
         return [
             PermissionResponse(
@@ -844,11 +902,7 @@ class PermissionService:
         # 获取所有租户端权限（菜单 + 操作权限）
         all_permissions = await self.get_enabled_permissions_by_scope("tenant")
         
-        # 租户所有者获取所有菜单和所有权限
-        if tenant_admin.is_owner:
-            return self._build_menu_tree(all_permissions, user_permission_codes=None)
-        
-        # 获取用户的有效权限 ID 集合
+        # 获取用户的有效权限 ID 集合（已包含套餐过滤逻辑）
         effective_ids = await self.get_tenant_admin_effective_permission_ids(tenant_admin)
         
         if not effective_ids:
