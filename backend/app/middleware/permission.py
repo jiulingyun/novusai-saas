@@ -20,8 +20,6 @@ from app.core.security import (
 from app.models import Admin, TenantAdmin
 from app.models.auth.admin_role import AdminRole
 from app.models.auth.tenant_admin_role import TenantAdminRole
-from app.repositories.system.admin_role_repository import AdminRoleRepository
-from app.repositories.tenant.tenant_role_repository import TenantRoleRepository
 
 
 class PermissionMiddleware:
@@ -127,22 +125,6 @@ class PermissionMiddleware:
                     if p.is_enabled and not p.is_deleted:
                         permissions.add(p.code)
             
-            # 获取祖先角色的权限（继承）
-            repo = AdminRoleRepository(db)
-            ancestors = await repo.get_ancestors(admin.role_id)
-            for ancestor in ancestors:
-                if ancestor.is_active:
-                    result = await db.execute(
-                        select(AdminRole)
-                        .where(AdminRole.id == ancestor.id)
-                        .options(selectinload(AdminRole.permissions))
-                    )
-                    ancestor_with_perms = result.scalar_one_or_none()
-                    if ancestor_with_perms:
-                        for p in ancestor_with_perms.permissions:
-                            if p.is_enabled and not p.is_deleted:
-                                permissions.add(p.code)
-            
             request.state.user_permissions = permissions
     
     async def _load_tenant_admin_permissions(
@@ -181,21 +163,5 @@ class PermissionMiddleware:
                 for p in role.permissions:
                     if p.is_enabled and not p.is_deleted:
                         permissions.add(p.code)
-            
-            # 获取祖先角色的权限（继承）
-            repo = TenantRoleRepository(db, tenant_admin.tenant_id)
-            ancestors = await repo.get_ancestors(tenant_admin.role_id)
-            for ancestor in ancestors:
-                if ancestor.is_active:
-                    result = await db.execute(
-                        select(TenantAdminRole)
-                        .where(TenantAdminRole.id == ancestor.id)
-                        .options(selectinload(TenantAdminRole.permissions))
-                    )
-                    ancestor_with_perms = result.scalar_one_or_none()
-                    if ancestor_with_perms:
-                        for p in ancestor_with_perms.permissions:
-                            if p.is_enabled and not p.is_deleted:
-                                permissions.add(p.code)
             
             request.state.user_permissions = permissions

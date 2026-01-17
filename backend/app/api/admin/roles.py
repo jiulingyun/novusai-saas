@@ -195,16 +195,47 @@ class AdminRoleController(GlobalController):
             """
             获取组织架构根节点列表（按需加载）
             
-            返回 level=1 的根节点，每个节点包含 has_children 标记。
+            层级权限控制：
+            - 超级管理员：返回 level=1 的系统根节点
+            - 普通管理员：返回自己所在角色作为根节点
+            
             前端可通过 GET /roles/{id}/children 按需加载子节点。
             
             权限: role:organization
             """
             service = AdminRoleService(db)
-            roles = await service.get_organization_root_nodes()
+            
+            # 超级管理员可以看到完整组织架构
+            if current_admin.is_super:
+                roles = await service.get_organization_root_nodes()
+                return success(
+                    data=[AdminRoleResponse.model_validate(r, from_attributes=True) for r in roles],
+                    message=_("common.success"),
+                )
+            
+            # 普通管理员只能看到以自己角色为根的子树
+            if current_admin.role_id is None:
+                return success(data=[], message=_("common.success"))
+            
+            # 获取当前用户的角色作为根节点
+            result = await db.execute(
+                select(AdminRole)
+                .where(
+                    AdminRole.id == current_admin.role_id,
+                    AdminRole.is_deleted == False,
+                )
+                .options(
+                    selectinload(AdminRole.children),
+                    selectinload(AdminRole.admins),
+                )
+            )
+            role = result.scalar_one_or_none()
+            
+            if role is None:
+                return success(data=[], message=_("common.success"))
             
             return success(
-                data=[AdminRoleResponse.model_validate(r, from_attributes=True) for r in roles],
+                data=[AdminRoleResponse.model_validate(role, from_attributes=True)],
                 message=_("common.success"),
             )
         

@@ -33,15 +33,13 @@ class PermissionService:
     
     async def get_admin_permissions(
         self, 
-        admin: Admin, 
-        include_inherited: bool = True,
+        admin: Admin,
     ) -> set[str]:
         """
-        获取平台管理员的权限集合
+        获取平台管理员的直接权限集合（不含继承）
         
         Args:
             admin: 平台管理员
-            include_inherited: 是否包含继承的权限（来自祖先角色）
         
         Returns:
             权限代码集合
@@ -65,34 +63,14 @@ class PermissionService:
         if role is None or not role.is_active:
             return set()
         
-        permissions: set[str] = {
+        return {
             p.code for p in role.permissions 
             if p.is_enabled and not p.is_deleted
         }
-        
-        # 获取继承的权限（来自祖先角色）
-        if include_inherited:
-            repo = AdminRoleRepository(self.db)
-            ancestors = await repo.get_ancestors(admin.role_id)
-            for ancestor in ancestors:
-                if ancestor.is_active:
-                    # 需要加载权限关联
-                    result = await self.db.execute(
-                        select(AdminRole)
-                        .where(AdminRole.id == ancestor.id)
-                        .options(selectinload(AdminRole.permissions))
-                    )
-                    ancestor_with_perms = result.scalar_one_or_none()
-                    if ancestor_with_perms:
-                        for p in ancestor_with_perms.permissions:
-                            if p.is_enabled and not p.is_deleted:
-                                permissions.add(p.code)
-        
-        return permissions
     
     async def get_admin_effective_permission_ids(self, admin: Admin) -> set[int]:
         """
-        获取平台管理员的有效权限 ID 集合（含继承）
+        获取平台管理员的直接权限 ID 集合（不含继承）
         
         Args:
             admin: 平台管理员
@@ -128,22 +106,6 @@ class PermissionService:
             for p in role.permissions:
                 if p.is_enabled and not p.is_deleted:
                     permission_ids.add(p.id)
-        
-        # 获取祖先角色的权限
-        repo = AdminRoleRepository(self.db)
-        ancestors = await repo.get_ancestors(admin.role_id)
-        for ancestor in ancestors:
-            if ancestor.is_active:
-                result = await self.db.execute(
-                    select(AdminRole)
-                    .where(AdminRole.id == ancestor.id)
-                    .options(selectinload(AdminRole.permissions))
-                )
-                ancestor_with_perms = result.scalar_one_or_none()
-                if ancestor_with_perms:
-                    for p in ancestor_with_perms.permissions:
-                        if p.is_enabled and not p.is_deleted:
-                            permission_ids.add(p.id)
         
         return permission_ids
     
@@ -209,14 +171,12 @@ class PermissionService:
     async def get_tenant_admin_permissions(
         self, 
         tenant_admin: TenantAdmin,
-        include_inherited: bool = True,
     ) -> set[str]:
         """
-        获取租户管理员的权限集合
+        获取租户管理员的直接权限集合（不含继承）
         
         Args:
             tenant_admin: 租户管理员
-            include_inherited: 是否包含继承的权限
         
         Returns:
             权限代码集合
@@ -240,36 +200,17 @@ class PermissionService:
         if role is None or not role.is_active:
             return set()
         
-        permissions: set[str] = {
+        return {
             p.code for p in role.permissions 
             if p.is_enabled and not p.is_deleted
         }
-        
-        # 获取继承的权限
-        if include_inherited:
-            repo = TenantRoleRepository(self.db, tenant_admin.tenant_id)
-            ancestors = await repo.get_ancestors(tenant_admin.role_id)
-            for ancestor in ancestors:
-                if ancestor.is_active:
-                    result = await self.db.execute(
-                        select(TenantAdminRole)
-                        .where(TenantAdminRole.id == ancestor.id)
-                        .options(selectinload(TenantAdminRole.permissions))
-                    )
-                    ancestor_with_perms = result.scalar_one_or_none()
-                    if ancestor_with_perms:
-                        for p in ancestor_with_perms.permissions:
-                            if p.is_enabled and not p.is_deleted:
-                                permissions.add(p.code)
-        
-        return permissions
     
     async def get_tenant_admin_effective_permission_ids(
         self, 
         tenant_admin: TenantAdmin,
     ) -> set[int]:
         """
-        获取租户管理员的有效权限 ID 集合（含继承）
+        获取租户管理员的直接权限 ID 集合（不含继承）
         
         Args:
             tenant_admin: 租户管理员
@@ -305,22 +246,6 @@ class PermissionService:
             for p in role.permissions:
                 if p.is_enabled and not p.is_deleted:
                     permission_ids.add(p.id)
-        
-        # 获取祖先角色的权限
-        repo = TenantRoleRepository(self.db, tenant_admin.tenant_id)
-        ancestors = await repo.get_ancestors(tenant_admin.role_id)
-        for ancestor in ancestors:
-            if ancestor.is_active:
-                result = await self.db.execute(
-                    select(TenantAdminRole)
-                    .where(TenantAdminRole.id == ancestor.id)
-                    .options(selectinload(TenantAdminRole.permissions))
-                )
-                ancestor_with_perms = result.scalar_one_or_none()
-                if ancestor_with_perms:
-                    for p in ancestor_with_perms.permissions:
-                        if p.is_enabled and not p.is_deleted:
-                            permission_ids.add(p.id)
         
         return permission_ids
     
