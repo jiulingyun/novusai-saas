@@ -7,9 +7,17 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from app.core.base_schema import BaseSchema
+
+
+class TenantPlanInfo(BaseSchema):
+    """租户套餐信息（简略）"""
+    
+    id: int = Field(..., description="套餐 ID")
+    code: str = Field(..., description="套餐代码")
+    name: str = Field(..., description="套餐名称")
 
 
 class TenantResponse(BaseSchema):
@@ -22,12 +30,47 @@ class TenantResponse(BaseSchema):
     contact_phone: str | None = Field(None, description="联系人电话")
     contact_email: str | None = Field(None, description="联系人邮箱")
     is_active: bool = Field(..., description="是否启用")
-    plan: str = Field(..., description="套餐类型")
+    # 套餐信息（新版）
+    plan_id: int | None = Field(None, description="套餐 ID")
+    plan_info: TenantPlanInfo | None = Field(None, description="套餐信息")
+    # 套餐类型（已废弃，保留向后兼容）
+    plan: str | None = Field(None, description="套餐类型（已废弃）")
     quota: dict[str, Any] | None = Field(None, description="配额配置")
     expires_at: datetime | None = Field(None, description="到期时间")
     remark: str | None = Field(None, description="备注")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: datetime = Field(..., description="更新时间")
+    
+    @model_validator(mode="before")
+    @classmethod
+    def extract_plan_info(cls, data: Any) -> Any:
+        """从 tenant_plan 关系中提取套餐信息"""
+        if hasattr(data, "tenant_plan") and data.tenant_plan is not None:
+            plan = data.tenant_plan
+            # 不直接修改 ORM 对象，而是返回字典
+            result = {
+                "id": data.id,
+                "code": data.code,
+                "name": data.name,
+                "contact_name": data.contact_name,
+                "contact_phone": data.contact_phone,
+                "contact_email": data.contact_email,
+                "is_active": data.is_active,
+                "plan_id": data.plan_id,
+                "plan_info": {
+                    "id": plan.id,
+                    "code": plan.code,
+                    "name": plan.name,
+                },
+                "plan": data.plan,
+                "quota": data.quota,
+                "expires_at": data.expires_at,
+                "remark": data.remark,
+                "created_at": data.created_at,
+                "updated_at": data.updated_at,
+            }
+            return result
+        return data
 
 
 class TenantCreateRequest(BaseSchema):
@@ -37,8 +80,11 @@ class TenantCreateRequest(BaseSchema):
     contact_name: str | None = Field(None, max_length=50, description="联系人姓名")
     contact_phone: str | None = Field(None, max_length=20, description="联系人电话")
     contact_email: str | None = Field(None, description="联系人邮箱")
-    plan: str = Field("free", description="套餐类型")
-    quota: dict[str, Any] | None = Field(None, description="配额配置")
+    # 套餐 ID（新版）
+    plan_id: int | None = Field(None, description="套餐 ID")
+    # 套餐类型（已废弃，保留向后兼容）
+    plan: str | None = Field(None, description="套餐类型（已废弃）")
+    quota: dict[str, Any] | None = Field(None, description="配额配置（可覆盖套餐默认值）")
     expires_at: datetime | None = Field(None, description="到期时间")
     remark: str | None = Field(None, max_length=500, description="备注")
 
@@ -50,8 +96,11 @@ class TenantUpdateRequest(BaseSchema):
     contact_name: str | None = Field(None, max_length=50, description="联系人姓名")
     contact_phone: str | None = Field(None, max_length=20, description="联系人电话")
     contact_email: str | None = Field(None, description="联系人邮箱")
-    plan: str | None = Field(None, description="套餐类型")
-    quota: dict[str, Any] | None = Field(None, description="配额配置")
+    # 套餐 ID（新版）
+    plan_id: int | None = Field(None, description="套餐 ID")
+    # 套餐类型（已废弃，保留向后兼容）
+    plan: str | None = Field(None, description="套餐类型（已废弃）")
+    quota: dict[str, Any] | None = Field(None, description="配额配置（可覆盖套餐默认值）")
     expires_at: datetime | None = Field(None, description="到期时间")
     remark: str | None = Field(None, max_length=500, description="备注")
 
@@ -78,6 +127,7 @@ class TenantImpersonateResponse(BaseSchema):
 
 
 __all__ = [
+    "TenantPlanInfo",
     "TenantResponse",
     "TenantCreateRequest",
     "TenantUpdateRequest",
