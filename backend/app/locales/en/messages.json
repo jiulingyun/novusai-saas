@@ -210,6 +210,27 @@
       "domain_update": "Update Domain Settings",
       "domain_delete": "Delete Custom Domain",
       "domain_verify": "Verify Domain"
+    },
+    "platform_config": {
+      "groups": "View Config Groups",
+      "detail": "View Config Details",
+      "update": "Update Config"
+    },
+    "tenant_config": {
+      "groups": "View Config Groups",
+      "detail": "View Config Details",
+      "update": "Update Config"
+    },
+    "tenant_plan": {
+      "list": "View Plan List",
+      "detail": "View Plan Details",
+      "create": "Create Plan",
+      "update": "Update Plan",
+      "delete": "Delete Plan",
+      "select": "Plan Remote Select",
+      "permissions": "View Plan Permissions",
+      "assign_permissions": "Assign Plan Permissions",
+      "available_permissions": "View Available Permissions"
     }
   },
   "role": {
@@ -548,39 +569,6 @@
         "name": "File Upload",
         "desc": "Allow users to upload files"
       }
-    }
-  },
-  "menu": {
-    "admin": {
-      "platform_config": "Platform Config",
-      "system_mgmt": "System Management"
-    },
-    "tenant": {
-      "tenant_config": "System Config",
-      "system_mgmt": "System Management"
-    }
-  },
-  "action": {
-    "platform_config": {
-      "groups": "View Config Groups",
-      "detail": "View Config Details",
-      "update": "Update Config"
-    },
-    "tenant_config": {
-      "groups": "View Config Groups",
-      "detail": "View Config Details",
-      "update": "Update Config"
-    },
-    "tenant_plan": {
-      "list": "View Plan List",
-      "detail": "View Plan Details",
-      "create": "Create Plan",
-      "update": "Update Plan",
-      "delete": "Delete Plan",
-      "select": "Plan Remote Select",
-      "permissions": "View Plan Permissions",
-      "assign_permissions": "Assign Plan Permissions",
-      "available_permissions": "View Available Permissions"
     }
   },
   "validation": {

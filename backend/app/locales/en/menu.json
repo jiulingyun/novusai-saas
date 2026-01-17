@@ -8,7 +8,9 @@
       "organization": "Organization",
       "tenant_mgmt": "Tenants",
       "tenant": "Tenant List",
-      "tenant_plan": "Plans"
+      "tenant_plan": "Plans",
+      "system_mgmt": "System Management",
+      "platform_config": "Platform Config"
     },
     "tenant": {
       "dashboard": "Dashboard",
@@ -16,7 +18,9 @@
       "tenant_user": "Users",
       "permission": "Permissions",
       "organization": "Organization",
-      "tenant_settings": "Settings"
+      "tenant_settings": "Settings",
+      "system_mgmt": "System Management",
+      "tenant_config": "System Config"
     }
   }
 }
