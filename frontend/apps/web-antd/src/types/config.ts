@@ -22,12 +22,21 @@ export interface ValidationRuleMeta {
 
 export interface ConfigOptionMeta {
   value: string;
-  label_key: string;
+  /** 选项标签（直接文本） */
+  label?: string;
+  /** 选项标签（翻译 key） */
+  label_key?: string;
 }
 
 export interface ConfigItemMeta {
   key: string;
-  name_key: string;
+  /** 配置项名称（直接文本） */
+  name?: string;
+  /** 配置项名称（翻译 key） */
+  name_key?: string;
+  /** 配置项描述（直接文本） */
+  description?: string;
+  /** 配置项描述（翻译 key） */
   description_key?: string;
   value_type: ConfigValueType;
   value?: any;
@@ -41,7 +50,11 @@ export interface ConfigItemMeta {
 
 export interface ConfigGroupListItemMeta {
   code: string;
-  name_key: string;
+  /** 分组名称（直接文本或翻译 key） */
+  name?: string;
+  name_key?: string;
+  /** 分组描述（直接文本或翻译 key） */
+  description?: string;
   description_key?: string;
   icon?: string;
   sort_order: number;

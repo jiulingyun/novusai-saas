@@ -4,9 +4,7 @@
  */
 import type { VxeGridInstance } from 'vxe-table';
 
-import { h, nextTick, onUnmounted } from 'vue';
-
-import { IconifyIcon } from '@vben/icons';
+import { nextTick, onUnmounted } from 'vue';
 
 import { message } from 'ant-design-vue';
 import Sortable from 'sortablejs';
@@ -132,9 +130,9 @@ async function handleDragEnd(evt: Sortable.SortableEvent) {
 
   try {
     await Promise.all(updates.map((u) => onUpdate(u.id, u.sortOrder)));
-    message.success(successMessage || $t('shared/common.sortSuccess'));
+    message.success(successMessage || $t('shared.common.sortSuccess'));
   } catch {
-    message.error(errorMessage || $t('shared/common.sortFailed'));
+    message.error(errorMessage || $t('shared.common.sortFailed'));
   } finally {
     await refreshDragTable();
   }
@@ -168,6 +166,7 @@ export function useTableDragSort(
 /**
  * 拖拽列定义（带渲染器）
  * 直接使用，无需写模板插槽
+ * 注：DragHandle 渲染器在 renderers.ts 中注册
  */
 export const dragColumn = {
   field: '_drag',
@@ -178,18 +177,3 @@ export const dragColumn = {
     name: 'DragHandle',
   },
 };
-
-/**
- * 注册拖拽手柄渲染器
- * 在 vxe-table 初始化时调用
- */
-export function registerDragHandleRenderer(vxeUI: any) {
-  vxeUI.renderer.add('DragHandle', {
-    renderTableDefault() {
-      return h(IconifyIcon, {
-        icon: 'lucide:grip-vertical',
-        class: 'drag-handle cursor-move text-gray-400 hover:text-gray-600',
-      });
-    },
-  });
-}

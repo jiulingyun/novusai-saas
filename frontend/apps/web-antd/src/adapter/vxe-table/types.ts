@@ -143,6 +143,9 @@ export interface UseCrudPageOptions<T extends BaseRow = BaseRow> {
   /** 是否启用分页，默认 true */
   pager?: boolean;
 
+  /** 是否启用斑马纹（交替行背景色），默认 true */
+  stripe?: boolean;
+
   /** 工具栏配置 */
   toolbar?: ToolbarConfig;
 
@@ -164,6 +167,8 @@ export interface GridOptionsConfig {
   rowHeight?: number;
   /** 是否启用分页，默认 true */
   pager?: boolean;
+  /** 是否启用斑马纹（交替行背景色），默认 true */
+  stripe?: boolean;
   /** 工具栏配置，默认显示全部 */
   toolbar?: ToolbarConfig;
   /** 其他自定义配置 */

@@ -55,11 +55,11 @@ const mainRoutes: RouteRecordRaw = {
     {
       name: 'AdminSystemConfigs',
       path: 'system/configs',
-      component: () => import('#/views/admin/system/configs/index.vue'),
+      component: () => import('#/views/admin/system/configs/list.vue'),
       meta: {
         hideInMenu: true,
         icon: 'lucide:settings',
-        title: 'System Configs',
+        title: $t('admin.system.configs.title'),
       },
     },
   ],

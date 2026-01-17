@@ -3,7 +3,8 @@
     "title": "System Configs",
     "unsaved_title": "Unsaved Changes",
     "unsaved_content": "You have unsaved changes. Are you sure to leave?",
-    "password_placeholder": "Enter new password to change"
+    "password_placeholder": "Enter new password to change",
+    "select_group": "Please select a config group from the left"
   },
   "group": {
     "platform_general": "General Settings",

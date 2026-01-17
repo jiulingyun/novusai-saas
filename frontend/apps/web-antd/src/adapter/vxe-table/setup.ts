@@ -20,6 +20,7 @@ export function setupVxeTable() {
         grid: {
           align: 'center',
           border: false,
+          stripe: true, // 默认启用斑马纹（交替行背景色）
           columnConfig: {
             resizable: true,
           },

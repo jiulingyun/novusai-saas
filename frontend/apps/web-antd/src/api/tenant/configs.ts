@@ -33,5 +33,5 @@ export async function updateTenantConfigGroupApi(
   configs: ConfigSubmitPayload,
   options?: ApiRequestOptions,
 ): Promise<void> {
-  await requestClient.put(`/tenant/configs/groups/${groupCode}`, { configs }, options);
+  await requestClient.put(`/tenant/configs/groups/${groupCode}`, configs, options);
 }

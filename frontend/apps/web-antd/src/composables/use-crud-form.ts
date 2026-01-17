@@ -1,5 +1,5 @@
 /**
- * CRUD 表单通用 Composable
+ * 声明式 CRUD 抽屉/弹窗 Composable
  *
  * 配合 useCrudPage 使用，自动处理：
  * - create/update 请求
@@ -9,11 +9,11 @@
  *
  * @example
  * ```ts
- * const [Drawer, drawerApi, crudForm] = useCrudDrawer<AdminInfo>({
+ * const { Drawer, drawerApi, isEdit } = useCrudDrawer<AdminInfo>({
  *   formApi,
  *   schema: useFormSchema,
  *   transform: (values, isEdit) => ({ ... }),
- *   toFormValues: (data) => ({ ... }),  // 编辑模式：后端数据 -> 表单值
+ *   toFormValues: (data) => ({ ... }),
  *   onSuccess: () => emits('success'),
  * });
  * ```
@@ -27,47 +27,18 @@ import { useVbenDrawer } from '@vben/common-ui';
 import { $t } from '#/locales';
 import { requestClient } from '#/utils/request';
 
-export interface UseCrudFormOptions<_T = any> {
-  /** Drawer/Modal API */
-  drawerApi:
-    | any
-    | {
-        close: () => void;
-        getData: <D = any>() => D | undefined;
-        lock: () => void;
-        unlock: () => void;
-      };
-
-  /** Form API */
-  formApi:
-    | any
-    | {
-        getValues: () => Promise<Record<string, any>>;
-        resetForm: () => Promise<void>;
-        setValues: (values: Record<string, any>) => void;
-        validate: () => Promise<{ valid: boolean }>;
-      };
-
-  /**
-   * 数据转换函数（表单值 -> API 请求体）
-   * @param values 表单原始值
-   * @param isEdit 是否编辑模式
-   */
-  transform: (
-    values: Record<string, any>,
-    isEdit: boolean,
-  ) => Record<string, any>;
-
-  /** 成功回调 */
-  onSuccess?: () => void;
-}
-
 /**
  * useCrudDrawer 配置选项
  */
 export interface UseCrudDrawerOptions<T = any> {
-  /** Form API */
-  formApi: any;
+  /** Form API（由 useVbenForm 返回） */
+  formApi: {
+    getValues: () => Promise<Record<string, any>>;
+    resetForm: () => Promise<void>;
+    setState: (state: { schema?: any[] }) => void;
+    setValues: (values: Record<string, any>) => void;
+    validate: () => Promise<{ valid: boolean }>;
+  };
 
   /**
    * Schema 工厂函数
@@ -77,6 +48,8 @@ export interface UseCrudDrawerOptions<T = any> {
 
   /**
    * 数据转换函数（表单值 -> API 请求体）
+   * @param values 表单原始值
+   * @param isEdit 是否编辑模式
    */
   transform: (
     values: Record<string, any>,
@@ -103,90 +76,6 @@ export interface UseCrudDrawerOptions<T = any> {
 
   /** 打开后额外操作（如更新下拉选项） */
   afterOpen?: (formApi: any, isEdit: boolean) => Promise<void> | void;
-}
-
-export interface UseCrudFormReturn<_T = any> {
-  /** 提交表单 */
-  submit: () => Promise<void>;
-  /** 是否编辑模式 */
-  isEdit: ReturnType<typeof computed<boolean>>;
-  /** 当前模式 */
-  mode: ReturnType<typeof ref<FormMode>>;
-  /** 记录 ID（编辑模式） */
-  recordId: ReturnType<typeof ref<number | string | undefined>>;
-  /** 资源路径 */
-  resource: ReturnType<typeof ref<string>>;
-}
-
-export function useCrudForm<T = any>(
-  options: UseCrudFormOptions<T>,
-): UseCrudFormReturn<T> {
-  const { drawerApi, formApi, transform, onSuccess } = options;
-
-  const mode = ref<FormMode>('add');
-  const recordId = ref<number | string>();
-  const resource = ref<string>('');
-
-  const isEdit = computed(() => mode.value === 'edit');
-
-  /**
-   * 初始化表单数据（在 onOpenChange 中调用）
-   */
-  function initFromDrawerData() {
-    const data = drawerApi.getData() as
-      | (T & { _resource?: string; id?: number | string; mode?: FormMode })
-      | undefined;
-    mode.value = data?.mode ?? 'add';
-    recordId.value = data?.id;
-    resource.value = data?._resource ?? '';
-    return data;
-  }
-
-  /**
-   * 提交表单
-   */
-  async function submit() {
-    const { valid } = await formApi.validate();
-    if (!valid) return;
-
-    const values = await formApi.getValues();
-    const requestData = transform(values, isEdit.value);
-
-    drawerApi.lock();
-
-    try {
-      // 编辑模式：PUT {resource}/{id}，新建模式：POST {resource}
-      await (isEdit.value && recordId.value
-        ? requestClient.put(
-            `${resource.value}/${recordId.value}`,
-            requestData,
-            {
-              showSuccessMessage: true,
-              successMessage: $t('ui.actionMessage.updateSuccess'),
-            },
-          )
-        : requestClient.post(resource.value, requestData, {
-            showSuccessMessage: true,
-            successMessage: $t('ui.actionMessage.createSuccess'),
-          }));
-      onSuccess?.();
-      drawerApi.close();
-    } catch {
-      drawerApi.unlock();
-    }
-  }
-
-  return {
-    submit,
-    isEdit,
-    mode,
-    recordId,
-    resource,
-    /** 内部方法，供 onOpenChange 使用 */
-    _initFromDrawerData: initFromDrawerData,
-  } as UseCrudFormReturn<T> & {
-    _initFromDrawerData: typeof initFromDrawerData;
-  };
 }
 
 /**

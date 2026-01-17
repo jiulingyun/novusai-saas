@@ -1,6 +1,8 @@
 /**
  * 表格 Hook 和配置工厂
  */
+import type { VbenFormSchema } from '#/adapter/form';
+
 import type { GridOptionsConfig } from './types';
 
 import { useVbenVxeGrid as useGrid } from '@vben/plugins/vxe-table';
@@ -55,7 +57,7 @@ export function useVbenVxeGrid(options: Parameters<typeof useGrid>[0]) {
  * });
  * ```
  */
-export function useGridSearchFormOptions(schema: any[]) {
+export function useGridSearchFormOptions(schema: VbenFormSchema[]) {
   return {
     schema,
     submitOnChange: true,
@@ -93,6 +95,7 @@ export function useGridOptions(config: GridOptionsConfig) {
     queryApi,
     defaultSort = '-created_at',
     rowHeight = 64,
+    stripe = true,
     pager = true,
     toolbar = {
       custom: true,
@@ -106,6 +109,7 @@ export function useGridOptions(config: GridOptionsConfig) {
 
   return {
     columns,
+    stripe,
     keepSource: true,
     pagerConfig: { enabled: pager },
     proxyConfig: {

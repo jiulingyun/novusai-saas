@@ -63,11 +63,11 @@ const mainRoutes: RouteRecordRaw = {
     {
       name: 'TenantSystemConfigs',
       path: 'system/configs',
-      component: () => import('#/views/tenant/system/configs/index.vue'),
+      component: () => import('#/views/tenant/system/configs/list.vue'),
       meta: {
         hideInMenu: true,
         icon: 'lucide:settings',
-        title: 'System Configs',
+        title: $t('tenant.system.configs.title'),
       },
     },
   ],

@@ -33,5 +33,5 @@ export async function updateAdminConfigGroupApi(
   configs: ConfigSubmitPayload,
   options?: ApiRequestOptions,
 ): Promise<void> {
-  await requestClient.put(`/admin/configs/groups/${groupCode}`, { configs }, options);
+  await requestClient.put(`/admin/configs/groups/${groupCode}`, configs, options);
 }

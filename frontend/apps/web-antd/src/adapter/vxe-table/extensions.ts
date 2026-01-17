@@ -106,7 +106,7 @@ export async function exportToExcel(
 ): Promise<void> {
   const grid = gridRef && 'value' in gridRef ? gridRef.value : gridRef;
   if (!grid) {
-    message.warning($t('shared/common.noData'));
+    message.warning($t('shared.common.noData'));
     return;
   }
 
@@ -130,7 +130,7 @@ export async function exportToExcel(
   const tableData = exportAll ? fullData : currentPageData;
 
   if (!tableData || tableData.length === 0) {
-    message.warning($t('shared/common.noData'));
+    message.warning($t('shared.common.noData'));
     return;
   }
 
@@ -183,7 +183,7 @@ export async function exportToExcel(
   // 导出文件
   XLSX.writeFile(workbook, `${filename}.xlsx`);
 
-  message.success($t('shared/common.exportSuccess'));
+  message.success($t('shared.common.exportSuccess'));
   afterExport?.();
 }
 

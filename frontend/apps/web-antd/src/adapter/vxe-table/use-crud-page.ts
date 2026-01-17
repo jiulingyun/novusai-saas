@@ -59,6 +59,7 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
     nameField = 'name' as keyof T & string,
     defaultSort = '-created_at',
     rowHeight = 64,
+    stripe = true,
     pager = true,
     toolbar = {
       custom: true,
@@ -147,37 +148,27 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
     }
   }
 
-  /** 删除（自动构造 DELETE {resource}/{id} 请求） */
-  function onDelete(row: T) {
+  /**
+   * 删除（自动构造 DELETE {resource}/{id} 请求）
+   * 注意：CellOperation 渲染器已经提供了 Popconfirm 确认，此处直接执行删除
+   */
+  async function onDelete(row: T) {
     // 防抖：如果正在处理中，直接返回
     if (isProcessing(row.id)) return;
 
-    const displayName = String(row[nameField] || row.id);
-
-    Modal.confirm({
-      title: $t(`${i18nPrefix}.messages.deleteTitle`),
-      content: $t(`${i18nPrefix}.messages.deleteConfirm`, {
-        name: displayName,
-      }),
-      okText: $t('common.delete'),
-      okButtonProps: { danger: true },
-      type: 'warning',
-      onOk: async () => {
-        setProcessing(row.id, true);
-        try {
-          // 自动构造 DELETE 请求：DELETE {resource}/{id}
-          await requestClient.delete(`${api.resource}/${row.id}`, {
-            loading: true,
-            showCodeMessage: true,
-            showSuccessMessage: true,
-            successMessage: $t(`${i18nPrefix}.messages.deleteSuccess`),
-          });
-          onRefresh();
-        } finally {
-          setProcessing(row.id, false);
-        }
-      },
-    });
+    setProcessing(row.id, true);
+    try {
+      // 自动构造 DELETE 请求：DELETE {resource}/{id}
+      await requestClient.delete(`${api.resource}/${row.id}`, {
+        loading: true,
+        showCodeMessage: true,
+        showSuccessMessage: true,
+        successMessage: $t(`${i18nPrefix}.messages.deleteSuccess`),
+      });
+      onRefresh();
+    } finally {
+      setProcessing(row.id, false);
+    }
   }
 
   /**
@@ -282,6 +273,7 @@ export function useCrudPage<T extends BaseRow = BaseRow>(
 
   const gridOptions = {
     columns: columns(handleActionClick, handleToggleStatus),
+    stripe,
     keepSource: true,
     pagerConfig: { enabled: pager },
     proxyConfig: {
